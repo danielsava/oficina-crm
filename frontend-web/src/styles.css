@@ -3,3 +3,20 @@
 @import 'tailwindcss';
 
 @import "tailwindcss-primeui";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+body {
+    background-color: #f1f5f9; /* Tailwind slate-100 */
+    color: #0f172a; /* Tailwind slate-900 */
+    margin: 0;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Custom adjustments for PrimeNG components to match the design */
+:root {
+  --p-border-radius: 0.75rem; /* 12px for softer cards like the design */
+}
