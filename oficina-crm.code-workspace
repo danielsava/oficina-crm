@@ -7,10 +7,6 @@
     {
       "name": "Angular",
       "path": "frontend-angular"
-    },
-    {
-      "name": "Sakai",
-      "path": "frontend-sakai"
     }
   ],
   "settings": {}
