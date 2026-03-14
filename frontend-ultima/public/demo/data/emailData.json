@@ -1,0 +1,769 @@
+{
+  "emails": [
+    {
+      "id": 1,
+      "sender": "Brook Simmons",
+      "time": "3:24 PM",
+      "subject": "Important Account Update",
+      "preview": "Dear customer, we've made updates to enhance your account security. Please log in to review and complete the necessary steps. Thank you for choosing ABC Corporation.",
+      "tag": "Security",
+      "read": false,
+      "avatar": "/demo/images/avatar/avatar-square-f-1.jpg",
+      "selected": false,
+      "email": "brook.simmons@example.com",
+      "starred": true,
+      "important": true,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Updates",
+      "fullContent": "<p>Dear valued customer,</p>\n        <p>We've made important updates to enhance your account security. These changes are part of our ongoing commitment to protecting your personal information and ensuring the highest level of security for our services.</p>\n        <p>Please log in to your account at your earliest convenience to review and complete the necessary steps. The process should only take a few minutes and will help keep your account secure.</p>\n        <p>Thank you for choosing ABC Corporation. If you have any questions, please don't hesitate to contact our support team.</p>\n        <p>Best regards,<br>ABC Corporation Security Team</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Brook Simmons",
+          "email": "brook.simmons@example.com",
+          "time": "Jun 02 2025 15:24",
+          "avatar": "/demo/images/avatar/avatar-square-f-1.jpg",
+          "subject": "Important Account Update",
+          "content": "Dear valued customer, we've made important updates to enhance your account security. These changes are part of our ongoing commitment to protecting your personal information and ensuring the highest level of security for our services. Please log in to your account at your earliest convenience to review and complete the necessary steps. Thank you for choosing ABC Corporation."
+        },
+        {
+          "id": 2,
+          "sender": "Robert Fox",
+          "email": "robert.fox@company.com",
+          "time": "Jun 02 2025 15:45",
+          "avatar": "/demo/images/avatar/avatar-square-m-2.jpg",
+          "subject": "Re: Important Account Update",
+          "content": "Hi Brook, I've completed the security update steps as requested. Could you confirm that my account is now fully secure? Also, when will the new security features be fully active? Thanks for keeping our accounts safe.",
+          "isReply": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "sender": "Dianne Russell",
+      "time": "11:24 AM",
+      "subject": "Weekly Project Update",
+      "preview": "Hi team, attached is the weekly project update. Kindly review the progress and come prepared for our discussion in the upcoming meeting on [Date and Time].",
+      "tag": "Update",
+      "read": false,
+      "avatar": "/demo/images/avatar/avatar-square-f-2.jpg",
+      "selected": false,
+      "email": "dianne.russell@company.com",
+      "starred": false,
+      "important": true,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Updates",
+      "fullContent": "<p>Hi team,</p>\n        <p>Attached is the weekly project update for your review. We've made significant progress across all workstreams this week.</p>\n        <h3>Key Achievements:</h3>\n        <ul>\n            <li>Completed Phase 1 deliverables</li>\n            <li>Started Phase 2 development</li>\n            <li>Resolved 15 critical issues</li>\n        </ul>\n        <p>Kindly review the progress and come prepared for our discussion in the upcoming meeting scheduled for Thursday at 2:00 PM.</p>\n        <p>Best regards,<br>Dianne Russell<br>Project Manager</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Dianne Russell",
+          "email": "dianne.russell@company.com",
+          "time": "Jun 02 2025 11:24",
+          "avatar": "/demo/images/avatar/avatar-square-f-2.jpg",
+          "subject": "Weekly Project Update",
+          "content": "Hi team, attached is the weekly project update for your review. We've made significant progress across all workstreams this week. Key achievements include completed Phase 1 deliverables, started Phase 2 development, and resolved 15 critical issues. Kindly review the progress and come prepared for our discussion in the upcoming meeting scheduled for Thursday at 2:00 PM."
+        },
+        {
+          "id": 2,
+          "sender": "Robert Fox",
+          "email": "robert.fox@company.com",
+          "time": "Jun 02 2025 14:15",
+          "avatar": "/demo/images/avatar/avatar-square-m-2.jpg",
+          "subject": "Re: Weekly Project Update",
+          "content": "Great progress on Phase 1! I have some questions about the Phase 2 timeline and resource allocation. Can we schedule a quick sync before Thursday's meeting to discuss the technical dependencies?",
+          "isReply": true
+        },
+        {
+          "id": 3,
+          "sender": "Dianne Russell",
+          "email": "dianne.russell@company.com",
+          "time": "Jun 02 2025 16:30",
+          "avatar": "/demo/images/avatar/avatar-square-f-2.jpg",
+          "subject": "Re: Weekly Project Update",
+          "content": "Absolutely Robert! Let's meet tomorrow at 10 AM to go over the technical requirements and dependencies. I'll send a calendar invite shortly with the agenda items we need to cover."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "sender": "Jacob Jones",
+      "time": "Jan 21",
+      "subject": "Exclusive Offer Inside - Limited Time Only",
+      "preview": "Greetings, check out our exclusive offer! Don't miss this limited-time deal. Details enclosed in the attached flyer. Act fast; the offer expires on [Date].",
+      "tag": "Marketing",
+      "read": true,
+      "avatar": "/demo/images/avatar/avatar-square-m-1.jpg",
+      "selected": true,
+      "email": "jacob.jones@marketing.com",
+      "starred": false,
+      "important": false,
+      "archived": true,
+      "spam": false,
+      "deleted": false,
+      "category": "Social",
+      "fullContent": "<p>Greetings valued customer,</p>\n        <p>We're excited to share an exclusive offer just for you! This limited-time deal offers incredible savings on our premium products.</p>\n        <h3>Special Offer Details:</h3>\n        <ul>\n            <li>Up to 50% off selected items</li>\n            <li>Free shipping on orders over $100</li>\n            <li>Exclusive access to new products</li>\n        </ul>\n        <p>Don't miss this opportunity - the offer expires soon. Details are enclosed in the attached flyer.</p>\n        <p>Act fast and take advantage of these amazing savings!</p>\n        <p>Best regards,<br>Jacob Jones<br>Marketing Team</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Jacob Jones",
+          "email": "jacob.jones@marketing.com",
+          "time": "Jan 21 2025 10:00",
+          "avatar": "/demo/images/avatar/avatar-square-m-1.jpg",
+          "subject": "Exclusive Offer Inside - Limited Time Only",
+          "content": "Greetings valued customer! We're excited to share an exclusive offer just for you. Up to 50% off selected items, free shipping on orders over $100, and exclusive access to new products. Don't miss this limited-time deal - act fast and take advantage of these amazing savings!"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "sender": "Cameron Watson",
+      "time": "Jan 15",
+      "subject": "Employee Appreciation Event - Save the Date",
+      "preview": "Hello team, mark your calendars for our upcoming Employee Appreciation Event on [Date]. Stay tuned for more details and get ready for a day of celebration!",
+      "tag": "HR",
+      "read": false,
+      "avatar": "CW",
+      "selected": false,
+      "email": "cameron.watson@hr.com",
+      "starred": false,
+      "important": false,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Forms",
+      "fullContent": "<p>Hello team,</p>\n        <p>We're thrilled to announce our upcoming Employee Appreciation Event! This is our way of saying thank you for all your hard work and dedication.</p>\n        <p>Mark your calendars for <strong>February 15th, 2025</strong> from 2:00 PM to 6:00 PM.</p>\n        <h3>Event Highlights:</h3>\n        <ul>\n            <li>Awards ceremony</li>\n            <li>Team building activities</li>\n            <li>Catered lunch</li>\n            <li>Live entertainment</li>\n        </ul>\n        <p>Stay tuned for more details and get ready for a fantastic day of celebration!</p>\n        <p>Best regards,<br>Cameron Watson<br>Human Resources</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Cameron Watson",
+          "email": "cameron.watson@hr.com",
+          "time": "Jan 15 2025 14:00",
+          "avatar": "CW",
+          "subject": "Employee Appreciation Event - Save the Date",
+          "content": "Hello team! We're thrilled to announce our upcoming Employee Appreciation Event on February 15th, 2025 from 2:00 PM to 6:00 PM. Event highlights include awards ceremony, team building activities, catered lunch, and live entertainment. Stay tuned for more details and get ready for a fantastic day of celebration!"
+        },
+        {
+          "id": 2,
+          "sender": "Robert Fox",
+          "email": "robert.fox@company.com",
+          "time": "Jan 15 2025 14:30",
+          "avatar": "/demo/images/avatar/avatar-square-m-2.jpg",
+          "subject": "Re: Employee Appreciation Event - Save the Date",
+          "content": "This sounds fantastic, Cameron! I'll definitely mark my calendar. Will there be any dress code requirements for the event? Looking forward to celebrating with the team.",
+          "isReply": true
+        },
+        {
+          "id": 3,
+          "sender": "Cameron Watson",
+          "email": "cameron.watson@hr.com",
+          "time": "Jan 15 2025 15:15",
+          "avatar": "CW",
+          "subject": "Re: Employee Appreciation Event - Save the Date",
+          "content": "Great question, Robert! Business casual attire would be perfect. We want everyone to feel comfortable while still maintaining a professional atmosphere for the awards ceremony. More details coming soon!"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "sender": "Amy Elsner",
+      "time": "9:24 AM",
+      "subject": "Urgent: Security Alert - Account Compromise",
+      "preview": "Dear user, we detected unauthorized access to your account. Take immediate action to secure your account. Follow the provided link to reset your password. Thank you.",
+      "tag": "Security",
+      "read": false,
+      "avatar": "/demo/images/avatar/profile.jpg",
+      "selected": false,
+      "email": "amy.elsner@security.com",
+      "starred": true,
+      "important": false,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Updates",
+      "fullContent": "<div style=\"color: #dc2626; border: 2px solid #dc2626; padding: 16px; border-radius: 8px; margin: 16px 0;\">\n        <h3 style=\"color: #dc2626;\">URGENT SECURITY ALERT</h3>\n        <p>Dear user,</p>\n        <p>We detected unauthorized access attempts to your account. This is a security-critical notification that requires immediate attention.</p>\n        <p><strong>Immediate actions required:</strong></p>\n        <ol>\n            <li>Change your password immediately</li>\n            <li>Enable two-factor authentication</li>\n            <li>Review recent account activity</li>\n        </ol>\n        <p>Follow the secure link provided to reset your password and secure your account.</p>\n        <p>Thank you for taking prompt action.</p>\n        <p>Security Team</p>\n        </div>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Amy Elsner",
+          "email": "amy.elsner@security.com",
+          "time": "Jun 02 2025 09:24",
+          "avatar": "/demo/images/avatar/profile.jpg",
+          "subject": "Urgent: Security Alert - Account Compromise",
+          "content": "Dear user, we detected unauthorized access attempts to your account. This is a security-critical notification that requires immediate attention. Please change your password immediately, enable two-factor authentication, and review recent account activity. Follow the secure link provided to reset your password and secure your account."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "sender": "Wade Warren",
+      "time": "Jan 12",
+      "subject": "Your Recent Purchase - Order Confirmation",
+      "preview": "Hi Wade Warren, secure your spot at the XYZ Conference 2025 with early bird registration. Enjoy discounted rates until [Date].",
+      "tag": "Invoice",
+      "read": false,
+      "avatar": "WW",
+      "selected": false,
+      "email": "wade.warren@conference.com",
+      "starred": false,
+      "important": false,
+      "archived": false,
+      "spam": true,
+      "deleted": false,
+      "category": "Introductions",
+      "fullContent": "<p>Hi Wade Warren,</p>\n        <p>Thank you for your recent purchase! This email confirms your order and provides important details about your transaction.</p>\n        <h3>Order Details:</h3>\n        <p><strong>Order #:</strong> XYZ-2025-001234</p>\n        <p><strong>Conference:</strong> XYZ Conference 2025</p>\n        <p><strong>Date:</strong> March 15-17, 2025</p>\n        <p><strong>Location:</strong> Downtown Convention Center</p>\n        <p>You've secured your spot with our early bird registration rate. Your discounted ticket includes access to all sessions, networking events, and materials.</p>\n        <p>We look forward to seeing you at the conference!</p>\n        <p>Best regards,<br>Conference Team</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Wade Warren",
+          "email": "wade.warren@conference.com",
+          "time": "Jan 12 2025 09:30",
+          "avatar": "WW",
+          "subject": "Your Recent Purchase - Order Confirmation",
+          "content": "Hi Wade Warren! Thank you for your recent purchase. Order #XYZ-2025-001234 for XYZ Conference 2025 (March 15-17, 2025) at Downtown Convention Center has been confirmed. You've secured your spot with early bird registration rate. Your discounted ticket includes access to all sessions, networking events, and materials. We look forward to seeing you at the conference!"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "sender": "Marketing Team",
+      "time": "Jan 10",
+      "subject": "Newsletter - Weekly Deals",
+      "preview": "Discover amazing deals this week! Check out our latest offers and save up to 60% on selected items.",
+      "tag": "Marketing",
+      "read": true,
+      "avatar": "MT",
+      "selected": false,
+      "email": "marketing@deals.com",
+      "starred": false,
+      "important": false,
+      "archived": false,
+      "spam": false,
+      "deleted": true,
+      "category": "Social",
+      "fullContent": "<p>Discover amazing deals this week!</p>\n        <p>Check out our latest offers and save up to 60% on selected items. Don't miss out!</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Marketing Team",
+          "email": "marketing@deals.com",
+          "time": "Jan 10 2025 12:00",
+          "avatar": "MT",
+          "subject": "Newsletter - Weekly Deals",
+          "content": "Discover amazing deals this week! Check out our latest offers and save up to 60% on selected items."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "sender": "Support Team",
+      "time": "Jan 08",
+      "subject": "Your Support Request Update",
+      "preview": "Your support ticket #12345 has been resolved. Thank you for your patience.",
+      "tag": "Support",
+      "read": true,
+      "avatar": "ST",
+      "selected": false,
+      "email": "support@company.com",
+      "starred": true,
+      "important": false,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Updates",
+      "fullContent": "<p>Dear customer,</p>\n        <p>Your support ticket #12345 has been resolved. Our team has addressed your concern and implemented the necessary fixes.</p>\n        <p>Thank you for your patience and for choosing our services.</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Support Team",
+          "email": "support@company.com",
+          "time": "Jan 08 2025 14:30",
+          "avatar": "ST",
+          "subject": "Your Support Request Update",
+          "content": "Your support ticket #12345 has been resolved. Our team has addressed your concern and implemented the necessary fixes."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "sender": "Sarah Chen",
+      "time": "Jan 05",
+      "subject": "Q1 Budget Review Meeting",
+      "preview": "Hi Robert, I've prepared the Q1 budget review documents. Can we schedule a meeting this week to go over the numbers?",
+      "tag": "Finance",
+      "read": false,
+      "avatar": null,
+      "selected": false,
+      "email": "sarah.chen@finance.com",
+      "starred": true,
+      "important": true,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Updates",
+      "fullContent": "<p>Hi Robert,</p>\n        <p>I've prepared the Q1 budget review documents for your review. The preliminary numbers look promising with a 12% increase over last quarter.</p>\n        <p>Key highlights:</p>\n        <ul>\n            <li>Revenue up 12% QoQ</li>\n            <li>Operating expenses within budget</li>\n            <li>New investments approved</li>\n        </ul>\n        <p>Can we schedule a meeting this week to go over the details?</p>\n        <p>Best regards,<br>Sarah Chen<br>Finance Director</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Sarah Chen",
+          "email": "sarah.chen@finance.com",
+          "time": "Jan 05 2025 09:00",
+          "avatar": null,
+          "subject": "Q1 Budget Review Meeting",
+          "content": "Hi Robert, I've prepared the Q1 budget review documents for your review. The preliminary numbers look promising with a 12% increase over last quarter. Can we schedule a meeting this week to go over the details?"
+        },
+        {
+          "id": 2,
+          "sender": "Robert Fox",
+          "email": "robert.fox@company.com",
+          "time": "Jan 05 2025 10:30",
+          "avatar": "/demo/images/avatar/avatar-square-m-2.jpg",
+          "subject": "Re: Q1 Budget Review Meeting",
+          "content": "Great news about the Q1 numbers, Sarah! How about Thursday at 2 PM? I'd like to understand the new investments section in detail.",
+          "isReply": true
+        },
+        {
+          "id": 3,
+          "sender": "Sarah Chen",
+          "email": "sarah.chen@finance.com",
+          "time": "Jan 05 2025 11:00",
+          "avatar": null,
+          "subject": "Re: Q1 Budget Review Meeting",
+          "content": "Thursday at 2 PM works perfectly! I'll book the conference room and bring detailed investment breakdowns. See you then!"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "sender": "Michael Torres",
+      "time": "Jan 03",
+      "subject": "New Client Onboarding - TechCorp",
+      "preview": "Exciting news! TechCorp has signed with us. Need your input on the implementation timeline.",
+      "tag": "Client",
+      "read": true,
+      "avatar": null,
+      "selected": false,
+      "email": "michael.torres@sales.com",
+      "starred": false,
+      "important": true,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Social",
+      "fullContent": "<p>Hi Robert,</p>\n        <p>Exciting news! TechCorp has officially signed with us for our enterprise solution. This is a major win for the team!</p>\n        <p>Contract details:</p>\n        <ul>\n            <li>3-year enterprise agreement</li>\n            <li>500+ user licenses</li>\n            <li>Full implementation support</li>\n        </ul>\n        <p>I need your input on the implementation timeline. When can we kick off?</p>\n        <p>Best,<br>Michael Torres<br>Sales Director</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Michael Torres",
+          "email": "michael.torres@sales.com",
+          "time": "Jan 03 2025 14:00",
+          "avatar": null,
+          "subject": "New Client Onboarding - TechCorp",
+          "content": "Exciting news! TechCorp has officially signed with us for our enterprise solution. 3-year agreement with 500+ user licenses. Need your input on the implementation timeline."
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "sender": "Emily Rodriguez",
+      "time": "Dec 28",
+      "subject": "Year-End Performance Reviews",
+      "preview": "Reminder: Please complete your self-assessment and team reviews by end of week.",
+      "tag": "HR",
+      "read": true,
+      "avatar": null,
+      "selected": false,
+      "email": "emily.rodriguez@hr.com",
+      "starred": false,
+      "important": false,
+      "archived": true,
+      "spam": false,
+      "deleted": false,
+      "category": "Forms",
+      "fullContent": "<p>Dear Robert,</p>\n        <p>This is a reminder to complete your year-end performance review documentation:</p>\n        <ul>\n            <li>Self-assessment form</li>\n            <li>Team member reviews</li>\n            <li>Goal setting for next year</li>\n        </ul>\n        <p>Please submit all forms by Friday, January 5th.</p>\n        <p>Thank you,<br>Emily Rodriguez<br>HR Manager</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Emily Rodriguez",
+          "email": "emily.rodriguez@hr.com",
+          "time": "Dec 28 2024 10:00",
+          "avatar": null,
+          "subject": "Year-End Performance Reviews",
+          "content": "Reminder: Please complete your self-assessment and team reviews by end of week. All forms must be submitted by Friday, January 5th."
+        },
+        {
+          "id": 2,
+          "sender": "Robert Fox",
+          "email": "robert.fox@company.com",
+          "time": "Dec 28 2024 14:30",
+          "avatar": "/demo/images/avatar/avatar-square-m-2.jpg",
+          "subject": "Re: Year-End Performance Reviews",
+          "content": "Thanks for the reminder, Emily. I've completed my self-assessment. Working on the team reviews now - should have everything submitted by Thursday.",
+          "isReply": true
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "sender": "Tech Support",
+      "time": "Dec 26",
+      "subject": "System Maintenance Scheduled",
+      "preview": "Planned maintenance window: Saturday 2 AM - 6 AM. Services will be temporarily unavailable.",
+      "tag": "System",
+      "read": true,
+      "avatar": "TS",
+      "selected": false,
+      "email": "support@techteam.com",
+      "starred": false,
+      "important": false,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Updates",
+      "fullContent": "<p>Dear Users,</p>\n        <p>We will be performing scheduled system maintenance this Saturday from 2:00 AM to 6:00 AM EST.</p>\n        <p>During this time:</p>\n        <ul>\n            <li>All services will be temporarily unavailable</li>\n            <li>Data will be backed up</li>\n            <li>Security patches will be applied</li>\n        </ul>\n        <p>We apologize for any inconvenience.</p>\n        <p>Tech Support Team</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Tech Support",
+          "email": "support@techteam.com",
+          "time": "Dec 26 2024 15:00",
+          "avatar": "TS",
+          "subject": "System Maintenance Scheduled",
+          "content": "Planned maintenance window: Saturday 2 AM - 6 AM EST. All services will be temporarily unavailable. Data backup and security patches will be applied."
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "sender": "Lisa Wang",
+      "time": "Dec 22",
+      "subject": "Design Review - Mobile App Mockups",
+      "preview": "Hi Robert, the new mobile app mockups are ready for review. Let me know your thoughts!",
+      "tag": "Design",
+      "read": false,
+      "avatar": null,
+      "selected": false,
+      "email": "lisa.wang@design.com",
+      "starred": true,
+      "important": false,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Social",
+      "fullContent": "<p>Hi Robert,</p>\n        <p>The mobile app mockups are ready for your review! I've incorporated all the feedback from our last meeting.</p>\n        <p>What's new:</p>\n        <ul>\n            <li>Redesigned navigation flow</li>\n            <li>New color scheme</li>\n            <li>Improved user onboarding</li>\n            <li>Dark mode support</li>\n        </ul>\n        <p>Please check the attached files and let me know your thoughts.</p>\n        <p>Best,<br>Lisa Wang<br>Lead Designer</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Lisa Wang",
+          "email": "lisa.wang@design.com",
+          "time": "Dec 22 2024 11:00",
+          "avatar": null,
+          "subject": "Design Review - Mobile App Mockups",
+          "content": "Hi Robert, the new mobile app mockups are ready for review. I've incorporated all feedback from our last meeting including redesigned navigation, new color scheme, and dark mode support."
+        },
+        {
+          "id": 2,
+          "sender": "Robert Fox",
+          "email": "robert.fox@company.com",
+          "time": "Dec 22 2024 14:00",
+          "avatar": "/demo/images/avatar/avatar-square-m-2.jpg",
+          "subject": "Re: Design Review - Mobile App Mockups",
+          "content": "These look fantastic, Lisa! The dark mode implementation is exactly what we needed. Can we add a few more transitions between screens? Also, let's schedule a demo for the stakeholders next week.",
+          "isReply": true
+        },
+        {
+          "id": 3,
+          "sender": "Lisa Wang",
+          "email": "lisa.wang@design.com",
+          "time": "Dec 22 2024 15:30",
+          "avatar": null,
+          "subject": "Re: Design Review - Mobile App Mockups",
+          "content": "Thanks Robert! I'll add smoother transitions between screens. How about Wednesday at 3 PM for the stakeholder demo? I can have everything polished by then."
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "sender": "James Mitchell",
+      "time": "Dec 20",
+      "subject": "Urgent: Server Capacity Alert",
+      "preview": "We're approaching 85% server capacity. Need approval for infrastructure upgrade.",
+      "tag": "Urgent",
+      "read": true,
+      "avatar": null,
+      "selected": false,
+      "email": "james.mitchell@ops.com",
+      "starred": true,
+      "important": true,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Updates",
+      "fullContent": "<p>Hi Robert,</p>\n        <p><strong>URGENT:</strong> Our servers are approaching 85% capacity due to increased user traffic.</p>\n        <p>Current status:</p>\n        <ul>\n            <li>CPU usage: 82%</li>\n            <li>Memory: 85%</li>\n            <li>Storage: 78%</li>\n        </ul>\n        <p>I recommend immediate infrastructure upgrade to prevent service disruption. Cost estimate: $45,000.</p>\n        <p>Please approve ASAP.</p>\n        <p>James Mitchell<br>Operations Manager</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "James Mitchell",
+          "email": "james.mitchell@ops.com",
+          "time": "Dec 20 2024 09:00",
+          "avatar": null,
+          "subject": "Urgent: Server Capacity Alert",
+          "content": "URGENT: Servers at 85% capacity. CPU 82%, Memory 85%, Storage 78%. Need immediate infrastructure upgrade approval. Cost: $45,000."
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "sender": "Newsletter Team",
+      "time": "Dec 18",
+      "subject": "December Newsletter - Year in Review",
+      "preview": "Check out our year-end newsletter featuring company highlights and achievements.",
+      "tag": "Newsletter",
+      "read": true,
+      "avatar": "NL",
+      "selected": false,
+      "email": "newsletter@company.com",
+      "starred": false,
+      "important": false,
+      "archived": false,
+      "spam": false,
+      "deleted": true,
+      "category": "Social",
+      "fullContent": "<p>Dear Team,</p>\n        <p>Our December newsletter is here! This special year-end edition features:</p>\n        <ul>\n            <li>2024 company achievements</li>\n            <li>Employee spotlights</li>\n            <li>Q4 milestones</li>\n            <li>2025 roadmap preview</li>\n        </ul>\n        <p>Read the full newsletter online.</p>\n        <p>Happy Holidays!<br>Newsletter Team</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Newsletter Team",
+          "email": "newsletter@company.com",
+          "time": "Dec 18 2024 12:00",
+          "avatar": "NL",
+          "subject": "December Newsletter - Year in Review",
+          "content": "Check out our year-end newsletter featuring 2024 achievements, employee spotlights, Q4 milestones, and 2025 roadmap preview."
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "sender": "David Kim",
+      "time": "Dec 15",
+      "subject": "Code Review Request - Feature Branch",
+      "preview": "Hey Robert, could you review my pull request for the new authentication feature?",
+      "tag": "Dev",
+      "read": false,
+      "avatar": "/demo/images/avatar/avatar-square-m-1.jpg",
+      "selected": false,
+      "email": "david.kim@dev.com",
+      "starred": false,
+      "important": true,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Updates",
+      "fullContent": "<p>Hey Robert,</p>\n        <p>I've completed the new authentication feature and need your code review before merging.</p>\n        <p>Changes include:</p>\n        <ul>\n            <li>OAuth 2.0 implementation</li>\n            <li>Two-factor authentication</li>\n            <li>Session management improvements</li>\n            <li>Security audit fixes</li>\n        </ul>\n        <p>PR #1234 is ready for your review. All tests are passing.</p>\n        <p>Thanks,<br>David Kim<br>Senior Developer</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "David Kim",
+          "email": "david.kim@dev.com",
+          "time": "Dec 15 2024 16:00",
+          "avatar": "/demo/images/avatar/avatar-square-m-1.jpg",
+          "subject": "Code Review Request - Feature Branch",
+          "content": "Hey Robert, I've completed the new authentication feature with OAuth 2.0, 2FA, and security fixes. PR #1234 is ready for review. All tests passing."
+        },
+        {
+          "id": 2,
+          "sender": "Robert Fox",
+          "email": "robert.fox@company.com",
+          "time": "Dec 15 2024 17:30",
+          "avatar": "/demo/images/avatar/avatar-square-m-2.jpg",
+          "subject": "Re: Code Review Request - Feature Branch",
+          "content": "Thanks David! I'll review the PR first thing tomorrow morning. Quick question - did you update the API documentation for the new auth endpoints?",
+          "isReply": true
+        },
+        {
+          "id": 3,
+          "sender": "David Kim",
+          "email": "david.kim@dev.com",
+          "time": "Dec 15 2024 17:45",
+          "avatar": "/demo/images/avatar/avatar-square-m-1.jpg",
+          "subject": "Re: Code Review Request - Feature Branch",
+          "content": "Good catch! Yes, I've updated all the API docs and added example requests. You'll find them in the /docs folder of the PR."
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "sender": "Amanda Foster",
+      "time": "Dec 12",
+      "subject": "Partnership Opportunity - DataSync Inc",
+      "preview": "DataSync Inc is interested in a strategic partnership. They're proposing integration with our platform.",
+      "tag": "Business",
+      "read": true,
+      "avatar": null,
+      "selected": false,
+      "email": "amanda.foster@bd.com",
+      "starred": true,
+      "important": false,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Social",
+      "fullContent": "<p>Hi Robert,</p>\n        <p>Great news! DataSync Inc has reached out about a strategic partnership opportunity.</p>\n        <p>Partnership proposal:</p>\n        <ul>\n            <li>API integration between platforms</li>\n            <li>Shared customer base access</li>\n            <li>Co-marketing initiatives</li>\n            <li>Revenue sharing model</li>\n        </ul>\n        <p>They're eager to move forward. Should we schedule an initial meeting?</p>\n        <p>Best regards,<br>Amanda Foster<br>Business Development</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Amanda Foster",
+          "email": "amanda.foster@bd.com",
+          "time": "Dec 12 2024 10:00",
+          "avatar": null,
+          "subject": "Partnership Opportunity - DataSync Inc",
+          "content": "DataSync Inc is interested in strategic partnership with API integration, shared customers, co-marketing, and revenue sharing. Should we schedule a meeting?"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "sender": "Automated System",
+      "time": "Dec 10",
+      "subject": "Monthly Report Generated",
+      "preview": "Your monthly analytics report is ready. View detailed insights and metrics.",
+      "tag": "Report",
+      "read": true,
+      "avatar": "AS",
+      "selected": false,
+      "email": "noreply@system.com",
+      "starred": false,
+      "important": false,
+      "archived": true,
+      "spam": false,
+      "deleted": false,
+      "category": "Updates",
+      "fullContent": "<p>Monthly Report - December 2024</p>\n        <p>Your automated monthly report has been generated with the following metrics:</p>\n        <ul>\n            <li>Active users: 15,234 (+8%)</li>\n            <li>Revenue: $1.2M (+12%)</li>\n            <li>Customer satisfaction: 4.7/5</li>\n            <li>Support tickets resolved: 98%</li>\n        </ul>\n        <p>View full report in dashboard.</p>\n        <p>This is an automated message.</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Automated System",
+          "email": "noreply@system.com",
+          "time": "Dec 10 2024 00:00",
+          "avatar": "AS",
+          "subject": "Monthly Report Generated",
+          "content": "December report ready: Active users 15,234 (+8%), Revenue $1.2M (+12%), Satisfaction 4.7/5, Tickets resolved 98%."
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "sender": "Rachel Green",
+      "time": "Dec 08",
+      "subject": "Training Session - New CRM System",
+      "preview": "Reminder: CRM training session tomorrow at 10 AM. Please bring your laptop.",
+      "tag": "Training",
+      "read": false,
+      "avatar": null,
+      "selected": false,
+      "email": "rachel.green@training.com",
+      "starred": false,
+      "important": false,
+      "archived": false,
+      "spam": false,
+      "deleted": false,
+      "category": "Forms",
+      "fullContent": "<p>Hi Team,</p>\n        <p>This is a reminder about tomorrow's CRM training session.</p>\n        <p>Session details:</p>\n        <ul>\n            <li>Time: 10:00 AM - 12:00 PM</li>\n            <li>Location: Conference Room A</li>\n            <li>Topic: New CRM features and workflows</li>\n            <li>Materials: Please bring your laptop</li>\n        </ul>\n        <p>Looking forward to seeing everyone there!</p>\n        <p>Rachel Green<br>Training Coordinator</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Rachel Green",
+          "email": "rachel.green@training.com",
+          "time": "Dec 08 2024 14:00",
+          "avatar": null,
+          "subject": "Training Session - New CRM System",
+          "content": "Reminder: CRM training tomorrow 10 AM - 12 PM in Conference Room A. Please bring your laptop for hands-on exercises."
+        },
+        {
+          "id": 2,
+          "sender": "Robert Fox",
+          "email": "robert.fox@company.com",
+          "time": "Dec 08 2024 15:00",
+          "avatar": "/demo/images/avatar/avatar-square-m-2.jpg",
+          "subject": "Re: Training Session - New CRM System",
+          "content": "Thanks for the reminder, Rachel. Will the session be recorded for team members who can't attend?",
+          "isReply": true
+        },
+        {
+          "id": 3,
+          "sender": "Rachel Green",
+          "email": "rachel.green@training.com",
+          "time": "Dec 08 2024 15:30",
+          "avatar": null,
+          "subject": "Re: Training Session - New CRM System",
+          "content": "Yes, we'll record the session and share it along with the training materials. The recording will be available by end of day tomorrow."
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "sender": "Spam Sender",
+      "time": "Dec 05",
+      "subject": "You've Won $1,000,000!!!",
+      "preview": "Congratulations! You've been selected as our grand prize winner. Claim now!",
+      "tag": "Spam",
+      "read": false,
+      "avatar": null,
+      "selected": false,
+      "email": "winner@suspicious.com",
+      "starred": false,
+      "important": false,
+      "archived": false,
+      "spam": true,
+      "deleted": false,
+      "category": "Social",
+      "fullContent": "<p>CONGRATULATIONS!</p>\n        <p>You've been randomly selected as our GRAND PRIZE WINNER!</p>\n        <p>Your prizes:</p>\n        <ul>\n            <li>$1,000,000 cash prize</li>\n            <li>Luxury car</li>\n            <li>Dream vacation</li>\n        </ul>\n        <p>Click here to claim immediately!</p>\n        <p>This offer expires in 24 hours!</p>",
+      "thread": [
+        {
+          "id": 1,
+          "sender": "Spam Sender",
+          "email": "winner@suspicious.com",
+          "time": "Dec 05 2024 03:00",
+          "avatar": null,
+          "subject": "You've Won $1,000,000!!!",
+          "content": "Congratulations! You've won $1,000,000, luxury car, and dream vacation. Click to claim now!"
+        }
+      ]
+    }
+  ],
+  "menuItems": [
+    { "label": "Inbox", "count": null, "icon": "pi pi-inbox" },
+    { "label": "Starred", "count": null, "icon": "pi pi-star" },
+    { "label": "Important", "count": null, "icon": "pi pi-bookmark" },
+    { "label": "Sent", "count": null, "icon": "pi pi-send" },
+    { "label": "Archived", "count": null, "icon": "pi pi-book" },
+    { "label": "Spam", "count": null, "icon": "pi pi-ban" },
+    { "label": "Trash", "count": null, "icon": "pi pi-trash" }
+  ],
+  "categoryItems": [
+    { "label": "Social", "count": null, "icon": "pi pi-users" },
+    { "label": "Updates", "count": null, "icon": "pi pi-sync" },
+    { "label": "Forms", "count": null, "icon": "pi pi-file-edit" }
+  ],
+  "currentUser": {
+    "id": 1,
+    "name": "Robert Fox",
+    "email": "robert.fox@company.com",
+    "avatar": "/demo/images/avatar/avatar-square-m-2.jpg"
+  },
+  "userData": {
+    "1": {
+      "id": 1,
+      "name": "Robert Fox",
+      "email": "robert.fox@company.com",
+      "avatar": "/demo/images/avatar/avatar-square-m-2.jpg",
+      "phone": "+1 (555) 123-4567",
+      "department": "Engineering",
+      "position": "Senior Developer"
+    }
+  }
+}

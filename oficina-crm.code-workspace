@@ -7,6 +7,10 @@
     {
       "name": "Angular",
       "path": "frontend-angular"
+    },
+    {
+      "name": "Ultima",
+      "path": "frontend-ultima"
     }
   ],
   "settings": {}
