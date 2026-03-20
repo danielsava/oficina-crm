@@ -66,21 +66,30 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - **PrimeNG Components**: Always prefer using PrimeNG components (e.g., `p-button`, `p-card`, `p-table`) over building custom ones from scratch, to maintain visual consistency and accessibility.
 - **Form Controls**: Use PrimeNG form inputs (`p-inputtext`, `p-dropdown`, `p-checkbox`) seamlessly integrated with Angular Reactive Forms (`formControlName`).
 - **Icons**: Exclusively use `primeicons` (`pi pi-icon-name`) instead of importing external icon libraries (like FontAwesome) unless specifically requested.
-- **Template Layout**: When creating new full pages, ensure they respect the template's routing structure and are placed appropriately within `src/app/pages/` or the relevant feature directories. Any new global layout components must reside in `src/app/layout/`.
+- **Template Layout**: When creating new business domain modules, ensure they respect the template's routing structure and are placed appropriately within `src/app/modules/`. Any new global layout components must reside in `src/app/core/layout/` or `src/app/layout/`.
 
+
+## Project Architecture (Core, Shared, Modules)
+
+The application architecture is divided into three main pillars:
+1. `core/`: Singleton services, guards, interceptors, global layout, and application-wide configurations.
+2. `shared/`: Highly reusable, "dumb" UI components, directives, and pipes that do not belong to a specific business domain.
+3. `modules/`: The business domains, containing the actual features and logic of the application.
 
 ## Domain Module Structure & Naming Conventions
 
-When generating or refactoring domain components inside \src/app/pages/\ (e.g., a \cliente\ module), strictly follow this scaffolding and naming convention:
+When generating or refactoring domain components inside `src/app/modules/` (e.g., a `cliente` module), strictly follow this scaffolding and naming convention:
 
 - **Folder Hierarchy**:
-  - \pages/{domain}/list/\: Contains the main data presentation component. File: \{domain}-table.component.ts\.
-  - \pages/{domain}/edit/\: Contains the creation/edition form component. File: \{domain}-form.component.ts\.
-  - \pages/{domain}/{domain}.service.ts\: The Angular Service responsible for API communication (Quarkus).
-  - \pages/{domain}/{domain}.routes.ts\: The lazy-loaded route definitions for this domain.
+  - `modules/{domain}/list/`: Contains the main data presentation component. File: `{domain}-table.component.ts`.
+  - `modules/{domain}/edit/`: Contains the creation/edition form component. File: `{domain}-form.component.ts`.
+  - `modules/{domain}/{domain}.model.ts`: The data model / interfaces for this domain.
+  - `modules/{domain}/{domain}.service.ts`: The Angular Service responsible for API communication (Quarkus).
+  - `modules/{domain}/{domain}.routes.ts`: The lazy-loaded route definitions for this domain.
 
 - **Class Naming**:
-  - Table Component: \{Domain}TableComponent\ (e.g., \ClienteTableComponent\)
-  - Form Component: \{Domain}FormComponent\ (e.g., \ClienteFormComponent\)
-  - Service: \{Domain}Service\ (e.g., \ClienteService\)
-  - Routes: \{Domain}Route\ (e.g., exported as export const ClienteRoute: Routes = []\)
+  - Table Component: `{Domain}TableComponent` (e.g., `ClienteTableComponent`)
+  - Form Component: `{Domain}FormComponent` (e.g., `ClienteFormComponent`)
+  - Model: Exported interfaces/types (e.g., `export interface Cliente { ... }`)
+  - Service: `{Domain}Service` (e.g., `ClienteService`)
+  - Routes: `{Domain}Route` (e.g., exported as `export const ClienteRoute: Routes = []`)
