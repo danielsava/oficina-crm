@@ -18,10 +18,24 @@ import { AppMenuitem } from './app.menuitem';
     </ul> `
 })
 export class AppMenu {
+
     el = inject(ElementRef);
 
     @ViewChild('menuContainer') menuContainer!: ElementRef;
+
     model: any[] = [
+        {
+            label: 'Gerenciamento de Acesso',
+            icon: 'pi pi-fw pi-shield',
+            path: '/iam',
+            items: [
+                {
+                    label: 'Usuários',
+                    icon: 'pi pi-fw pi-users',
+                    routerLink: ['/iam/usuarios/list']
+                }
+            ]
+        },
         {
             label: 'Dashboards',
             icon: 'pi pi-home',

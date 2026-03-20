@@ -6,7 +6,11 @@ export const appRoutes: Routes = [
         path: '',
         component: AppLayout,
         children: [
-            { path: '', redirectTo: '/dashboards', pathMatch: 'full' },
+            {
+                path: '',
+                redirectTo: '/dashboards',
+                pathMatch: 'full'
+            },
             {
                 path: 'dashboards',
                 data: { breadcrumb: 'Analytics Dashboard' },
@@ -46,10 +50,18 @@ export const appRoutes: Routes = [
                 path: 'profile',
                 data: { breadcrumb: 'User Management' },
                 loadChildren: () => import('@/app/pages/usermanagement/usermanagement.routes')
+            },
+            {
+                path: 'iam',
+                data: { breadcrumb: 'Gerenciamento de Acesso' },
+                loadChildren: () => import('@/app/modules/iam/iam.routes').then((m) => m.IamRoutes)
             }
         ]
     },
-    { path: 'auth', loadChildren: () => import('@/app/pages/auth/auth.routes') },
+    {
+        path: 'auth',
+        loadChildren: () => import('@/app/pages/auth/auth.routes')
+    },
     {
         path: 'landing',
         loadComponent: () => import('@/app/pages/landing/landing').then((c) => c.Landing)
@@ -58,5 +70,8 @@ export const appRoutes: Routes = [
         path: 'notfound',
         loadComponent: () => import('@/app/pages/notfound/notfound').then((c) => c.Notfound)
     },
-    { path: '**', redirectTo: '/notfound' }
+    {
+        path: '**',
+        redirectTo: '/notfound'
+    }
 ];
