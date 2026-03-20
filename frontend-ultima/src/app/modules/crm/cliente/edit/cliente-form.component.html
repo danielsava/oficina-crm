@@ -1,0 +1,62 @@
+<p-card styleClass="p-0">
+    <p-toolbar styleClass="mb-4">
+        <ng-template #left>
+            <h2 class="text-2xl font-semibold m-0">
+                @if (clienteId()) { Editar Cliente }
+                @else { Novo Cliente }
+            </h2>
+        </ng-template>
+        <ng-template #right>
+            <p-button routerLink="/clientes" label="Voltar" icon="pi pi-arrow-left" severity="secondary" [text]="true" />
+        </ng-template>
+    </p-toolbar>
+
+    @if (carregando()) {
+        <div class="flex justify-center p-4">
+            <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        </div>
+    } @else {
+        <form [formGroup]="form" (ngSubmit)="salvar()" class="flex flex-col gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-2">
+                    <label for="nome" class="font-medium">Nome</label>
+                    <input pInputText id="nome" formControlName="nome" class="w-full" placeholder="Ex: João da Silva" />
+                    @if (form.controls.nome.invalid && form.controls.nome.touched) {
+                        <small class="text-red-500">Nome é obrigatório e deve ter no mínimo 3 caracteres.</small>
+                    }
+                </div>
+                
+                <div class="flex flex-col gap-2">
+                    <label for="email" class="font-medium">Email</label>
+                    <input pInputText id="email" formControlName="email" class="w-full" placeholder="Ex: joao@email.com" />
+                    @if (form.controls.email.invalid && form.controls.email.touched) {
+                        <small class="text-red-500">Insira um email válido.</small>
+                    }
+                </div>
+                
+                <div class="flex flex-col gap-2">
+                    <label for="documento" class="font-medium">Documento</label>
+                    <input pInputText id="documento" formControlName="documento" class="w-full" placeholder="CPF/CNPJ" />
+                    @if (form.controls.documento.invalid && form.controls.documento.touched) {
+                        <small class="text-red-500">Documento é obrigatório.</small>
+                    }
+                </div>
+                
+                <div class="flex flex-col gap-2">
+                    <label for="telefone" class="font-medium">Telefone</label>
+                    <input pInputText id="telefone" formControlName="telefone" class="w-full" placeholder="(00) 00000-0000" />
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-4">
+                <p-button 
+                    type="submit" 
+                    [label]="salvando() ? 'Salvando...' : 'Salvar'" 
+                    icon="pi pi-check" 
+                    [loading]="salvando()" 
+                    [disabled]="form.invalid || salvando()" 
+                />
+            </div>
+        </form>
+    }
+</p-card>
