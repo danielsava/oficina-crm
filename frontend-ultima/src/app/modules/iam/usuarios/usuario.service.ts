@@ -1,4 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { Usuario } from './usuario.model';
 
 @Injectable({
@@ -6,96 +8,36 @@ import { Usuario } from './usuario.model';
 })
 export class UsuarioService {
 
-    private readonly initialUsers: Usuario[] = [
-        {
-            id: 1,
-            name: 'Brook Simmons',
-            login: 'brook.simmons',
-            email: 'brook@empresa.com',
-            avatar: '/demo/images/avatar/avatar-f-3.png',
-            status: 'Active'
-        },
-        {
-            id: 2,
-            name: 'Dianne Russell',
-            login: 'dianne.russell',
-            email: 'dianne@empresa.com',
-            avatar: '/demo/images/avatar/avatar-f-5.png',
-            status: 'Deactive'
-        },
-        {
-            id: 3,
-            name: 'Amy Elsner',
-            login: 'amy.elsner',
-            email: 'amy@empresa.com',
-            avatar: '/demo/images/avatar/amyelsner.png',
-            status: 'Active'
-        },
-        {
-            id: 4,
-            name: 'Guy Hawkins',
-            login: 'guy.hawkins',
-            email: 'guy@empresa.com',
-            avatar: '/demo/images/avatar/avatar-m-2.png',
-            status: 'Active'
-        },
-        {
-            id: 5,
-            name: 'Darrell Steward',
-            login: 'darrell.steward',
-            email: 'darrell@empresa.com',
-            avatar: '/demo/images/avatar/avatar-m-4.png',
-            status: 'Deactive'
-        },
-        {
-            id: 6,
-            name: 'Onyama Limba',
-            login: 'onyama.limba',
-            email: 'onyama@empresa.com',
-            avatar: '/demo/images/avatar/onyamalimba.png',
-            status: 'Deactive'
-        },
-        {
-            id: 7,
-            name: 'Arlene McCoy',
-            login: 'arlene.mccoy',
-            email: 'arlene@empresa.com',
-            avatar: '/demo/images/avatar/avatar-f-7.png',
-            status: 'Deactive'
-        },
-        {
-            id: 8,
-            name: 'Annette Black',
-            login: 'annette.black',
-            email: 'annette@empresa.com',
-            avatar: '/demo/images/avatar/annafali.png',
-            status: 'Active'
-        }
-    ];
+    private http = inject(HttpClient);
 
-    private usersSignal = signal<Usuario[]>(this.initialUsers);
+    private apiUrl = 'http://localhost:8080/api/usuarios';
+
+    private usersSignal = signal<Usuario[]>([]);
 
     // Readonly signal for components to consume
     public users = this.usersSignal.asReadonly();
 
-    public getUserById(id: number): Usuario | undefined {
-        return this.usersSignal().find(u => u.id === id);
+    public loadUsers(): void {
+        this.http.get<Usuario[]>(this.apiUrl).subscribe({
+            next: (data) => this.usersSignal.set(data),
+            error: (err) => console.error('Erro ao buscar usuários', err)
+        });
     }
 
-    public addUser(user: Omit<Usuario, 'id'>) {
-        const id = Math.max(0, ...this.usersSignal().map(u => u.id)) + 1;
-        this.usersSignal.update(users => [...users, { ...user, id }]);
+    public getUserById(id: number): Observable<Usuario> {
+        return this.http.get<Usuario>(`${this.apiUrl}/${id}`);
     }
 
-    public updateUser(updatedUser: Usuario) {
-        this.usersSignal.update(users =>
-            users.map(u => u.id === updatedUser.id ? updatedUser : u)
-        );
-        // Refresh the signal array reference explicitly
-        this.usersSignal.set([...this.usersSignal()]);
+    public addUser(user: Omit<Usuario, 'id'>): Observable<Usuario> {
+        return this.http.post<Usuario>(this.apiUrl, user);
     }
 
-    public deleteUser(id: number) {
-        this.usersSignal.update(users => users.filter(u => u.id !== id));
+    public updateUser(user: Usuario): Observable<Usuario> {
+        return this.http.put<Usuario>(`${this.apiUrl}/${user.id}`, user);
     }
+
+    public deleteUser(id: number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    }
+
 }

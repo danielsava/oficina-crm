@@ -91,10 +91,14 @@ export class UsuarioFormComponent implements OnInit {
         if (idParam && idParam !== 'new') {
             this.isEditMode = true;
             this.currentId = Number(idParam);
-            const user = this.usuarioService.getUserById(this.currentId);
-            if (user) {
-                this.userForm.patchValue(user);
-            }
+            this.usuarioService.getUserById(this.currentId).subscribe({
+                next: (user) => {
+                    if (user) {
+                        this.userForm.patchValue(user);
+                    }
+                },
+                error: (err) => console.error('Erro ao buscar usuário', err)
+            });
         }
 
     }
@@ -118,15 +122,19 @@ export class UsuarioFormComponent implements OnInit {
                 this.usuarioService.updateUser({
                     ...this.userForm.value,
                     id: this.currentId
+                }).subscribe({
+                    next: () => this.router.navigate(['/iam/usuarios/list']),
+                    error: (err) => console.error('Erro ao editar usuário', err)
                 });
 
             } else {
 
-                this.usuarioService.addUser(this.userForm.value);
+                this.usuarioService.addUser(this.userForm.value).subscribe({
+                    next: () => this.router.navigate(['/iam/usuarios/list']),
+                    error: (err) => console.error('Erro ao criar usuário', err)
+                });
 
             }
-
-            this.router.navigate(['/iam/usuarios/list']);
 
         }
 

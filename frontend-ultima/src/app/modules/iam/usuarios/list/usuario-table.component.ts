@@ -1,4 +1,4 @@
-import { Component, computed, signal, ViewChild, inject } from '@angular/core';
+import { Component, computed, signal, ViewChild, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -110,7 +110,8 @@ import { Usuario } from '../usuario.model';
         </div>
     `
 })
-export class UsuarioTableComponent {
+export class UsuarioTableComponent implements OnInit {
+
     @ViewChild('dt') dt!: Table;
     @ViewChild('actionMenu') actionMenu!: Menu;
 
@@ -122,6 +123,10 @@ export class UsuarioTableComponent {
     searchValue = '';
     first = 0;
     selectedUserId = signal<number | null>(null);
+
+    ngOnInit() {
+        this.usuarioService.loadUsers();
+    }
 
     menuItems = computed(() => {
         const userId = this.selectedUserId();
@@ -176,7 +181,10 @@ export class UsuarioTableComponent {
                 severity: 'danger'
             },
             accept: () => {
-                this.usuarioService.deleteUser(userId);
+                this.usuarioService.deleteUser(userId).subscribe({
+                    next: () => this.usuarioService.loadUsers(),
+                    error: (err) => console.error('Erro ao excluir usuário', err)
+                });
             }
         });
     }
