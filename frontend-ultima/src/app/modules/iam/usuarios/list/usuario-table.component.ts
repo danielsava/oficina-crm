@@ -1,5 +1,5 @@
-import { Component, computed, signal, ViewChild, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, signal, ViewChild, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
@@ -16,8 +16,8 @@ import { Usuario } from '../usuario.model';
 
 @Component({
     selector: 'app-usuario-table',
-    standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, InputTextModule, IconFieldModule, InputIconModule, TagModule, MenuModule, ConfirmDialogModule],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [CommonModule, NgOptimizedImage, FormsModule, TableModule, ButtonModule, InputTextModule, IconFieldModule, InputIconModule, TagModule, MenuModule, ConfirmDialogModule],
     providers: [ConfirmationService],
     template: `
         <div class="flex flex-col bg-surface-0 dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-700 overflow-hidden">
@@ -81,7 +81,7 @@ import { Usuario } from '../usuario.model';
                             </td>
                             <td>
                                 <div class="flex items-center gap-2">
-                                    <img [src]="user.avatar" alt="" class="w-8 h-8 rounded-full" />
+                                    <img [ngSrc]="user.avatar" alt="" width="32" height="32" class="rounded-full" />
                                     <span class="text-surface-950 dark:text-surface-0 text-sm font-medium leading-tight">{{ user.name }}</span>
                                 </div>
                             </td>

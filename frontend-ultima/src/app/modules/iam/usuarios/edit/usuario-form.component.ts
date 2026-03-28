@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,7 +10,7 @@ import { UsuarioService } from '../usuario.service';
 
 @Component({
     selector: 'app-usuario-form',
-    standalone: true,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, FileUploadModule],
     template: `
         <div class="flex flex-col xl:flex-row h-full card overflow-hidden !p-0">
