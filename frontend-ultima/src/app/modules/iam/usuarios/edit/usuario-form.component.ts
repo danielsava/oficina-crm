@@ -8,15 +8,18 @@ import { SelectModule } from 'primeng/select';
 import { FileUploadModule } from 'primeng/fileupload';
 import { UsuarioService } from '../usuario.service';
 import {Usuario} from "@/app/modules/iam/usuarios/usuario.model";
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
     selector: 'app-usuario-form',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, FileUploadModule],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, FileUploadModule, IconFieldModule, InputIconModule],
     template: `
         <div class="flex flex-col xl:flex-row h-full card overflow-hidden p-0!">
 
-            <div class="px-6 py-5 dark:border-surface-700">
+            <div class="px-6 py-5 dark:border-surface-700 flex items-center gap-4">
+                <i class="pi pi-user-edit text-surface-950 dark:text-surface-0 text-xl"></i>
                 <h1 class="text-surface-950 dark:text-surface-0 text-xl font-medium leading-7">{{ isEditMode ? 'Editar Usuário' : 'Novo Usuário' }}</h1>
             </div>
 
@@ -59,7 +62,10 @@ import {Usuario} from "@/app/modules/iam/usuarios/usuario.model";
                         </div>
 
                         <div class="flex-1 w-full flex flex-col gap-2">
-                            <input pInputText id="name" formControlName="name" type="text" placeholder="" class="w-full" />
+                            <p-iconfield iconPosition="left" class="w-full">
+                                <p-inputicon class="pi pi-user" />
+                                <input pInputText id="name" formControlName="name" type="text" placeholder="Nome completo" class="w-full" />
+                            </p-iconfield>
                         </div>
                     </div>
 
@@ -73,7 +79,10 @@ import {Usuario} from "@/app/modules/iam/usuarios/usuario.model";
                         </div>
 
                         <div class="flex-1 w-full flex flex-col gap-2">
-                            <input pInputText id="login" formControlName="login" type="text" placeholder="" class="w-full" />
+                            <p-iconfield iconPosition="left" class="w-full">
+                                <p-inputicon class="pi pi-user" />
+                                <input pInputText id="login" formControlName="login" type="text" placeholder="Login" class="w-full" />
+                            </p-iconfield>
                         </div>
                     </div>
 
@@ -87,17 +96,12 @@ import {Usuario} from "@/app/modules/iam/usuarios/usuario.model";
                         </div>
 
                         <div class="flex-1 w-full flex flex-col gap-2">
-                            <input pInputText id="email" formControlName="email" type="email" placeholder="" class="w-full" />
+                            <p-iconfield iconPosition="left" class="w-full">
+                                <p-inputicon class="pi pi-envelope" />
+                                <input pInputText id="email" formControlName="email" type="email" placeholder="E-mail" class="w-full" />
+                            </p-iconfield>
                         </div>
                     </div>
-
-                    <!-- menu inferior -->
-                    <!--div class="self-stretch h-0 border-t border-dashed border-surface-200 dark:border-surface-700 mt-4"></div>
-
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-start justify-end gap-3 sm:gap-4 w-full sm:w-auto mt-4">
-                        <p-button label="Limpar" severity="secondary" [outlined]="true" (onClick)="cancel()" styleClass="cursor-pointer !rounded-xl w-full sm:w-auto" />
-                        <p-button [label]="isEditMode ? 'Salvar' : 'Incluir'" type="submit" [disabled]="userForm.invalid" styleClass="cursor-pointer !rounded-xl w-full sm:w-auto" />
-                    </div-->
                 </div>
             </div>
         </div>
@@ -106,8 +110,8 @@ import {Usuario} from "@/app/modules/iam/usuarios/usuario.model";
             <div class="flex-1 self-stretch xl:rounded-tr-3xl xl:rounded-br-3xl flex flex-col overflow-hidden">
                 <div class="self-stretch p-4 sm:p-6 xl:p-8 flex flex-col items-end gap-6 pt-5! pb-5!">
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-start justify-end gap-3 sm:gap-4 w-full sm:w-auto">
-                        <p-button label="Limpar" severity="secondary" [outlined]="true" (onClick)="cancel()" styleClass="cursor-pointer !rounded-xl w-full sm:w-auto" />
-                        <p-button [label]="isEditMode ? 'Salvar' : 'Incluir'" type="submit" [disabled]="userForm.invalid" styleClass="cursor-pointer !rounded-xl w-full sm:w-auto" />
+                        <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true" (onClick)="cancel()" styleClass="cursor-pointer !rounded-xl w-full sm:w-36" />
+                        <p-button [label]="isEditMode ? 'Salvar' : 'Incluir'" [icon]="isEditMode ? 'pi pi-check' : 'pi pi-save'" (click)="saveUser()" [disabled]="userForm.invalid" styleClass="cursor-pointer !rounded-xl w-full sm:w-36" />
                     </div>
                 </div>
             </div>
