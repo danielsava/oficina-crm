@@ -119,7 +119,9 @@ import { InputIconModule } from 'primeng/inputicon';
     `
 })
 export class UsuarioFormComponent implements OnInit {
-    @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
+    @ViewChild('fileInput')
+    fileInput!: ElementRef<HTMLInputElement>;
 
     private fb = inject(FormBuilder);
 
