@@ -10,6 +10,4 @@ export interface Usuario {
 
     avatar: string
 
-    status: string
-
 }
