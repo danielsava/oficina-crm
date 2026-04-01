@@ -44,10 +44,10 @@
 
     <dependencies>
 
-        <!-- RestEasy Reactive -->
+        <!-- RestEasy Reactive Jackson -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest</artifactId>
+            <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
 
         <dependency>
@@ -55,21 +55,23 @@
             <artifactId>quarkus-hibernate-orm-panache</artifactId>
         </dependency>
 
+        <!-- Banco -->
         <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
+        </dependency>
+
+        <!--dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
         </dependency>
     
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-arc</artifactId>
-        </dependency>
-        
-        <!--dependency>
-            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>

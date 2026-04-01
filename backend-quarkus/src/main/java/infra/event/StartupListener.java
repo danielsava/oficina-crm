@@ -1,4 +1,4 @@
-package base.event;
+package infra.event;
 
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
