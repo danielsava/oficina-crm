@@ -1,10 +1,9 @@
 package modules.iam.usuario;
 
-
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Response;
+import java.util.List;
 
 /**
  *
@@ -31,10 +30,58 @@ import jakarta.ws.rs.core.MediaType;
 @Path("/usuario")
 public class UsuarioController {
 
+
+    @Inject
+    UsuarioService usuarioService;
+
+
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String hello() {
-        return "Hello from Quarkus REST";
+    public List<Usuario> listar() {
+
+        return usuarioService.listar();
+    }
+
+    @GET
+    @Path("/{id}")
+    public Usuario buscarPorId(@PathParam("id") Long id) {
+
+        Usuario usuario = usuarioService.buscarPorId(id);
+
+        if (usuario == null)
+            throw new NotFoundException("Usuário não encontrado"); //Response.status(Response.Status.NOT_FOUND).build();
+
+        return usuario; // Response.ok(usuario).build();
+    }
+
+    @POST
+    public Usuario inserir(Usuario usuario) {
+
+        return usuarioService.inserir(usuario);
+
+        //return Response.status(Response.Status.CREATED).entity(novoUsuario).build();
+    }
+
+    @PUT
+    @Path("/{id}")
+    public Usuario atualizar(@PathParam("id") Long id, Usuario usuarioAtualizado) {
+
+        Usuario usuario = usuarioService.atualizar(id, usuarioAtualizado);
+
+        if (usuario == null)
+            throw new NotFoundException("Usuário não encontrado"); // return Response.status(Response.Status.NOT_FOUND).build();
+
+        return usuario; //Response.ok(usuario).build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    public void delete(@PathParam("id") Long id) {
+
+        boolean deleted = usuarioService.excluir(id);
+
+        if (!deleted)
+            throw new NotFoundException("Usuário não encontrado"); // return Response.status(Response.Status.NOT_FOUND).build();
+
     }
 
 }

@@ -64,7 +64,7 @@ import { InputIconModule } from 'primeng/inputicon';
                         <div class="flex-1 w-full flex flex-col gap-2">
                             <p-iconfield iconPosition="left" class="w-full">
                                 <p-inputicon class="pi pi-user" />
-                                <input pInputText id="name" formControlName="name" type="text" placeholder="Nome completo" class="w-full" />
+                                <input pInputText id="nome" formControlName="nome" type="text" placeholder="Nome completo" class="w-full" />
                             </p-iconfield>
                         </div>
                     </div>
@@ -158,7 +158,7 @@ export class UsuarioFormComponent implements OnInit {
 
     private initForm() {
         this.userForm = this.fb.group({
-            name: ['', Validators.required],
+            nome: ['', Validators.required],
             login: ['', Validators.required],
             email: ['', [Validators.required, Validators.email]],
             avatar: ['/demo/images/avatar/avatar-f-1.png'],
