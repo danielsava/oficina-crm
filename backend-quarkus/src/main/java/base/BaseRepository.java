@@ -1,7 +1,7 @@
 package base;
 
 
-public abstract class BaseRepository<E extends BaseEntity>  {
+public abstract class BaseRepository<E extends BaseEntity> {
 
 
 
