@@ -1,9 +1,11 @@
 package modules.iam.usuario;
 
+import common.BaseController;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
-
-import java.util.List;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 
 /**
  *
@@ -28,38 +30,19 @@ import java.util.List;
  */
 
 @Path("/usuario")
-public class UsuarioController {
+public class UsuarioController extends BaseController<Usuario> {
 
 
     @Inject
     UsuarioService usuarioService;
 
 
-    @GET
-    public List<Usuario> listar() {
+    @Inject
+    public UsuarioController(UsuarioService service) {
 
-        return usuarioService.listar();
+        super(service);
     }
 
-    @GET
-    @Path("/{id}")
-    public Usuario buscarPorId(@PathParam("id") Long id) {
-
-        Usuario usuario = usuarioService.consultarPorId(id);
-
-        if (usuario == null)
-            throw new NotFoundException("Usuário não encontrado"); //Response.status(Response.Status.NOT_FOUND).build();
-
-        return usuario; // Response.ok(usuario).build();
-    }
-
-    @POST
-    public Usuario inserir(Usuario usuario) {
-
-        return usuarioService.inserir(usuario);
-
-        //return Response.status(Response.Status.CREATED).entity(novoUsuario).build();
-    }
 
     @PUT
     @Path("/{id}")
@@ -71,17 +54,6 @@ public class UsuarioController {
             throw new NotFoundException("Usuário não encontrado"); // return Response.status(Response.Status.NOT_FOUND).build();
 
         return usuario; //Response.ok(usuario).build();
-    }
-
-    @DELETE
-    @Path("/{id}")
-    public void delete(@PathParam("id") Long id) {
-
-        boolean deleted = usuarioService.excluir(id);
-
-        if (!deleted)
-            throw new NotFoundException("Usuário não encontrado"); // return Response.status(Response.Status.NOT_FOUND).build();
-
     }
 
 }
