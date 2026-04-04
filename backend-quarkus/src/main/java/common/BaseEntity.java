@@ -16,16 +16,15 @@ public abstract class BaseEntity {
     @Column(name = "uuid")
     public String uuid;
 
+    @Version
+    @Column(name = "version")
+    public Long version;
+
     @Column(name = "created_at")
     public LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     public LocalDateTime updatedAt;
-
-    /*
-    @Version
-    @Column(name = "version")
-    public Long version; */
 
 
     @PrePersist
