@@ -19,7 +19,7 @@ public class UsuarioService {
         return usuarioRepository.listAll();
     }
 
-    public Usuario buscarPorId(Long id) {
+    public Usuario consultarPorId(Long id) {
 
         return usuarioRepository.findById(id);
     }

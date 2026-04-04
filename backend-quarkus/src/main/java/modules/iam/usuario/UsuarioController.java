@@ -2,7 +2,7 @@ package modules.iam.usuario;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Response;
+
 import java.util.List;
 
 /**
@@ -45,7 +45,7 @@ public class UsuarioController {
     @Path("/{id}")
     public Usuario buscarPorId(@PathParam("id") Long id) {
 
-        Usuario usuario = usuarioService.buscarPorId(id);
+        Usuario usuario = usuarioService.consultarPorId(id);
 
         if (usuario == null)
             throw new NotFoundException("Usuário não encontrado"); //Response.status(Response.Status.NOT_FOUND).build();

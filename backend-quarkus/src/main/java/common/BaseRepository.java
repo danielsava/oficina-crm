@@ -1,14 +1,30 @@
 package common;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
-import io.quarkus.panache.common.Sort;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public interface BaseRepository<E extends BaseEntity> extends PanacheRepository<E> {
 
+
+
+    default int inativarPorId(Long id) {
+
+        return this.update("status = ?1 where id = ?2", EnumStatusEntity.INATIVO, id);
+    }
+
+    default int inativarPorUUID(String uuid) {
+
+        return this.update("status = ?1 where uuid = ?2", EnumStatusEntity.INATIVO, uuid);
+    }
+
+
+    /*
+    default List<E> listarPaginado(int pageIndex, int pageSize, String sortBy, String sortDirection) {
+
+        return findAll(Sort.by(sortBy)
+                .direction(Sort.Direction.valueOf(sortDirection)))
+                .page(pageIndex, pageSize)
+                .list();
+    }
 
     default List<E> findByDynamicFilters(String name, Integer minRanking) {
 
@@ -27,40 +43,6 @@ public interface BaseRepository<E extends BaseEntity> extends PanacheRepository<
         }
 
         return find(query, params).list();
-    }
-
-
-    default List<E> listPaged(int pageIndex, int pageSize, String sortBy, String sortDirection) {
-
-        return findAll(Sort.by(sortBy)
-                .direction(Sort.Direction.valueOf(sortDirection)))
-                .page(pageIndex, pageSize)
-                .list();
-    }
-
-    default List<E> findBy(String atributo, Object valor) {
-
-        return find(atributo, valor).list();
-    }
-
-    default Long countBy(String atributo, Object valor) {
-
-        return find(atributo, valor).count();
-    }
-
-    default Long deleteBy(String atributo, Object valor) {
-
-        return delete(atributo, valor);
-    }
-
-    default int inactivateById(Long id) {
-
-        return this.update("status = ?1 where uuid = ?2", EnumStatusEntity.INATIVO, id);
-    }
-
-    default int inactivateByUuid(String uuid) {
-
-        return this.update("status = ?1 where uuid = ?2", EnumStatusEntity.INATIVO, uuid);
-    }
+    }*/
 
 }
