@@ -24,7 +24,7 @@ public abstract class BaseService<E extends BaseEntity> {
 
     public List<E> listarPor(String atributo, Object valor) {
 
-        return repository.find(atributo, valor).list();
+        return repository.list(atributo, valor);
     }
 
     public E buscarPor(String atributo, Object valor) {
@@ -79,7 +79,7 @@ public abstract class BaseService<E extends BaseEntity> {
     @Transactional
     public boolean excluirPorId(Long id) {
 
-        return excluirPor("id", id) > 0;
+        return excluirPor("id", id) > 0;  // repository.deleteById(id)
     }
 
     @Transactional

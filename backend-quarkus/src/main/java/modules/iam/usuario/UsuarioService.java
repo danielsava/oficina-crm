@@ -1,41 +1,26 @@
 package modules.iam.usuario;
 
+import common.BaseService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import java.util.List;
-
 @ApplicationScoped
-public class UsuarioService {
+public class UsuarioService extends BaseService<Usuario> {
+
 
 
     @Inject
-    UsuarioRepository usuarioRepository;
+    public UsuarioService(UsuarioRepository usuarioRepository) {
 
-
-    public List<Usuario> listar() {
-
-        return usuarioRepository.listAll();
+        super(usuarioRepository);
     }
 
-    public Usuario consultarPorId(Long id) {
-
-        return usuarioRepository.findById(id);
-    }
-
-    @Transactional
-    public Usuario inserir(Usuario usuario) {
-
-        usuarioRepository.persist(usuario);
-
-        return usuario;
-    }
 
     @Transactional
     public Usuario atualizar(Long id, Usuario usuarioAtualizado) {
 
-        Usuario usuario = usuarioRepository.findById(id);
+        Usuario usuario = repository.findById(id);
 
         if (usuario != null) {
             usuario.nome = usuarioAtualizado.nome;
@@ -45,12 +30,6 @@ public class UsuarioService {
         }
 
         return usuario;
-    }
-
-    @Transactional
-    public boolean excluir(Long id) {
-
-        return usuarioRepository.deleteById(id);
     }
 
 }
