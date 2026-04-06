@@ -9,7 +9,6 @@ import jakarta.transaction.Transactional;
 public class UsuarioService extends BaseService<Usuario> {
 
 
-
     @Inject
     public UsuarioService(UsuarioRepository usuarioRepository) {
 

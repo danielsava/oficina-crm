@@ -10,6 +10,12 @@ public abstract class BaseService<E extends BaseEntity> {
 
     protected final BaseRepository<E> repository;
 
+    /* Gambi por conta do Quarkus IoC Arc proxy com @ApplicationScoped */
+    public BaseService() {
+
+        this.repository = null;
+    }
+    
 
     protected BaseService(BaseRepository<E> repository) {
 
