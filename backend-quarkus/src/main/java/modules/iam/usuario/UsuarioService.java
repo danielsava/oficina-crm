@@ -4,9 +4,16 @@ import common.BaseService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import modules.iam.usuario.dto.UsuarioEditDTO;
+import modules.iam.usuario.dto.UsuarioMapper;
 
 @ApplicationScoped
 public class UsuarioService extends BaseService<Usuario> {
+
+
+    @Inject
+    UsuarioMapper mapper;
 
 
     @Inject
@@ -15,6 +22,15 @@ public class UsuarioService extends BaseService<Usuario> {
         super(usuarioRepository);
     }
 
+
+
+    @Transactional
+    public void inserir(@Valid UsuarioEditDTO usuarioEditDTO) {
+
+        Usuario usuario = this.mapper.toEntity(usuarioEditDTO);
+
+        repository.persist(usuario);
+    }
 
     @Transactional
     public Usuario atualizar(Long id, Usuario usuarioAtualizado) {

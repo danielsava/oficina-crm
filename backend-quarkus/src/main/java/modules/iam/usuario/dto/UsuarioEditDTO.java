@@ -1,20 +1,23 @@
 package modules.iam.usuario.dto;
 
-import common.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-@Entity
-@Table(name = "usuario")
-public class UsuarioEditDTO extends BaseEntity {
+public record UsuarioEditDTO (
 
-    public String nome;
+    @NotBlank(message = "Informe o nome")
+    String nome,
 
-    public String login;
+    @Size(min = 3, max = 50, message = "O tamanho do login deve estar entre 3 e 50 caracteres")
+    @NotBlank(message = "Informe o login")
+    String login,
 
-    public String email;
+    @Email
+    @NotBlank(message = "Informe o email")
+    String email,
 
-    public String avatar;
+    String avatar
 
-}
+) {  }

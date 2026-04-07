@@ -1,14 +1,14 @@
 package modules.iam.usuario.dto;
 
 
-public class UsuarioListDTO {
+public record UsuarioListDTO (
 
-    public String nome;
+    String nome,
 
-    public String login;
+    String login,
 
-    public String email;
+    String email,
 
-    public String avatar;
+    String avatar
 
-}
+) { }
