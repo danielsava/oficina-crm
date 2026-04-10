@@ -6,32 +6,19 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import modules.iam.usuario.dto.UsuarioEditDTO;
+import modules.iam.usuario.dto.UsuarioListDTO;
 import modules.iam.usuario.dto.UsuarioMapper;
 
 @ApplicationScoped
-public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO> {
+public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, UsuarioListDTO> {
 
 
+    @Inject
+    UsuarioRepository repository;
+
+    @Inject
     UsuarioMapper mapper;
 
-
-    public UsuarioService(
-            UsuarioRepository usuarioRepository,
-            UsuarioMapper mapper
-    ) {
-
-        super(usuarioRepository, mapper);
-    }
-
-
-
-    @Transactional
-    public void inserir(@Valid UsuarioEditDTO usuarioEditDTO) {
-
-        Usuario usuario = this.mapper.toEntity(usuarioEditDTO);
-
-        repository.persist(usuario);
-    }
 
     @Transactional
     public Usuario atualizar(Long id, Usuario usuarioAtualizado) {
@@ -47,5 +34,11 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO> {
 
         return usuario;
     }
+
+    public UsuarioRepository repository() { return this.repository; }
+
+    public UsuarioMapper mapper() { return this.mapper; }
+
+    public Class<UsuarioListDTO> listDTO() { return UsuarioListDTO.class; }
 
 }

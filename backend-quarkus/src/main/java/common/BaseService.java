@@ -2,49 +2,53 @@ package common;
 
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
-public abstract class BaseService<Entity extends BaseEntity, EditDTO> {
+public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
-    protected final BaseMapper<Entity, EditDTO> mapper;
+    public abstract BaseMapper<Entity, EditDTO> mapper();
 
-    protected final BaseRepository<Entity> repository;
+    public abstract BaseRepository<Entity> repository();
+
+    public abstract Class<ListDTO> listDTO();
 
 
 
-    /* Gambi por conta do Quarkus IoC Arc proxy com @ApplicationScoped */
-    public BaseService() {
-        this.repository = null;
-        this.mapper = null;
-    }
-    
+    public List<ListDTO> listarDTO() {
 
-    protected BaseService(
-            BaseRepository<Entity> repository,
-            BaseMapper<Entity, ?> mapper
-    ) {
-
-        this.repository = repository;
-
-        this.mapper = mapper;
+        return this.repository().find("status", EnumStatusEntity.ATIVO)
+                .project(listDTO())
+                .list();
     }
 
+
+    @Transactional
+    public void inserir(@Valid EditDTO editDTO) {
+
+        Entity e = this.mapper().toEntity(editDTO);
+
+        repository().persist(e);
+    }
+
+
+    // --
 
     public List<Entity> listar() {
 
-        return repository.listAll();
+        return repository().listAll();
     }
 
     public List<Entity> listarPor(String atributo, Object valor) {
 
-        return repository.list(atributo, valor);
+        return repository().list(atributo, valor);
     }
 
     public Entity buscarPor(String atributo, Object valor) {
 
-        return repository.find(atributo, valor).firstResult();
+        return repository().find(atributo, valor).firstResult();
     }
 
     public Entity buscarPorId(Long id) {
@@ -52,14 +56,14 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO> {
         return buscarPor("id", id);
     }
 
-    public Entity buscarPorUUID(Long id) {
+    public Entity buscarPorUUID(String uuid) {
 
-        return buscarPor("uuid", id);
+        return buscarPor("uuid", uuid);
     }
 
     public Long contarPor(String atributo, Object valor) {
 
-        return repository.count(atributo, valor);
+        return repository().count(atributo, valor);
     }
 
     public boolean existePor(String atributo, Object valor) {
@@ -70,25 +74,25 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO> {
     @Transactional
     public void inserir(Entity e) {
 
-        repository.persist(e);
+        repository().persist(e);
     }
 
     @Transactional
     public boolean inativarPorId(Long id) {
 
-        return repository.inativarPorId(id) > 0;
+        return repository().update("status = ?1 where id = ?2", EnumStatusEntity.INATIVO, id) > 0;
     }
 
     @Transactional
     public boolean inativarPorUUID(String uuid) {
 
-        return repository.inativarPorUUID(uuid) > 0;
+        return repository().update("status = ?1 where uuid = ?2", EnumStatusEntity.INATIVO, uuid) > 0;
     }
 
     @Transactional
     public Long excluirPor(String atributo, Object valor) {
 
-        return repository.delete(atributo, valor);
+        return repository().delete(atributo, valor);
     }
 
     @Transactional
@@ -102,5 +106,34 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO> {
 
         return excluirPor("uuid", uuid) > 0;
     }
+
+
+    /*
+    default List<E> listarPaginado(int pageIndex, int pageSize, String sortBy, String sortDirection) {
+
+        return findAll(Sort.by(sortBy)
+                .direction(Sort.Direction.valueOf(sortDirection)))
+                .page(pageIndex, pageSize)
+                .list();
+    }
+
+    default List<E> findByDynamicFilters(String name, Integer minRanking) {
+
+        String query = "1=1"; // Base da consulta
+
+        Map<String, Object> params = new HashMap<>();
+
+        if (name != null) {
+            query += " and name like :name";
+            params.put("name", "%" + name + "%");
+        }
+
+        if (minRanking != null) {
+            query += " and ranking >= :minRanking";
+            params.put("minRanking", minRanking);
+        }
+
+        return find(query, params).list();
+    }*/
 
 }
