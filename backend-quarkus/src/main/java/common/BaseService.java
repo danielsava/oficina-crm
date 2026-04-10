@@ -5,42 +5,54 @@ import jakarta.transaction.Transactional;
 
 import java.util.List;
 
-public abstract class BaseService<E extends BaseEntity> {
+public abstract class BaseService<Entity extends BaseEntity, EditDTO> {
 
 
-    protected final BaseRepository<E> repository;
+    protected final BaseMapper<Entity, EditDTO> mapper;
+
+    protected final BaseRepository<Entity> repository;
+
+
 
     /* Gambi por conta do Quarkus IoC Arc proxy com @ApplicationScoped */
-    public BaseService() { this.repository = null; }
+    public BaseService() {
+        this.repository = null;
+        this.mapper = null;
+    }
     
 
-    protected BaseService(BaseRepository<E> repository) {
+    protected BaseService(
+            BaseRepository<Entity> repository,
+            BaseMapper<Entity, ?> mapper
+    ) {
 
         this.repository = repository;
+
+        this.mapper = mapper;
     }
 
 
-    public List<E> listar() {
+    public List<Entity> listar() {
 
         return repository.listAll();
     }
 
-    public List<E> listarPor(String atributo, Object valor) {
+    public List<Entity> listarPor(String atributo, Object valor) {
 
         return repository.list(atributo, valor);
     }
 
-    public E buscarPor(String atributo, Object valor) {
+    public Entity buscarPor(String atributo, Object valor) {
 
         return repository.find(atributo, valor).firstResult();
     }
 
-    public E buscarPorId(Long id) {
+    public Entity buscarPorId(Long id) {
 
         return buscarPor("id", id);
     }
 
-    public E buscarPorUUID(Long id) {
+    public Entity buscarPorUUID(Long id) {
 
         return buscarPor("uuid", id);
     }
@@ -56,7 +68,7 @@ public abstract class BaseService<E extends BaseEntity> {
     }
 
     @Transactional
-    public void inserir(E e) {
+    public void inserir(Entity e) {
 
         repository.persist(e);
     }

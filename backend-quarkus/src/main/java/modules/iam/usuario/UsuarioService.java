@@ -9,17 +9,18 @@ import modules.iam.usuario.dto.UsuarioEditDTO;
 import modules.iam.usuario.dto.UsuarioMapper;
 
 @ApplicationScoped
-public class UsuarioService extends BaseService<Usuario> {
+public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO> {
 
 
-    @Inject
     UsuarioMapper mapper;
 
 
-    @Inject
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(
+            UsuarioRepository usuarioRepository,
+            UsuarioMapper mapper
+    ) {
 
-        super(usuarioRepository);
+        super(usuarioRepository, mapper);
     }
 
 
