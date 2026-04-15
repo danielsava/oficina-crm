@@ -3,29 +3,29 @@ package common;
 import jakarta.ws.rs.*;
 import java.util.List;
 
-public abstract class BaseController<E extends BaseEntity> {
+public abstract class BaseController<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
-    protected final BaseService<E> service;
+    protected final BaseService<Entity, EditDTO, ListDTO> service;
 
 
-    protected BaseController(BaseService<E> service) {
+    protected BaseController(BaseService<Entity, EditDTO, ListDTO> service) {
 
         this.service = service;
     }
 
 
     @GET
-    public List<E> listar() {
+    public List<Entity> listar() {
 
         return service.listar();
     }
 
     @GET
     @Path("/{id}")
-    public E buscarPorId(@PathParam("id") Long id) {
+    public Entity buscarPorId(@PathParam("id") Long id) {
 
-        E entity = service.buscarPorId(id);
+        Entity entity = service.buscarPorId(id);
 
         if (entity == null)
             throw new NotFoundException("Registro não encontrado");
@@ -34,7 +34,7 @@ public abstract class BaseController<E extends BaseEntity> {
     }
 
     @POST
-    public void inserir(E entity) {
+    public void inserir(Entity entity) {
 
         service.inserir(entity); // return Response.status(Response.Status.CREATED).entity(novoUsuario).build();
     }

@@ -2,10 +2,11 @@ package modules.iam.usuario;
 
 import common.BaseController;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import modules.iam.usuario.dto.UsuarioEditDTO;
+import modules.iam.usuario.dto.UsuarioListDTO;
 
 /**
  *
@@ -30,7 +31,7 @@ import jakarta.ws.rs.PathParam;
  */
 
 @Path("/usuario")
-public class UsuarioController extends BaseController<Usuario> {
+public class UsuarioController extends BaseController<Usuario, UsuarioEditDTO, UsuarioListDTO> {
 
 
     @Inject
@@ -46,14 +47,9 @@ public class UsuarioController extends BaseController<Usuario> {
 
     @PUT
     @Path("/{id}")
-    public Usuario atualizar(@PathParam("id") Long id, Usuario usuarioAtualizado) {
+    public void atualizar(@PathParam("id") Long id, UsuarioEditDTO usuarioEditDTO) {
 
-        Usuario usuario = usuarioService.atualizar(id, usuarioAtualizado);
-
-        if (usuario == null)
-            throw new NotFoundException("Usuário não encontrado"); // return Response.status(Response.Status.NOT_FOUND).build();
-
-        return usuario; //Response.ok(usuario).build();
+        usuarioService.atualizar(id, usuarioEditDTO);
     }
 
 }

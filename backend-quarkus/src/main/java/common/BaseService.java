@@ -3,8 +3,10 @@ package common;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.NotFoundException;
 
 import java.util.List;
+import java.util.Map;
 
 public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
 
@@ -24,7 +26,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
                 .list();
     }
 
-
     @Transactional
     public void inserir(@Valid EditDTO editDTO) {
 
@@ -33,6 +34,32 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         repository().persist(e);
     }
 
+    @Transactional
+    public void atualizar(Long id, EditDTO editDTO) {
+
+        Entity e = buscarPorId(id);
+
+        if(e == null)
+            throw new NotFoundException("Registro não encontrado");
+
+        mapper().updatedEntityFromDTO(editDTO, e);
+    }
+
+    @Transactional
+    public int atualizar(Long id, Map<String, Object> params) {
+
+        String query = params.keySet().stream()
+                .map(key -> key + " = :" + key)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
+
+        query = query + " where id = :id";
+
+        params.put("id", id);
+
+        return repository().update(query, params);
+
+    }
 
     // --
 

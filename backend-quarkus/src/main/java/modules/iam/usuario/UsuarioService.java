@@ -20,20 +20,6 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
     UsuarioMapper mapper;
 
 
-    @Transactional
-    public Usuario atualizar(Long id, Usuario usuarioAtualizado) {
-
-        Usuario usuario = repository.findById(id);
-
-        if (usuario != null) {
-            usuario.nome = usuarioAtualizado.nome;
-            usuario.login = usuarioAtualizado.login;
-            usuario.email = usuarioAtualizado.email;
-            usuario.avatar = usuarioAtualizado.avatar;
-        }
-
-        return usuario;
-    }
 
     public UsuarioRepository repository() { return this.repository; }
 
