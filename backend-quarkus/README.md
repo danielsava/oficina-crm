@@ -10,6 +10,30 @@ If you want to learn more about Quarkus, please visit its website: <https://quar
     docker run -d --name postgres -p 5432:5432 -e POSTGRES_DB=user -e POSTGRES_PASSWORD=123456 postgres 
 ```
 
+## Banco: Docker Compose
+
+Resumo dos principais comandos do Docker Compose:
+
+ - **docker compose build**: constrói as imagens dos serviços definidos no arquivo docker-compose.yml
+ - **docker compose up**: sobe os containers, cria a rede e os volumes nomeados, como postgres_data
+ - **docker compose stop**: só para os containers
+ - **docker compose down**: para e remove os containers
+ - **docker compose down -v**: para, remove os containers e também remove os volumes nomeados, como postgres_data
+
+Especificando o nome do arquivo docker-compose.yml:
+
+ - docker compose -f compose-postgres.yml build
+
+ - docker compose -f compose-postgres.yml up -d
+ - docker compose -f compose-postgres.yml stop
+ - docker compose -f compose-postgres.yml start
+
+ - docker compose -f compose-postgres.yml ps
+ - docker compose -f compose-postgres.yml logs
+
+ - docker compose -f compose-postgres.yml down
+ - docker compose -f compose-postgres.yml down -v
+
 
 ## Running the application in dev mode
 
