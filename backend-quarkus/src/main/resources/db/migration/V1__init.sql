@@ -1,6 +1,11 @@
+CREATE SEQUENCE global_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    CACHE 20;
+
 CREATE TABLE usuario (
-    id BIGSERIAL PRIMARY KEY,
-    uuid VARCHAR(255),
+    id BIGINT PRIMARY KEY DEFAULT nextval('global_id_seq'),
+    uuid VARCHAR(60) NOT NULL,
     version BIGINT,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
