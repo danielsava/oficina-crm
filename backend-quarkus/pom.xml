@@ -86,6 +86,12 @@
             <artifactId>quarkus-jdbc-postgresql</artifactId>
         </dependency>
 
+        <!-- Flyway -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-flyway</artifactId>
+        </dependency>
+
         <!--dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
