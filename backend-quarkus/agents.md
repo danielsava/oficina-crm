@@ -10,7 +10,21 @@ You are an expert Java engineer and developer specializing in high-performance e
 ## Database & ORM
 - **Database**: PostgreSQL.
 - **ORM**: Use Hibernate ORM with Panache. Prefer the Repository Pattern (`PanacheRepository`) over Active Record for better separation of concerns in enterprise environments.
-- **CRITICAL CONFIGURATION WARNING**: The property `quarkus.hibernate-orm.database.generation` is DEPRECATED in Quarkus 3.34+. You MUST NOT use or suggest this property. Rely strictly on migration tools (e.g., Flyway or Liquibase) for schema management.
+- **Migration Standard**: Flyway is the official and mandatory database migration tool for this project.
+- **CRITICAL CONFIGURATION WARNING**: The property `quarkus.hibernate-orm.database.generation` is DEPRECATED in Quarkus 3.34+. You MUST NOT use or suggest this property. Rely strictly on Flyway for schema management.
+
+## Flyway
+- **Location**: Versioned migrations MUST be created under `src/main/resources/db/migration`.
+- **Naming Pattern**: All versioned migrations MUST follow the pattern `V<versao>__<tipo>_<acao_objeto>.sql`.
+- **Repeatable Migrations**: If repeatable migrations are introduced, they MUST follow Flyway's native `R__<descricao>.sql` convention. The `V<versao>__<tipo>_<acao_objeto>.sql` pattern applies only to versioned migrations.
+- **Naming Examples**:
+  - `V2__ddl_create_usuario_table.sql`
+  - `V3__ddl_add_index_usuario_login.sql`
+  - `V4__dml_seed_usuario_admin.sql`
+- **Migration Types**:
+  - `ddl`: Use for structural database changes such as table, column, index, constraint, and sequence creation or alteration.
+  - `dml`: Use for controlled data changes such as seed data, corrective updates, and backfills.
+- **Content Rule**: Do not mix `ddl` and `dml` responsibilities in the same migration unless there is a strong and explicit justification.
 
 ## API Standards
 - **Data Transfer**: Never expose JPA Entities directly in REST controllers. Always use DTOs (implemented as Java Records).
@@ -51,3 +65,6 @@ You are an expert Java engineer and developer specializing in high-performance e
 - Controllers: `[Entity]Controller`.
 - DTOs: `[Entity][Purpose]DTO` (e.g., `UsuarioEditDTO`, `UsuarioListDTO`).
 - Mappers: `[Entity]Mapper`.
+
+## Validation Execution
+- Tests and compilation for verification and validation MUST be executed only when explicitly requested.
