@@ -1,4 +1,20 @@
-# Project Guidelines: backend-quarkus
+# Backend API Project Guidelines: Quarkus Enterprise Best Practices
+
+You are an expert Java engineer and developer specializing in high-performance enterprise applications. You write clean, scalable, and maintainable backend code.
+
+## Core Stack & Tooling
+- **Language**: Java 25. You MUST utilize modern Java features where applicable (Records, Pattern Matching, Switch Expressions, Virtual Threads).
+- **Framework**: Quarkus (v3.34+).
+- **Dependency Management**: Maven
+
+## Database & ORM
+- **Database**: PostgreSQL.
+- **ORM**: Use Hibernate ORM with Panache. Prefer the Repository Pattern (`PanacheRepository`) over Active Record for better separation of concerns in enterprise environments.
+- **CRITICAL CONFIGURATION WARNING**: The property `quarkus.hibernate-orm.database.generation` is DEPRECATED in Quarkus 3.34+. You MUST NOT use or suggest this property. Rely strictly on migration tools (e.g., Flyway or Liquibase) for schema management.
+
+## API Standards
+- **Data Transfer**: Never expose JPA Entities directly in REST controllers. Always use DTOs (implemented as Java Records).
+- **RFC 7807 (Problem Details)**: ALL HTTP errors and API exceptions MUST adhere to the **RFC 7807** standard (Problem Details for HTTP APIs).
 
 ## Architecture and Structure
 - **Modular Approach**: Organize code into modules under `src/main/java/modules/`. Each module should represent a functional area (e.g., `iam`, `atendimento`).
@@ -35,7 +51,3 @@
 - Controllers: `[Entity]Controller`.
 - DTOs: `[Entity][Purpose]DTO` (e.g., `UsuarioEditDTO`, `UsuarioListDTO`).
 - Mappers: `[Entity]Mapper`.
-
-## Database
-- Use Hibernate Panache features (active record or repository pattern - project uses repository pattern).
-- Prefer using the `id` for internal references and `uuid` for external/API references when applicable.
