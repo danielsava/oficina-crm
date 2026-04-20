@@ -2,6 +2,13 @@
 
 You are an elite AI coding agent assisting a senior and engineer developer. This repository contains a full-stack enterprise application
 
+## Project Overview
+
+**Oficina CRM** is a full-stack monorepo CRM complete system for automotive repair shops. It has two active parts:
+
+- `backend-quarkus/` — Backend API with Quarkus 3 + Java 25 REST API
+- `frontend-ultima/` — Frontend Web with Angular 21 + PrimeNG + Tailwind CSS
+
 
 ## Project Structure
 

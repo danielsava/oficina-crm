@@ -72,11 +72,23 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 ## Project Architecture (Core, Shared, Modules)
 
 The application architecture is divided into three main pillars:
-1. `core/`: Singleton services, guards, interceptors, global layout, and application-wide configurations.
-2. `shared/`: Highly reusable, "dumb" UI components, directives, and pipes that do not belong to a specific business domain.
-3. `modules/`: The business domains, containing the actual features and logic of the application.
+1. `src/app/core/`: Singleton services, guards, interceptors, global layout, and application-wide configurations.
+2. `src/app/shared/`: Highly reusable, "dumb" UI components, directives, and pipes that do not belong to a specific business domain.
+3. `src/app/modules/`: The business domains, containing the actual features and logic of the application.
+
 
 ## Domain Module Structure & Naming Conventions
+
+Feature modules live under `src/app/modules/{domain}/{sub-feature}/`:
+
+```
+modules/iam/usuarios/
+├── usuario-table.component.ts   # List view
+├── usuario-form.component.ts    # Create/edit form
+├── usuario.model.ts
+├── usuario.service.ts
+└── usuario.routes.ts            # Lazy-loaded routes
+```
 
 When generating or refactoring domain components inside `src/app/modules/` (e.g., a `cliente` module), strictly follow this scaffolding and naming convention:
 

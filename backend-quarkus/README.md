@@ -99,8 +99,6 @@ Create your first JPA entity
 [Related guide section...](https://quarkus.io/guides/hibernate-orm)
 
 
-
-
 ### REST
 
 Easily start your REST Web Services
