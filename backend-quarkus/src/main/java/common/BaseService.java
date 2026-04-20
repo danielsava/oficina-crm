@@ -19,13 +19,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
 
-    public List<ListDTO> listarDTO() {
-
-        return this.repository().find("status", EnumStatusEntity.ATIVO)
-                .project(listDTO())
-                .list();
-    }
-
     @Transactional
     public void inserir(@Valid EditDTO editDTO) {
 
@@ -59,6 +52,13 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
 
         return repository().update(query, params);
 
+    }
+
+    public List<ListDTO> listarDTO() {
+
+        return this.repository().find("status", EnumStatusEntity.ATIVO)
+                .project(listDTO())
+                .list();
     }
 
     // --

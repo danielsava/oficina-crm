@@ -5,7 +5,7 @@ CREATE SEQUENCE global_id_seq
 
 CREATE TABLE usuario (
     id BIGINT PRIMARY KEY DEFAULT nextval('global_id_seq'),
-    uuid VARCHAR(60) NOT NULL,
+    uuid UUID NOT NULL, -- DEFAULT gen_random_uuid()
     version BIGINT,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,

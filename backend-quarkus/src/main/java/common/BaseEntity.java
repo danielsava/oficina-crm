@@ -19,21 +19,22 @@ public abstract class BaseEntity {
             strategy = GenerationType.SEQUENCE,
             generator = "base_entity_seq"
     )
-    @Column(name = "id")
-    public Long id;
 
-    @Column(name = "uuid", nullable = false, updatable = false, length = 60)
-    public String uuid;
+    @Column(name = "id", nullable = false, updatable = false, unique=true)
+    private Long id;
+
+    @Column(name = "uuid", nullable = false, updatable = false, unique=true)
+    private UUID uuid;
 
     @Version
-    @Column(name = "version")
-    public Long version;
+    @Column(name = "version", nullable = false)
+    private Long version;
 
-    @Column(name = "created_at", updatable = false)
-    public LocalDateTime createdAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    public LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
 
     @PrePersist
@@ -45,8 +46,8 @@ public abstract class BaseEntity {
 
         this.updatedAt = now;
 
-        if (this.uuid == null || this.uuid.isBlank())
-            this.uuid = UUID.randomUUID().toString();
+        if (this.uuid == null || this.uuid.toString().isEmpty())
+            this.uuid = UUID.randomUUID();
 
     }
 
@@ -69,4 +70,44 @@ public abstract class BaseEntity {
         return Objects.hash(id, uuid);
     }
 
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }
