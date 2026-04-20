@@ -12,16 +12,32 @@
     <packaging>quarkus</packaging>
 
     <properties>
-        <compiler-plugin.version>3.15.0</compiler-plugin.version>
+
+        <!-- Java -->
         <maven.compiler.release>25</maven.compiler.release>
+
+        <!-- Encoding -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+
+        <!-- Quarkus -->
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.version>3.34.1</quarkus.platform.version>
-        <skipITs>true</skipITs>
+        <quarkus.profile>dev</quarkus.profile>
+
+        <!-- Plugins -->
+        <compiler-plugin.version>3.15.0</compiler-plugin.version>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
+        <jacoco.version>0.8.12</jacoco.version>
+
+        <!-- MapStruct -->
         <mapstruct.version>1.6.3</mapstruct.version>
+
+        <!-- Testes -->
+        <skipITs>true</skipITs>
+        <skipTests>false</skipTests>
+
     </properties>
 
     <dependencyManagement>
@@ -95,8 +111,9 @@
         <!--dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
-        </dependency>
-    
+        </dependency-->
+
+        <!-- Testes -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit</artifactId>
@@ -107,7 +124,7 @@
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
-        </dependency-->
+        </dependency>
     
     </dependencies>
 
@@ -115,6 +132,7 @@
 
         <plugins>
 
+            <!-- Quarkus -->
             <plugin>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
@@ -122,6 +140,7 @@
                 <extensions>true</extensions>
             </plugin>
 
+            <!-- Compiler -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${compiler-plugin.version}</version>
@@ -137,6 +156,7 @@
                 </configuration>
             </plugin>
 
+            <!-- Unit Tests -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
@@ -146,9 +166,11 @@
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
                     </systemPropertyVariables>
+                    <skipTests>${skipTests}</skipTests> <!-- ** Adicionado depois, testar ** -->
                 </configuration>
             </plugin>
 
+            <!-- Integration Tests -->
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
@@ -161,6 +183,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <skipITs>${skipITs}</skipITs> <!-- ** Adicionado depois, testar ** -->
                     <argLine>@{argLine}</argLine>
                     <systemPropertyVariables>
                         <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
@@ -170,11 +193,66 @@
                 </configuration>
             </plugin>
 
+            <!-- Coverage Tests Report (command: mvn verify; report: in target/site/jacoco/index.html) -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+
+                </executions>
+            </plugin>
+
         </plugins>
 
     </build>
 
     <profiles>
+
+        <!-- DEV: rápido, ignora execução de testes -->
+        <profile>
+            <id>dev</id>
+            <properties>
+                <skipITs>true</skipITs>
+                <skipTests>true</skipTests>
+                <quarkus.profile>dev</quarkus.profile>
+            </properties>
+        </profile>
+
+        <!-- CI: executa tudo (build mais confiável) -->
+        <profile>
+            <id>ci</id>
+            <properties>
+                <skipITs>false</skipITs>
+                <skipTests>false</skipTests>
+                <quarkus.profile>test</quarkus.profile>
+            </properties>
+        </profile>
+
+        <!-- PROD: build otimizado (sem testes) -->
+        <profile>
+            <id>prod</id>
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+                <quarkus.profile>prod</quarkus.profile>
+            </properties>
+        </profile>
+
+        <!-- Native -->
         <profile>
             <id>native</id>
             <activation>
@@ -183,10 +261,12 @@
                 </property>
             </activation>
             <properties>
-                <quarkus.package.jar.enabled>false</quarkus.package.jar.enabled>
                 <skipITs>false</skipITs>
                 <quarkus.native.enabled>true</quarkus.native.enabled>
+                <quarkus.package.jar.enabled>false</quarkus.package.jar.enabled>
             </properties>
         </profile>
+
     </profiles>
+
 </project>

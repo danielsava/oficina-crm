@@ -45,12 +45,29 @@ You can run your application in dev mode that enables live coding using:
 
 > **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
 
+
 ## Packaging and running the application
 
 The application can be packaged using:
 
 ```shell script
+
+# Package default. Gera o artefato (JAR ou native, se configurado)
 ./mvnw package
+
+# Skip Tests (compila os arquivos de testes, mas não executa)
+./mvnw package -DskipTests 
+
+# Não compila, e não executa
+./mvnw package -Dmaven.test.skip=true
+
+# Usando o CLI do Quarkus
+quarkus build -DskipTests
+
+# Maven
+mvn clean install -DskipTests
+
+mvn clean install -Dmaven.test.skip=true
 ```
 
 It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
