@@ -6,7 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "usuario")
+@Table(name = "tb_usuario")
 public class Usuario extends BaseEntity {
 
     @Column(name = "nome", nullable = false)
@@ -14,6 +14,9 @@ public class Usuario extends BaseEntity {
 
     @Column(name = "login", nullable = false, updatable = false, unique=true)
     private String login;
+
+    @Column(name = "senha", nullable = false)
+    private String senha;
 
     @Column(name = "email")
     private String email;

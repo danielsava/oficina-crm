@@ -26,6 +26,9 @@ public abstract class BaseEntity {
     @Column(name = "uuid", nullable = false, updatable = false, unique=true)
     private UUID uuid;
 
+    @Column(name = "status", nullable = false)
+    private EnumStatusEntity status;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -45,6 +48,8 @@ public abstract class BaseEntity {
         this.createdAt = now;
 
         this.updatedAt = now;
+
+        this.status = EnumStatusEntity.ATIVO;
 
         if (this.uuid == null || this.uuid.toString().isEmpty())
             this.uuid = UUID.randomUUID();
