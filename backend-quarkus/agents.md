@@ -87,3 +87,8 @@ Bases classes are located in `src/main/java/common/`.
 
 ## Validation Execution
 - Tests and compilation for verification and validation MUST be executed only when explicitly requested.
+
+## Workflow Restrictions
+- Do NOT run build or compile commands (`./mvnw package`, `./mvnw verify`, etc.) unless explicitly requested.
+- Do NOT create separate branches or pull requests unless explicitly requested.
+- Work directly on the current branch.
