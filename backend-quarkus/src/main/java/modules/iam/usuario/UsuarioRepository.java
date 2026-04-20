@@ -6,6 +6,4 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class UsuarioRepository implements BaseRepository<Usuario> {
 
-
-
 }
