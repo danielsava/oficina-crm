@@ -10,11 +10,13 @@ CREATE TABLE tb_usuario (
     version BIGINT,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
-    nome VARCHAR(255),
-    login VARCHAR(255),
-    email VARCHAR(255),
+    nome VARCHAR(150) NOT NULL,
+    login VARCHAR(50) NOT NULL,
+    senha_hash VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL,
     avatar VARCHAR(255)
 );
 
 CREATE UNIQUE INDEX unique_tb_usuario_uuid ON tb_usuario (uuid);
 CREATE UNIQUE INDEX unique_tb_usuario_login ON tb_usuario (login);
+CREATE UNIQUE INDEX unique_tb_usuario_email ON tb_usuario (email);

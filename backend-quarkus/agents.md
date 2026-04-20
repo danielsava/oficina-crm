@@ -25,6 +25,7 @@ You are an expert Java engineer and developer specializing in high-performance e
   - `ddl`: Use for structural database changes such as table, column, index, constraint, and sequence creation or alteration.
   - `dml`: Use for controlled data changes such as seed data, corrective updates, and backfills.
 - **Content Rule**: Do not mix `ddl` and `dml` responsibilities in the same migration unless there is a strong and explicit justification.
+- **Temporary Project-Phase Directive (initial stage)**: The project is currently in its initial phase and no migration has been executed yet in any environment. While this phase lasts, DO NOT create new versioned migrations for schema changes to entities already defined in `V1__init.sql`. Instead, adjust the table definitions directly inside `V1__init.sql`. New migrations (`V2__...`, `V3__...`, etc.) should only start being created after the first deployment/execution of `V1__init.sql` in any shared environment. This directive is temporary and must be removed once the project leaves the initial phase.
 
 ## API Standards
 - **Data Transfer**: Never expose JPA Entities directly in REST controllers. Always use DTOs (implemented as Java Records).

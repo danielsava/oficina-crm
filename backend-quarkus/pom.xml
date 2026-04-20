@@ -108,6 +108,12 @@
             <artifactId>quarkus-flyway</artifactId>
         </dependency>
 
+        <!-- Segurança: BCrypt (BcryptUtil) para hash de senhas -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-elytron-security-common</artifactId>
+        </dependency>
+
         <!--dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-quarkus-3</artifactId>

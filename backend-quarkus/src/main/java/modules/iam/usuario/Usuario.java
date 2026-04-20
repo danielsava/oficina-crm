@@ -13,11 +13,11 @@ public class Usuario extends BaseEntity {
     @Column(name = "nome", nullable = false)
     private String nome;
 
-    @Column(name = "login", nullable = false, updatable = false, unique=true)
+    @Column(name = "login", nullable = false, updatable = false, unique = true)
     private String login;
 
-    @Column(name = "senha", nullable = false)
-    private String senha;
+    @Column(name = "senha_hash", nullable = false)
+    private String senhaHash;
 
     @Column(name = "email")
     private String email;
@@ -40,6 +40,14 @@ public class Usuario extends BaseEntity {
 
     public void setLogin(String login) {
         this.login = login;
+    }
+
+    public String getSenhaHash() {
+        return senhaHash;
+    }
+
+    public void setSenhaHash(String senhaHash) {
+        this.senhaHash = senhaHash;
     }
 
     public String getEmail() {
