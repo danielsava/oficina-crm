@@ -41,7 +41,10 @@
     </properties>
 
     <dependencyManagement>
+
         <dependencies>
+    
+            <!-- Quarkus Platform -->
             <dependency>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>${quarkus.platform.artifact-id}</artifactId>
@@ -49,14 +52,25 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
+    
+            <!-- Quarkus Blaze Persistence -->
+            <!--dependency>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-blaze-persistence-bom</artifactId>
                 <version>${quarkus.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
+            </dependency-->
+
+            <!-- Override do driver PostgreSQL -->
+            <!--dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>42.7.4</version>
+            </dependency-->
+
         </dependencies>
+    
     </dependencyManagement>
 
     <dependencies>
@@ -102,6 +116,12 @@
             <artifactId>quarkus-jdbc-postgresql</artifactId>
         </dependency>
 
+        <!-- Blaze Persistence -->
+        <!--dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
+        </dependency-->
+
         <!-- Flyway -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -113,11 +133,6 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-elytron-security-common</artifactId>
         </dependency>
-
-        <!--dependency>
-            <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
-        </dependency-->
 
         <!-- Testes -->
         <dependency>
