@@ -6,7 +6,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.NotFoundException;
-import modules.iam.seguranca.PasswordHasher;
+import common.security.PasswordHasher;
 import modules.iam.usuario.dto.UsuarioEditDTO;
 import modules.iam.usuario.dto.UsuarioListDTO;
 import modules.iam.usuario.dto.UsuarioMapper;

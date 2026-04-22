@@ -1,11 +1,7 @@
-package modules.iam.seguranca;
+package common.security;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.wildfly.security.password.Password;
-import org.wildfly.security.password.PasswordFactory;
-import org.wildfly.security.password.interfaces.BCryptPassword;
-import org.wildfly.security.password.util.ModularCrypt;
 
 /**
  * Serviço responsável por gerar e verificar hashes de senha.
@@ -33,18 +29,7 @@ public class PasswordHasher {
         if (senhaCrua == null || hashArmazenado == null || hashArmazenado.isBlank())
             return false;
 
-        try {
-
-            PasswordFactory factory = PasswordFactory.getInstance(BCryptPassword.ALGORITHM_BCRYPT);
-
-            Password password = factory.translate(ModularCrypt.decode(hashArmazenado));
-
-            return factory.verify(password, senhaCrua.toCharArray());
-
-        } catch (Exception e) {
-
-            return false;
-        }
+        return BcryptUtil.matches(senhaCrua, hashArmazenado);
     }
 
 }
