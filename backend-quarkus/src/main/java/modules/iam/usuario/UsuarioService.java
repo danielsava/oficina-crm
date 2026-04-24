@@ -6,7 +6,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.NotFoundException;
-import common.security.PasswordHasher;
+import modules.iam.auth.PasswordHashUtil;
 import modules.iam.usuario.dto.UsuarioEditDTO;
 import modules.iam.usuario.dto.UsuarioListDTO;
 import modules.iam.usuario.dto.UsuarioMapper;
@@ -22,7 +22,7 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
     UsuarioMapper mapper;
 
     @Inject
-    PasswordHasher passwordHasher;
+    PasswordHashUtil passwordHasher;
 
 
     public UsuarioRepository repository() { return this.repository; }
