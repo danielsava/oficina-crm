@@ -1,10 +1,8 @@
 package modules.iam.usuario;
 
-import common.BaseController;
+import common.BaseRest;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import modules.iam.usuario.dto.UsuarioEditDTO;
 import modules.iam.usuario.dto.UsuarioListDTO;
 
@@ -31,25 +29,13 @@ import modules.iam.usuario.dto.UsuarioListDTO;
  */
 
 @Path("/usuario")
-public class UsuarioController extends BaseController<Usuario, UsuarioEditDTO, UsuarioListDTO> {
+public class UsuarioRest extends BaseRest<Usuario, UsuarioEditDTO, UsuarioListDTO> {
 
 
     @Inject
-    UsuarioService usuarioService;
+    UsuarioService service;
 
 
-    @Inject
-    public UsuarioController(UsuarioService service) {
-
-        super(service);
-    }
-
-
-    @PUT
-    @Path("/{id}")
-    public void atualizar(@PathParam("id") Long id, UsuarioEditDTO usuarioEditDTO) {
-
-        usuarioService.atualizar(id, usuarioEditDTO);
-    }
+    public UsuarioService service() { return this.service; }
 
 }

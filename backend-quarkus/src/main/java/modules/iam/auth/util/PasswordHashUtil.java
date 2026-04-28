@@ -1,4 +1,4 @@
-package modules.iam.auth;
+package modules.iam.auth.util;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
 
