@@ -23,9 +23,6 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
     @Inject
     UsuarioMapper mapper;
 
-    @Inject
-    PasswordHashUtil passwordHasher;
-
 
     public UsuarioRepository repository() { return this.repository; }
 
@@ -51,7 +48,7 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
 
         Usuario usuario = mapper.toEntity(editDTO);
 
-        usuario.setSenhaHash(passwordHasher.hash(editDTO.senha()));
+        usuario.setSenhaHash(PasswordHashUtil.hash(editDTO.senha()));
 
         repository.persist(usuario);
     }
@@ -69,7 +66,7 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
         mapper.updatedEntityFromDTO(editDTO, usuario);
 
         if (editDTO.senha() != null && !editDTO.senha().isBlank())
-            usuario.setSenhaHash(passwordHasher.hash(editDTO.senha()));
+            usuario.setSenhaHash(PasswordHashUtil.hash(editDTO.senha()));
     }
 
 
