@@ -1,1 +1,1 @@
-For this full-stack project, follow the guidelines defined in `\agents.md`
+For this full-stack project, follow the guidelines defined in `AGENTS.md`
