@@ -108,8 +108,8 @@ When generating or refactoring domain components inside `src/app/modules/` (e.g.
 
 ## Workflow Restrictions
 - Do NOT run build or compile commands (`npm run build`, `ng build`, `npm test`, etc.) unless explicitly requested.
-- Do NOT create separate branches or pull requests unless explicitly requested.
-- Work directly on the current branch.
+
+> Git workflow restrictions (branches, PRs/MRs, commits) are defined globally in the root `AGENTS.md`.
 
 ## Commands
 

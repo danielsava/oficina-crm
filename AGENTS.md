@@ -57,3 +57,14 @@ Always ensure that your suggestions and code generation are contextually relevan
 - Follow existing patterns before introducing new ones
 - Respect separation of concerns
 - Always generate production-ready code
+
+---
+
+## Workflow Restrictions
+
+These rules apply to BOTH backend and frontend, regardless of the stack. They are intentionally defined here (root) to avoid duplication across submodule `agents.md` files.
+
+- Do NOT create separate branches or pull requests/merge requests unless explicitly requested.
+- Work directly on the current branch.
+- Only commit, amend, push, or open PRs/MRs when explicitly requested by the user.
+- Do NOT update git config, skip hooks, use interactive flags (e.g., `-i`), force-push, or create empty commits unless explicitly requested.
