@@ -28,7 +28,8 @@ You are an expert Java engineer and developer specializing in high-performance e
 - **Migration Rules**:
   - Every `CREATE TABLE`, `CREATE INDEX`, `CREATE SEQUENCE`, etc. in migrations MUST be schema-qualified (e.g., `iam.tb_usuario`, `core.global_id_seq`).
   - Never rely on `search_path` or implicit schema resolution in migrations.
-- **Entity Mapping**: Every JPA entity MUST declare its schema explicitly via `@Table(name = "...", schema = "<module_schema>")`. Do not set a global `quarkus.hibernate-orm.database.default-schema`; schema ownership belongs to each entity.
+- **Entity Mapping**: Every JPA entity MUST declare its schema explicitly via `@Table(name = "...", schema = ...)`. Do not set a global `quarkus.hibernate-orm.database.default-schema`; schema ownership belongs to each entity.
+- **Schema Constants (`common.DbSchemas`)**: Schema names MUST NOT be hardcoded as string literals inside entities or other JPA annotations. Always reference the constants in `common.DbSchemas` (e.g., `DbSchemas.IAM`, `DbSchemas.CORE`). When a new module/schema is introduced, add a new `public static final String` to `DbSchemas` and reuse it everywhere. This rule applies to `@Table`, `@SequenceGenerator`, `@TableGenerator`, `@SecondaryTable`, and any other JPA annotation that accepts a `schema` attribute.
 
 ### Global ID Sequence
 - The application uses a **single shared sequence**, `core.global_id_seq`, as the PK source for every entity that extends `BaseEntity`.

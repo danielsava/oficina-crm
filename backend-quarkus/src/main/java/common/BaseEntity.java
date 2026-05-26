@@ -13,7 +13,7 @@ public abstract class BaseEntity {
     @SequenceGenerator(
             name = "base_entity_seq",
             sequenceName = "global_id_seq",
-            schema = "core",
+            schema = DbSchemas.CORE,
             allocationSize = 20
     )
     @GeneratedValue(

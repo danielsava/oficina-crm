@@ -1,12 +1,13 @@
 package modules.iam.usuario;
 
 import common.BaseEntity;
+import common.DbSchemas;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "tb_usuario", schema = "iam")
+@Table(name = "tb_usuario", schema = DbSchemas.IAM)
 public class Usuario extends BaseEntity {
 
 
