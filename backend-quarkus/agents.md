@@ -13,6 +13,30 @@ You are an expert Java engineer and developer specializing in high-performance e
 - **Migration Standard**: Flyway is the official and mandatory database migration tool for this project.
 - **CRITICAL CONFIGURATION WARNING**: The property `quarkus.hibernate-orm.database.generation` is DEPRECATED in Quarkus 3.34+. You MUST NOT use or suggest this property. Rely strictly on Flyway for schema management.
 
+### Schemas
+- **Schema Strategy**: The application uses multiple PostgreSQL schemas to physically segregate modules. The `public` schema MUST NOT be used.
+- **Technical Schema (`core`)**: Reserved for cross-cutting infrastructure objects. It hosts:
+  - `flyway_schema_history` (Flyway control table for the entire application).
+  - `global_id_seq` (application-wide PK sequence — see note below).
+  - Any future shared technical artifacts (e.g., utility functions, audit tables).
+- **Functional Schemas**: One schema per functional module, matching the module package name under `modules.[functional_area]`:
+  - `iam` → entities of `modules.iam.*`
+  - `crm` → entities of `modules.crm.*`
+  - `estoque` → entities of `modules.estoque.*`
+  - New modules MUST follow the same 1:1 mapping (module name = schema name).
+- **Flyway Configuration**: `quarkus.flyway.schemas` MUST list every schema managed by the application, starting with `core`. The property `quarkus.flyway.default-schema=core` ensures the Flyway history table lives in `core`. Use `quarkus.flyway.create-schemas=true` so missing schemas are created automatically.
+- **Migration Rules**:
+  - Every `CREATE TABLE`, `CREATE INDEX`, `CREATE SEQUENCE`, etc. in migrations MUST be schema-qualified (e.g., `iam.tb_usuario`, `core.global_id_seq`).
+  - Never rely on `search_path` or implicit schema resolution in migrations.
+- **Entity Mapping**: Every JPA entity MUST declare its schema explicitly via `@Table(name = "...", schema = "<module_schema>")`. Do not set a global `quarkus.hibernate-orm.database.default-schema`; schema ownership belongs to each entity.
+
+### Global ID Sequence
+- The application uses a **single shared sequence**, `core.global_id_seq`, as the PK source for every entity that extends `BaseEntity`.
+- **Rationale**: produces globally unique IDs across all modules/schemas, simplifying logging, auditing, integrations, and inter-module references. The numeric "waste" is negligible for `BIGINT`.
+- **Location**: lives in the `core` schema (transversal, not owned by any business module).
+- **JPA wiring**: `BaseEntity` declares `@SequenceGenerator(sequenceName = "global_id_seq", schema = "core", allocationSize = 20)`. The `allocationSize` MUST stay aligned with the `CACHE` value of the PostgreSQL sequence to avoid ID gaps or collisions.
+- **Do NOT** create per-schema or per-entity sequences; always reuse `core.global_id_seq`.
+
 ## Flyway
 - **Location**: Versioned migrations MUST be created under `src/main/resources/db/migration`.
 - **Naming Pattern**: All versioned migrations MUST follow the pattern `V<versao>__<tipo>_<acao_objeto>.sql`.
