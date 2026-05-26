@@ -24,11 +24,11 @@ You MUST respect the directory boundaries and project structures. This repositor
 
 When working on **Backend API**:
 → Use `/backend-quarkus`
-→ Follow `/backend-quarkus/agents.md`
+→ Follow `/backend-quarkus/AGENTS.md`
 
 When working on **Frontend Web**:
 → Use `/frontend-ultima`
-→ Follow `/frontend-ultima/agents.md`
+→ Follow `/frontend-ultima/AGENTS.md`
 
 Do not mix Angular concepts into the Quarkus project, and do not mix Java concepts into the Angular project. 
 Always ensure that your suggestions and code generation are contextually relevant to the specific project you are working on.
@@ -62,7 +62,7 @@ Always ensure that your suggestions and code generation are contextually relevan
 
 ## Workflow Restrictions
 
-These rules apply to BOTH backend and frontend, regardless of the stack. They are intentionally defined here (root) to avoid duplication across submodule `agents.md` files.
+These rules apply to BOTH backend and frontend, regardless of the stack. They are intentionally defined here (root) to avoid duplication across submodule `AGENTS.md` files.
 
 - Do NOT create separate branches or pull requests/merge requests unless explicitly requested.
 - Work directly on the current branch.

@@ -1,2 +1,2 @@
-For this backend project, follow the guidelines defined in `backend-quarkus/agents.md`.
+For this backend project, follow the guidelines defined in `backend-quarkus/AGENTS.md`.
    
