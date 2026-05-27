@@ -55,6 +55,7 @@ You are an expert Java engineer and developer specializing in high-performance e
 ## API Standards
 - **Data Transfer**: Never expose JPA Entities directly in REST resources. Always use DTOs (implemented as Java Records).
 - **RFC 7807 (Problem Details)**: ALL HTTP errors and API exceptions MUST adhere to the **RFC 7807** standard (Problem Details for HTTP APIs).
+- **Public Identifier**: `uuid` is the public identifier exposed in URLs (`/usuario/{uuid}`) and DTOs. The numeric `id` is strictly internal (PK, FKs, joins, technical logs) and MUST NOT appear in REST paths or response payloads. List DTOs MUST include `uuid` so clients can reference the resource. See [ADR-0002](doc/adr/0002-uuid-como-identificador-publico.md).
 
 ## Architecture and Structure
 

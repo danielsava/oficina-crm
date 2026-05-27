@@ -3,6 +3,16 @@ package common;
 import jakarta.ws.rs.*;
 import java.util.List;
 
+/**
+ * Base para recursos REST do CRUD padrão.
+ *
+ * <p>Convenção de identificadores:</p>
+ * <ul>
+ *   <li><b>UUID</b> é o identificador <b>público</b>, exposto em URLs e payloads.</li>
+ *   <li><b>id</b> (Long) é identificador <b>interno</b> (PK, FKs, joins, logs técnicos),
+ *       nunca trafega em endpoints públicos.</li>
+ * </ul>
+ */
 public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
@@ -16,10 +26,10 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
     @PUT
-    @Path("/{id}")
-    public void atualizar(@PathParam("id") Long id, EditDTO editDTO) {
+    @Path("/{uuid}")
+    public void atualizar(@PathParam("uuid") String uuid, EditDTO editDTO) {
 
-        this.service().atualizar(id, editDTO);
+        this.service().atualizarPorUUID(uuid, editDTO);
     }
 
     @GET
@@ -29,10 +39,10 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
     @GET
-    @Path("/{id}")
-    public Entity buscarPorId(@PathParam("id") Long id) {
+    @Path("/{uuid}")
+    public Entity buscarPorUUID(@PathParam("uuid") String uuid) {
 
-        Entity entity = this.service().buscarPorId(id);
+        Entity entity = this.service().buscarPorUUID(uuid);
 
         if (entity == null)
             throw new NotFoundException("Registro não encontrado");
@@ -41,18 +51,7 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
     @DELETE
-    @Path("/inativar/id/{id}")
-    public void inativarPorId(@PathParam("id") Long id) {
-
-        boolean inativado = this.service().inativarPorId(id);
-
-        if (!inativado)
-            throw new NotFoundException("Registro não encontrado");
-
-    }
-
-    @DELETE
-    @Path("/inativar/uuid/{uuid}")
+    @Path("/inativar/{uuid}")
     public void inativarPorUUID(@PathParam("uuid") String uuid) {
 
         boolean inativado = this.service().inativarPorUUID(uuid);
@@ -63,10 +62,10 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
     @DELETE
-    @Path("/{id}")
-    public void excluir(@PathParam("id") Long id) {
+    @Path("/{uuid}")
+    public void excluirPorUUID(@PathParam("uuid") String uuid) {
 
-        boolean excluido = this.service().excluirPorId(id);
+        boolean excluido = this.service().excluirPorUUID(uuid);
 
         if (!excluido)
             throw new NotFoundException("Registro não encontrado");

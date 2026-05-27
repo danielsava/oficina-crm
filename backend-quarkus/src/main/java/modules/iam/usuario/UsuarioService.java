@@ -56,9 +56,9 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
 
     @Override
     @Transactional
-    public void atualizar(Long id, UsuarioEditDTO editDTO) {
+    public void atualizarPorUUID(String uuid, UsuarioEditDTO editDTO) {
 
-        Usuario usuario = buscarPorId(id);
+        Usuario usuario = buscarPorUUID(uuid);
 
         if (usuario == null)
             throw new NotFoundException("Registro não encontrado");

@@ -39,6 +39,17 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
     @Transactional
+    public void atualizarPorUUID(String uuid, EditDTO editDTO) {
+
+        Entity e = buscarPorUUID(uuid);
+
+        if(e == null)
+            throw new NotFoundException("Registro não encontrado");
+
+        mapper().updatedEntityFromDTO(editDTO, e);
+    }
+
+    @Transactional
     public int atualizar(Long id, Map<String, Object> params) {
 
         String query = params.keySet().stream()
@@ -129,7 +140,7 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
     @Transactional
-    public boolean excluirPorUUID(Long uuid) {
+    public boolean excluirPorUUID(String uuid) {
 
         return excluirPor("uuid", uuid) > 0;
     }
