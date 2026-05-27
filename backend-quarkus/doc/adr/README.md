@@ -36,7 +36,8 @@ Não vale a pena ADR para: escolhas triviais, formatação, bugs simples, refato
 
 ## Índice
 
-| #    | Título                                                                                                  | Status   |
-|------|---------------------------------------------------------------------------------------------------------|----------|
-| 0001 | [Padrão de nomenclatura `*Rest` para classes JAX-RS](./0001-padrao-nomenclatura-rest.md)                | Accepted |
-| 0002 | [UUID como identificador público em URLs e DTOs](./0002-uuid-como-identificador-publico.md)             | Accepted |
+| #    | Título                                                                                                          | Status   |
+|------|-----------------------------------------------------------------------------------------------------------------|----------|
+| 0001 | [Padrão de nomenclatura `*Rest` para classes JAX-RS](./0001-padrao-nomenclatura-rest.md)                        | Accepted |
+| 0002 | [UUID como identificador público em URLs e DTOs](./0002-uuid-como-identificador-publico.md)                     | Accepted |
+| 0003 | [`EditDTO` como DTO único de formulário (entrada e leitura para edição)](./0003-editdto-como-dto-unico-de-formulario.md) | Accepted |

@@ -56,6 +56,7 @@ You are an expert Java engineer and developer specializing in high-performance e
 - **Data Transfer**: Never expose JPA Entities directly in REST resources. Always use DTOs (implemented as Java Records).
 - **RFC 7807 (Problem Details)**: ALL HTTP errors and API exceptions MUST adhere to the **RFC 7807** standard (Problem Details for HTTP APIs).
 - **Public Identifier**: `uuid` is the public identifier exposed in URLs (`/usuario/{uuid}`) and DTOs. The numeric `id` is strictly internal (PK, FKs, joins, technical logs) and MUST NOT appear in REST paths or response payloads. List DTOs MUST include `uuid` so clients can reference the resource. See [ADR-0002](doc/adr/0002-uuid-como-identificador-publico.md).
+- **DTO Roles**: `ListDTO` is used for listings (`GET /`), `EditDTO` is the single form DTO used both for input (`POST`, `PUT /{uuid}`) and for populating the edit form on read (`GET /{uuid}` returns the `EditDTO`). Sensitive or write-only fields (e.g., passwords) MUST NOT live in `EditDTO`; they are handled by dedicated endpoints. See [ADR-0003](doc/adr/0003-editdto-como-dto-unico-de-formulario.md).
 
 ## Architecture and Structure
 

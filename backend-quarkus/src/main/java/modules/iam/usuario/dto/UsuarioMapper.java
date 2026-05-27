@@ -10,11 +10,9 @@ import org.mapstruct.MappingTarget;
 public interface UsuarioMapper extends BaseMapper<Usuario, UsuarioEditDTO> {
 
     @Override
-    @Mapping(target = "senhaHash", ignore = true)
     Usuario toEntity(UsuarioEditDTO usuarioEditDTO);
 
     @Override
-    @Mapping(target = "senhaHash", ignore = true)
     @Mapping(target = "login", ignore = true)
     void updatedEntityFromDTO(UsuarioEditDTO usuarioEditDTO, @MappingTarget Usuario usuario);
 

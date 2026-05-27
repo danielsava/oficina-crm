@@ -40,14 +40,14 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
     @GET
     @Path("/{uuid}")
-    public Entity buscarPorUUID(@PathParam("uuid") String uuid) {
+    public EditDTO buscarPorUUID(@PathParam("uuid") String uuid) {
 
-        Entity entity = this.service().buscarPorUUID(uuid);
+        EditDTO editDTO = this.service().buscarEditDTOporUUID(uuid);
 
-        if (entity == null)
+        if (editDTO == null)
             throw new NotFoundException("Registro não encontrado");
 
-        return entity; // Response.ok(usuario).build();
+        return editDTO;
     }
 
     @DELETE

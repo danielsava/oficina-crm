@@ -15,10 +15,6 @@ public record UsuarioEditDTO (
     @Size(min = 3, max = 50, message = "Login deve ter entre 3 e 50 caracteres")
     String login,
 
-    @NotBlank(message = "Informe a senha")
-    @Size(min = 8, max = 150, message = "Senha deve ter entre 8 e 150 caracteres")
-    String senha,
-
     @Email(message = "Informe um email válido")
     @NotBlank(message = "Informe o email")
     @Size(max = 150, message = "Email deve ter no máximo 150 caracteres")

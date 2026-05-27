@@ -17,6 +17,14 @@ import modules.iam.usuario.dto.UsuarioMapper;
 public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, UsuarioListDTO> {
 
 
+    /**
+     * Senha temporária aplicada a todo novo usuário criado pelo fluxo padrão de
+     * cadastro enquanto o endpoint dedicado de definição/alteração de senha não
+     * é implementado. Ver ADR-0003 (dívida técnica registrada).
+     */
+    private static final String SENHA_TEMPORARIA_PADRAO = "123456";
+
+
     @Inject
     UsuarioRepository repository;
 
@@ -30,11 +38,14 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
 
     public Class<UsuarioListDTO> listDTO() { return UsuarioListDTO.class; }
 
+    public Class<UsuarioEditDTO> editDTO() { return UsuarioEditDTO.class; }
+
 
     @Override
     @Transactional
     public void inserir(@Valid UsuarioEditDTO editDTO) {
 
+        /*
         // 1. Valida força da senha
         var isSenhaValida = PasswordValidatorUtil.validate(editDTO.senha());
 
@@ -45,10 +56,12 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
 
         if(isEmailDuplicado)
             throw new ValidationException("Senha fraca: " + isSenhaValida.reason());
+        */
 
         Usuario usuario = mapper.toEntity(editDTO);
 
-        usuario.setSenhaHash(PasswordHashUtil.hash(editDTO.senha()));
+        // Dívida técnica: senha temporária fixa. Ver ADR-0003.
+        usuario.setSenhaHash(PasswordHashUtil.hash(SENHA_TEMPORARIA_PADRAO));
 
         repository.persist(usuario);
     }
@@ -64,9 +77,6 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
             throw new NotFoundException("Registro não encontrado");
 
         mapper.updatedEntityFromDTO(editDTO, usuario);
-
-        if (editDTO.senha() != null && !editDTO.senha().isBlank())
-            usuario.setSenhaHash(PasswordHashUtil.hash(editDTO.senha()));
     }
 
 

@@ -17,6 +17,8 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
 
     public abstract Class<ListDTO> listDTO();
 
+    public abstract Class<EditDTO> editDTO();
+
 
 
     @Transactional
@@ -70,6 +72,22 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         return this.repository().find("status", EnumStatusEntity.ATIVO)
                 .project(listDTO())
                 .list();
+    }
+
+    /**
+     * Retorna o {@code EditDTO} populado com os dados do registro identificado
+     * pelo {@code uuid}, pronto para alimentar o formulário de edição no
+     * frontend.
+     *
+     * <p>Usa projeção Panache para evitar carregar a entidade completa quando
+     * o EditDTO basta. Módulos que precisem de campos calculados ou
+     * associações podem sobrescrever este método.</p>
+     */
+    public EditDTO buscarEditDTOporUUID(String uuid) {
+
+        return this.repository().find("uuid", java.util.UUID.fromString(uuid))
+                .project(editDTO())
+                .firstResult();
     }
 
     // --
