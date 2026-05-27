@@ -53,7 +53,7 @@ You are an expert Java engineer and developer specializing in high-performance e
 - **Temporary Project-Phase Directive (initial stage)**: The project is currently in its initial phase and no migration has been executed yet in any environment. While this phase lasts, DO NOT create new versioned migrations for schema changes to entities already defined in `V1__init.sql`. Instead, adjust the table definitions directly inside `V1__init.sql`. New migrations (`V2__...`, `V3__...`, etc.) should only start being created after the first deployment/execution of `V1__init.sql` in any shared environment. This directive is temporary and must be removed once the project leaves the initial phase.
 
 ## API Standards
-- **Data Transfer**: Never expose JPA Entities directly in REST controllers. Always use DTOs (implemented as Java Records).
+- **Data Transfer**: Never expose JPA Entities directly in REST resources. Always use DTOs (implemented as Java Records).
 - **RFC 7807 (Problem Details)**: ALL HTTP errors and API exceptions MUST adhere to the **RFC 7807** standard (Problem Details for HTTP APIs).
 
 ## Architecture and Structure
@@ -65,7 +65,7 @@ modules/iam/usuario/
 ├── Usuario.java            # JPA entity (extends BaseEntity)
 ├── UsuarioRepository.java  # Extends BaseRepository<Usuario>
 ├── UsuarioService.java     # Extends BaseService, @ApplicationScoped
-├── UsuarioController.java  # Extends BaseController, JAX-RS @Path
+├── UsuarioRest.java        # Extends BaseRest, JAX-RS @Path
 └── dto/
     ├── UsuarioEditDTO.java # Input DTO (use Java Records)
     ├── UsuarioListDTO.java # Output DTO (use Java Records)
@@ -77,7 +77,7 @@ modules/iam/usuario/
     - `Entity`: Extending `common.BaseEntity`.
     - `Repository`: Interface extending `common.BaseRepository<Entity>`.
     - `Service`: Class extending `common.BaseService<Entity, EditDTO, ListDTO>`.
-    - `Controller`: Class extending `common.BaseController<Entity, EditDTO, ListDTO>`.
+    - `Rest`: Class extending `common.BaseRest<Entity, EditDTO, ListDTO>`.
     - `DTOs`: Specifically `EditDTO` for creation/updates and `ListDTO` for listings.
     - `Mapper`: MapStruct interface extending `common.BaseMapper<Entity, EditDTO>`.
 
@@ -88,17 +88,17 @@ Bases classes are located in `src/main/java/common/`.
 - **BaseEntity**: Provides `id`, `uuid`, `version`, `createdAt`, and `updatedAt`. Use `@PrePersist` and `@PreUpdate` for timestamps.
 - **BaseRepository**: Leverages Quarkus Panache for data access. Panache repository interface (Repository Pattern, not Active Record)
 - **BaseService**: Implements common CRUD operations. Requires implementations of `mapper()`, `repository()`, and `listDTO()`.
-- **BaseController**: Provides standard JAX-RS endpoints (`GET /`, `GET /{id}`, `POST /`, `DELETE /inativar/id/{id}`, etc.).
+- **BaseRest**: Provides standard JAX-RS endpoints (`GET /`, `GET /{id}`, `POST /`, `DELETE /inativar/id/{id}`, etc.).
 - **BaseMapper**: Provides MapStruct base interface
 
 ## Coding Standards
-- **Dependency Injection**: Use `@Inject` for CDI. Prefer constructor injection in Controllers if needed, or field injection in Services.
+- **Dependency Injection**: Use `@Inject` for CDI. Prefer constructor injection in Rest classes if needed, or field injection in Services.
 - **Scopes**: Services should be `@ApplicationScoped`.
 - **Transactions**: Use `@Transactional` for methods that modify the database (usually in Service layer).
 - **Mapping**: Use MapStruct for DTO-Entity conversions. Ensure `componentModel = "cdi"` is set.
 - **Validation**: Use Jakarta Bean Validation annotations (e.g., `@Valid`, `@NotBlank`) on DTOs.
 - **Response Handling**:
-    - Prefer returning entities or DTOs directly in Controllers (Quarkus handles JSON serialization).
+    - Prefer returning DTOs directly in Rest classes (Quarkus handles JSON serialization).
     - Throw `NotFoundException` or other JAX-RS exceptions for error states.
 - **Statuses**: Use `common.EnumStatusEntity` (`ATIVO`, `INATIVO`) for soft deletes/record status.
 
@@ -107,7 +107,7 @@ Bases classes are located in `src/main/java/common/`.
 - Entities: Singular PascalCase (e.g., `Usuario`).
 - Repositories: `[Entity]Repository`.
 - Services: `[Entity]Service`.
-- Controllers: `[Entity]Controller`.
+- Rest: `[Entity]Rest`.
 - DTOs: `[Entity][Purpose]DTO` (e.g., `UsuarioEditDTO`, `UsuarioListDTO`).
 - Mappers: `[Entity]Mapper`.
 
