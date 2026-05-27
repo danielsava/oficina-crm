@@ -111,6 +111,12 @@ When generating or refactoring domain components inside `src/app/modules/` (e.g.
 
 > Git workflow restrictions (branches, PRs/MRs, commits) are defined globally in the root `AGENTS.md`.
 
+## Architecture Decision Records (ADRs)
+
+Non-trivial architectural decisions MUST be recorded as ADRs in [`doc/adr/`](doc/adr/README.md) **before** the corresponding code change is merged. The directory's `README.md` defines the criteria, format (Nygard classic, Portuguese) and the numbering convention. Accepted ADRs are immutable; superseding decisions create a new ADR.
+
+When a change in this `AGENTS.md` reflects a deliberate architectural decision, the change MUST be accompanied by a new ADR, and the relevant section here SHOULD link to it.
+
 ## Commands
 
 ```bash

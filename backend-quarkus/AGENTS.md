@@ -103,6 +103,7 @@ Bases classes are located in `src/main/java/common/`.
     - Prefer returning DTOs directly in Rest classes (Quarkus handles JSON serialization).
     - Throw `NotFoundException` or other JAX-RS exceptions for error states.
 - **Statuses**: Use `common.EnumStatusEntity` (`ATIVO`, `INATIVO`) for soft deletes/record status.
+- **Enum Mapping**: Every JPA enum field MUST be annotated with `@Enumerated(EnumType.STRING)`. `EnumType.ORDINAL` is forbidden (fragile against enum refactoring, illegible in the database).
 
 ## Naming Conventions
 - Modules: `modules.[functional_area].[sub_area]` (e.g., `modules.iam.usuario`).
@@ -120,3 +121,9 @@ Bases classes are located in `src/main/java/common/`.
 - Do NOT run build or compile commands (`./mvnw package`, `./mvnw verify`, etc.) unless explicitly requested.
 
 > Git workflow restrictions (branches, PRs/MRs, commits) are defined globally in the root `AGENTS.md`.
+
+## Architecture Decision Records (ADRs)
+
+Non-trivial architectural decisions MUST be recorded as ADRs in [`doc/adr/`](doc/adr/README.md) **before** the corresponding code change is merged. The directory's `README.md` defines the criteria, format (Nygard classic, Portuguese) and the numbering convention. Accepted ADRs are immutable; superseding decisions create a new ADR.
+
+When a change in this `AGENTS.md` reflects a deliberate architectural decision, the change MUST be accompanied by a new ADR, and the relevant section here SHOULD link to it.

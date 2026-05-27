@@ -10,7 +10,7 @@ CREATE SEQUENCE core.global_id_seq
 CREATE TABLE iam.tb_usuario (
     id BIGINT PRIMARY KEY DEFAULT nextval('core.global_id_seq'),
     uuid UUID NOT NULL, -- DEFAULT gen_random_uuid()
-    status VARCHAR(255) NOT NULL,
+    status VARCHAR(40) NOT NULL,
     version BIGINT,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,

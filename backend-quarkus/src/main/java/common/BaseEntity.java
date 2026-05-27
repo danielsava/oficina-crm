@@ -27,6 +27,7 @@ public abstract class BaseEntity {
     @Column(name = "uuid", nullable = false, updatable = false, unique=true)
     private UUID uuid;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private EnumStatusEntity status;
 

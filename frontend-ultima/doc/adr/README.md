@@ -1,6 +1,6 @@
-# Architecture Decision Records (ADRs)
+# Architecture Decision Records (ADRs) — Frontend
 
-Este diretório registra as **decisões arquiteturais** do backend.
+Este diretório registra as **decisões arquiteturais** do frontend.
 
 ## Propósito
 
@@ -40,8 +40,10 @@ Decisões que afetam **backend e frontend simultaneamente** (ex.: contrato de AP
 
 ## Índice
 
-| #    | Título                                                                                                          | Status   |
-|------|-----------------------------------------------------------------------------------------------------------------|----------|
-| 0001 | [Padrão de nomenclatura `*Rest` para classes JAX-RS](./0001-padrao-nomenclatura-rest.md)                        | Accepted |
-| 0002 | [UUID como identificador público em URLs e DTOs](./0002-uuid-como-identificador-publico.md)                     | Accepted |
-| 0003 | [`EditDTO` como DTO único de formulário (entrada e leitura para edição)](./0003-editdto-como-dto-unico-de-formulario.md) | Accepted |
+_Nenhum ADR registrado ainda._
+
+<!--
+| #    | Título | Status   |
+|------|--------|----------|
+| 0001 | [Título](./0001-titulo-em-kebab-case.md) | Accepted |
+-->
