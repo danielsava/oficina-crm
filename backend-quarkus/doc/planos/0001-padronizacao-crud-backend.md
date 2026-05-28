@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-05-26
+> **Última atualização**: 2026-05-27
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -22,39 +22,11 @@
 | 4  | `@Enumerated(EnumType.STRING)` obrigatório + `status VARCHAR(20)` | `AGENTS.md` (sem ADR; decisão técnica simples)                        |
 | 10 | Bug `BaseService.excluirPorUUID(Long → String)`                   | Corrigido junto com o ponto 2                                          |
 | 11 | Mensagem "Senha fraca" em check de e-mail duplicado               | Removido junto com o ponto 3 (trecho deletado)                         |
+| 5  | RFC 7807 — Problem Details para erros HTTP                        | ADR-0004                                                              |
 
 ---
 
 ## Pendências (ordem recomendada)
-
-### 5. RFC 7807 — Problem Details para erros HTTP
-
-- **Objetivo**: padronizar todas as respostas de erro da API no formato RFC 7807 (`application/problem+json`).
-- **Contexto**: o `AGENTS.md` exige RFC 7807 ("ALL HTTP errors and API exceptions MUST adhere"), mas hoje:
-  - `NotFoundException` em `BaseRest` retorna apenas texto simples no body.
-  - `ValidationException` lançada em services não é mapeada para um payload estruturado.
-  - Erros de Bean Validation (`@Valid`) retornam o formato padrão do Quarkus, fora do contrato.
-- **Decisões necessárias**:
-  - Onde fica o pacote? Sugestão: `infra.exception` (já temos `infra.event`).
-  - Estrutura do payload: `record ProblemDetails(URI type, String title, int status, String detail, URI instance, ...)`. Incluir campo de erros de validação por campo (`Map<String, List<String>> errors` ou estrutura tipada)?
-  - URIs do campo `type`: usar URIs reais (`https://api.oficinacrm.com.br/problems/not-found`) ou `"about:blank"` (default RFC quando não há documentação de erro)?
-  - Quais exceções mapear inicialmente? Mínimo recomendado:
-    - `NotFoundException` → 404
-    - `ConstraintViolationException` (Bean Validation) → 400
-    - `ValidationException` → 400
-    - `OptimisticLockException` → 409 (futuro)
-    - `WebApplicationException` (catch-all JAX-RS) → status do exception
-    - `Exception` (catch-all final) → 500
-- **Escopo de mudança**:
-  - Criar `infra/exception/ProblemDetails.java` (record).
-  - Criar `infra/exception/*ExceptionMapper.java` por tipo (cada um `@Provider implements ExceptionMapper<X>`).
-  - Ajustar `BaseRest`: pode parar de tratar `NotFoundException` manualmente (o mapper cuida), mas hoje a lógica é "se retornou null, lança NotFoundException" — manter.
-  - Documentar no `AGENTS.md` o pacote e o contrato.
-  - **ADR-0004**: registrar a decisão (formato, URIs, lista inicial de mappers).
-- **Risco/observação**: o `quarkus-rest-jackson` já lida com a serialização do record; não precisa de dependência nova. O `Content-Type` precisa ser `application/problem+json`, configurado por mapper.
-- **Status**: pendente.
-
----
 
 ### 6. Hard delete (`DELETE /{uuid}`) no `BaseRest` — manter, restringir ou remover?
 
@@ -233,33 +205,31 @@
 ## Dependências entre itens
 
 ```
-5 (RFC 7807) ──┬─→ 13 (@Valid no controller, pois validation errors usam o mapper)
-               └─→ 18 parcialmente (problem+json content-type)
-
 7 (paginação) → independente, mas grande
 
-8 (OpenAPI) → melhor depois de 5, 7, 18 (contrato fica completo)
+8 (OpenAPI) → melhor depois de 7, 18 (contrato fica completo)
 
-9 (Create/Update validation groups) → independente; pode entrar antes ou depois de 5
+9 (Create/Update validation groups) → independente
 
 6 (hard delete) → independente
 
 12, 14, 15, 16, 17 → independentes, pequenos
+
+13 (@Valid no controller) → desbloqueado pelo ADR-0004 (mapper de ConstraintViolationException)
 ```
 
 ## Ordem sugerida de execução
 
-1. **5** — RFC 7807 (destrava 13 e parte de 18)
-2. **6** — Hard delete (decisão de design, rápida)
-3. **9** — Grupos de validação (padrão para o futuro, rápido)
-4. **13** — `@Valid` no `*Rest` (rápido, depende de 5)
-5. **18** — `@Produces`/`@Consumes` (rápido)
-6. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
-7. **17** — Remover `atualizar(Long, Map)` (rápido)
-8. **12** — Revisar `UsuarioListDTO` (rápido)
-9. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
-10. **7** — Paginação, ordenação e filtros (sessão dedicada)
-11. **8** — OpenAPI (fecha o contrato externo)
+1. **6** — Hard delete (decisão de design, rápida)
+2. **9** — Grupos de validação (padrão para o futuro, rápido)
+3. **13** — `@Valid` no `*Rest` (rápido, já desbloqueado pelo ADR-0004)
+4. **18** — `@Produces`/`@Consumes` (rápido)
+5. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
+6. **17** — Remover `atualizar(Long, Map)` (rápido)
+7. **12** — Revisar `UsuarioListDTO` (rápido)
+8. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
+9. **7** — Paginação, ordenação e filtros (sessão dedicada)
+10. **8** — OpenAPI (fecha o contrato externo)
 
 ## Concluídos
 
@@ -269,5 +239,6 @@
 | 2  | UUID como identificador público                                   | 2026-05-26 | ADR-0002            |
 | 3  | `EditDTO` único de formulário + dívida da senha temporária        | 2026-05-26 | ADR-0003            |
 | 4  | `@Enumerated(EnumType.STRING)` + `status VARCHAR(20)`             | 2026-05-26 | `AGENTS.md`         |
+| 5  | RFC 7807 — Problem Details para erros HTTP                        | 2026-05-27 | ADR-0004            |
 | 10 | Bug `excluirPorUUID(Long → String)`                               | 2026-05-26 | (corrigido junto com #2) |
 | 11 | Mensagem "Senha fraca" em check de e-mail duplicado               | 2026-05-26 | (removido junto com #3) |
