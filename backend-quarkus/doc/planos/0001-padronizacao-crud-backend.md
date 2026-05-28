@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-05-27
+> **Última atualização**: 2026-05-28
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -23,28 +23,11 @@
 | 10 | Bug `BaseService.excluirPorUUID(Long → String)`                   | Corrigido junto com o ponto 2                                          |
 | 11 | Mensagem "Senha fraca" em check de e-mail duplicado               | Removido junto com o ponto 3 (trecho deletado)                         |
 | 5  | RFC 7807 — Problem Details para erros HTTP                        | ADR-0004                                                              |
+| 6  | Hard delete (`DELETE /{uuid}`) removido do `BaseRest`             | ADR-0005                                                              |
 
 ---
 
 ## Pendências (ordem recomendada)
-
-### 6. Hard delete (`DELETE /{uuid}`) no `BaseRest` — manter, restringir ou remover?
-
-- **Objetivo**: decidir o destino do endpoint de exclusão física da base genérica.
-- **Contexto**: hoje `BaseRest` expõe `DELETE /{uuid}` que chama `excluirPorUUID` (delete físico no banco). Convive com `DELETE /inativar/{uuid}` (soft delete via `status = INATIVO`). Em sistema enterprise com auditoria, hard delete é geralmente proibido ou restrito a admin.
-- **Decisões necessárias**:
-  - Manter, restringir por papel (`@RolesAllowed("admin")`), ou remover da base genérica e expor caso a caso?
-  - Se manter, qual o impacto em FKs (CASCADE? RESTRICT? hoje não há FKs ainda)?
-  - Definição de "auditoria" — vamos manter histórico de inativações? (Influencia ponto 5 indiretamente, mas é mais um item futuro.)
-- **Escopo de mudança**:
-  - Se remover: deletar método `excluirPorUUID` de `BaseRest` (manter em `BaseService` como API interna).
-  - Se restringir: adicionar dependência `quarkus-security` + anotar o método.
-  - Atualizar `AGENTS.md` com a regra.
-  - **ADR-0005**: registrar a decisão.
-- **Recomendação prévia**: **remover do `BaseRest`** por enquanto. Soft delete é suficiente para o CRUD padrão; hard delete vira endpoint específico no `*Rest` da entidade que justificar (raríssimo).
-- **Status**: pendente.
-
----
 
 ### 7. Paginação, ordenação e filtros no contrato base
 
@@ -211,8 +194,6 @@
 
 9 (Create/Update validation groups) → independente
 
-6 (hard delete) → independente
-
 12, 14, 15, 16, 17 → independentes, pequenos
 
 13 (@Valid no controller) → desbloqueado pelo ADR-0004 (mapper de ConstraintViolationException)
@@ -220,16 +201,15 @@
 
 ## Ordem sugerida de execução
 
-1. **6** — Hard delete (decisão de design, rápida)
-2. **9** — Grupos de validação (padrão para o futuro, rápido)
-3. **13** — `@Valid` no `*Rest` (rápido, já desbloqueado pelo ADR-0004)
-4. **18** — `@Produces`/`@Consumes` (rápido)
-5. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
-6. **17** — Remover `atualizar(Long, Map)` (rápido)
-7. **12** — Revisar `UsuarioListDTO` (rápido)
-8. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
-9. **7** — Paginação, ordenação e filtros (sessão dedicada)
-10. **8** — OpenAPI (fecha o contrato externo)
+1. **9** — Grupos de validação (padrão para o futuro, rápido)
+2. **13** — `@Valid` no `*Rest` (rápido, já desbloqueado pelo ADR-0004)
+3. **18** — `@Produces`/`@Consumes` (rápido)
+4. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
+5. **17** — Remover `atualizar(Long, Map)` (rápido)
+6. **12** — Revisar `UsuarioListDTO` (rápido)
+7. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
+8. **7** — Paginação, ordenação e filtros (sessão dedicada)
+9. **8** — OpenAPI (fecha o contrato externo)
 
 ## Concluídos
 
@@ -240,5 +220,6 @@
 | 3  | `EditDTO` único de formulário + dívida da senha temporária        | 2026-05-26 | ADR-0003            |
 | 4  | `@Enumerated(EnumType.STRING)` + `status VARCHAR(20)`             | 2026-05-26 | `AGENTS.md`         |
 | 5  | RFC 7807 — Problem Details para erros HTTP                        | 2026-05-27 | ADR-0004            |
+| 6  | Hard delete (`DELETE /{uuid}`) removido do `BaseRest`             | 2026-05-28 | ADR-0005            |
 | 10 | Bug `excluirPorUUID(Long → String)`                               | 2026-05-26 | (corrigido junto com #2) |
 | 11 | Mensagem "Senha fraca" em check de e-mail duplicado               | 2026-05-26 | (removido junto com #3) |

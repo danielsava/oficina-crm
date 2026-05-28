@@ -61,15 +61,4 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
     }
 
-    @DELETE
-    @Path("/{uuid}")
-    public void excluirPorUUID(@PathParam("uuid") String uuid) {
-
-        boolean excluido = this.service().excluirPorUUID(uuid);
-
-        if (!excluido)
-            throw new NotFoundException("Registro não encontrado");
-
-    }
-
 }

@@ -90,7 +90,7 @@ Bases classes are located in `src/main/java/common/`.
 - **BaseEntity**: Provides `id`, `uuid`, `version`, `createdAt`, and `updatedAt`. Use `@PrePersist` and `@PreUpdate` for timestamps.
 - **BaseRepository**: Leverages Quarkus Panache for data access. Panache repository interface (Repository Pattern, not Active Record)
 - **BaseService**: Implements common CRUD operations. Requires implementations of `mapper()`, `repository()`, and `listDTO()`.
-- **BaseRest**: Provides standard JAX-RS endpoints (`GET /`, `GET /{id}`, `POST /`, `DELETE /inativar/id/{id}`, etc.).
+- **BaseRest**: Provides standard JAX-RS endpoints (`GET /`, `GET /{uuid}`, `POST /`, `PUT /{uuid}`, `DELETE /inativar/{uuid}`). The generic CRUD exposes **only soft delete** (`status = INATIVO`) via `DELETE /inativar/{uuid}`; **hard delete is NOT exposed by `BaseRest`**. The internal method `BaseService#excluirPorUUID` remains available for the rare cases where an entity-specific `*Rest` truly needs physical deletion — in that case, the endpoint MUST be declared explicitly in the concrete `*Rest`, with its own path and (when applicable) role-based restriction. See [ADR-0005](doc/adr/0005-remocao-do-hard-delete-no-baserest.md).
 - **BaseMapper**: Provides MapStruct base interface
 
 ## Coding Standards
