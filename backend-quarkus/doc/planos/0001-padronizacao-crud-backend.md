@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-05-28
+> **Última atualização**: 2026-05-28 (concluído #8 — OpenAPI/Swagger; decidido não versionar APIs internas; adicionado agrupamento sugerido em sessões do agente)
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -24,6 +24,7 @@
 | 11 | Mensagem "Senha fraca" em check de e-mail duplicado               | Removido junto com o ponto 3 (trecho deletado)                         |
 | 5  | RFC 7807 — Problem Details para erros HTTP                        | ADR-0004                                                              |
 | 6  | Hard delete (`DELETE /{uuid}`) removido do `BaseRest`             | ADR-0005                                                              |
+| 8  | OpenAPI/Swagger (dev e prod) + decisão de não versionar CRUD interno | ADR-0006                                                          |
 
 ---
 
@@ -51,23 +52,6 @@
   - Validar limites (size máximo).
   - **ADR-0006**: registrar a decisão completa.
 - **Risco/observação**: maior item da lista. Provavelmente vai consumir uma sessão inteira. Filtros dinâmicos têm risco de injection se não restringir whitelist de campos — relacionado ao ponto 17.
-- **Status**: pendente.
-
----
-
-### 8. OpenAPI / Swagger
-
-- **Objetivo**: expor contrato OpenAPI 3 automaticamente para o frontend e para testes manuais.
-- **Contexto**: parte integral do "CRUD enterprise". O `quarkus-smallrye-openapi` integra-se nativamente.
-- **Decisões necessárias**:
-  - Habilitar Swagger UI em dev? Em prod (atrás de auth)?
-  - Anotar DTOs com `@Schema` para documentação rica, ou aceitar o default?
-  - Versionar a API no path (`/api/v1/...`)?
-- **Escopo de mudança**:
-  - Adicionar `quarkus-smallrye-openapi` ao `pom.xml`.
-  - Configurar `application.properties` (path, info, server URL).
-  - Adicionar `@Tag`, `@Operation` em `*Rest` (opcional inicialmente; defaults bastam).
-  - **ADR-0007**: registrar a decisão (versionamento, exposição em prod, padrão de anotação).
 - **Status**: pendente.
 
 ---
@@ -190,8 +174,6 @@
 ```
 7 (paginação) → independente, mas grande
 
-8 (OpenAPI) → melhor depois de 7, 18 (contrato fica completo)
-
 9 (Create/Update validation groups) → independente
 
 12, 14, 15, 16, 17 → independentes, pequenos
@@ -209,7 +191,29 @@
 6. **12** — Revisar `UsuarioListDTO` (rápido)
 7. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
 8. **7** — Paginação, ordenação e filtros (sessão dedicada)
-9. **8** — OpenAPI (fecha o contrato externo)
+
+## Agrupamento sugerido em sessões do agente
+
+Estratégia para preservar a qualidade da análise do agente de IA, evitando contexto inchado em sessões longas. Cada sessão deve ser **iniciada do zero**, com prompt direto referenciando este plano e as pendências a tratar. Toda a "memória" necessária está nos ADRs, no `AGENTS.md` e neste plano — o agente relê sob demanda.
+
+| Sessão  | Pendências                                  | Natureza                                  | Por que agrupar (ou isolar)                                                                          |
+|---------|---------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------|
+| **S1**  | **#9**                                      | Design + ADR                              | Decisão arquitetural (validation groups vs. DTOs separados vs. MapStruct). Merece foco isolado.       |
+| **S2**  | **#13** + **#18**                           | Pequenas, encadeadas                      | Ambas mexem em `BaseRest`/`*Rest` com mudanças mínimas. Naturalmente complementares.                 |
+| **S3**  | **#14** + **#15** + **#17** + **#12** + **#16** | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR (ou só nota no `AGENTS.md`). Lote eficiente.                    |
+| **S4**  | **#7**                                      | Maior item, ADR próprio                   | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
+
+### Diretrizes para abrir uma nova sessão
+
+- **Prompt inicial padrão**: *"Leia o documento `backend-quarkus/doc/planos/0001-padronizacao-crud-backend.md` e vamos prosseguir com a(s) pendência(s) **#N** (e **#M**). Quero discutir as opções antes de implementar."*
+- **Não recontar o histórico** ao agente — está nos ADRs (`doc/adr/`) e no `AGENTS.md`. O agente lê sob demanda.
+- **Atualizar este plano ao final de cada sessão**: mover a pendência para "Concluídos", registrar ADR criado (se houver), atualizar a data no cabeçalho.
+
+### Quando consolidar em uma única sessão (exceções)
+
+- Trabalho **iniciado e incompleto** que exige continuidade direta.
+- Decisão pendente que depende de discussão recente **ainda não registrada em ADR**.
+- Itens muito pequenos (uma ou duas edições) onde o overhead de reiniciar não compensa.
 
 ## Concluídos
 
@@ -221,5 +225,6 @@
 | 4  | `@Enumerated(EnumType.STRING)` + `status VARCHAR(20)`             | 2026-05-26 | `AGENTS.md`         |
 | 5  | RFC 7807 — Problem Details para erros HTTP                        | 2026-05-27 | ADR-0004            |
 | 6  | Hard delete (`DELETE /{uuid}`) removido do `BaseRest`             | 2026-05-28 | ADR-0005            |
+| 8  | OpenAPI/Swagger (dev e prod) + não versionar CRUD interno         | 2026-05-28 | ADR-0006            |
 | 10 | Bug `excluirPorUUID(Long → String)`                               | 2026-05-26 | (corrigido junto com #2) |
 | 11 | Mensagem "Senha fraca" em check de e-mail duplicado               | 2026-05-26 | (removido junto com #3) |

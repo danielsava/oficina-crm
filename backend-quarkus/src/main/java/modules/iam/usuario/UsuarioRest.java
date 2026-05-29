@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.Path;
 import modules.iam.usuario.dto.UsuarioEditDTO;
 import modules.iam.usuario.dto.UsuarioListDTO;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 /**
  *
@@ -29,6 +30,7 @@ import modules.iam.usuario.dto.UsuarioListDTO;
  */
 
 @Path("/usuario")
+@Tag(name = "Usuário", description = "CRUD de usuários internos (IAM).")
 public class UsuarioRest extends BaseRest<Usuario, UsuarioEditDTO, UsuarioListDTO> {
 
 

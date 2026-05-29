@@ -40,10 +40,6 @@ Decisões que afetam **backend e frontend simultaneamente** (ex.: contrato de AP
 
 ## Índice
 
-_Nenhum ADR registrado ainda._
-
-<!--
-| #    | Título | Status   |
-|------|--------|----------|
-| 0001 | [Título](./0001-titulo-em-kebab-case.md) | Accepted |
--->
+| #    | Título                                                                                                          | Status   |
+|------|-----------------------------------------------------------------------------------------------------------------|----------|
+| 0001 | [`openapi-typescript` como fonte canônica de tipos do backend](./0001-openapi-typescript-como-fonte-de-tipos-do-backend.md) | Accepted |

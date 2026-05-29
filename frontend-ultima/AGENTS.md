@@ -54,6 +54,24 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
 
+## Backend Contract Consumption (OpenAPI)
+
+The backend (`backend-quarkus`) publishes an OpenAPI 3 contract at `/q/openapi` (JSON; `?format=yaml` for YAML) and a Swagger UI at `/q/swagger-ui`. See backend ADR-0006 (`backend-quarkus/doc/adr/0006-openapi-swagger-e-nao-versionamento-de-apis-internas.md`).
+
+TypeScript types are generated from this contract using **`openapi-typescript`** (types-only generator). The Angular `HttpClient` remains the HTTP layer; only the types are generated. See [ADR-0001](doc/adr/0001-openapi-typescript-como-fonte-de-tipos-do-backend.md) for the full rationale and the decisions on tooling, file location, and update policy.
+
+### Rules
+
+- **DO NOT** manually duplicate backend DTOs in the frontend. The single source of truth for DTO shapes is the generated file at `src/app/core/api/generated/backend-api.d.ts`.
+- The generated file MUST NOT be hand-edited. Regenerate it with `npm run api:generate` whenever a backend DTO changes, and commit the updated `.d.ts` together with the backend change (same commit or same delivery).
+- Domain services (`*.service.ts`) consume the generated types via `components['schemas']['<DTOName>']`. Example:
+  ```ts
+  import type { components } from '@core/api/generated/backend-api';
+  type UsuarioEditDTO = components['schemas']['UsuarioEditDTO'];
+  ```
+- The `*.model.ts` file per domain holds **derived types, view models, and form-specific shapes** — not the raw backend DTOs. It is allowed (and encouraged) to extend, restrict, or compose the generated types.
+- CI MUST run `npm run api:check` to fail the build when the committed `.d.ts` diverges from the live backend contract.
+
 ## Styling & Theming (Ultima & PrimeNG)
 
 - **Semantic Colors**: Use PrimeNG semantic color presets configured in `app.config.ts` (e.g., `primary`) and rely on Tailwind's utility classes (e.g., `bg-primary-500`, `text-surface-500`) instead of hardcoding HEX values.
@@ -102,7 +120,7 @@ When generating or refactoring domain components inside `src/app/modules/` (e.g.
 - **Class Naming**:
     - Table Component: `{Domain}TableComponent` (e.g., `ClienteTableComponent`)
     - Form Component: `{Domain}FormComponent` (e.g., `ClienteFormComponent`)
-    - Model: Exported interfaces/types (e.g., `export interface Cliente { ... }`)
+    - Model: Exported interfaces/types for **view models, form shapes, and derived types** (e.g., `export interface ClienteListView { ... }`). Raw backend DTOs come from the generated `src/app/core/api/generated/backend-api.d.ts` (see "Backend Contract Consumption (OpenAPI)" and ADR-0001).
     - Service: `{Domain}Service` (e.g., `ClienteService`)
     - Routes: `{Domain}Route` (e.g., exported as `export const ClienteRoute: Routes = []`)
 
@@ -120,8 +138,10 @@ When a change in this `AGENTS.md` reflects a deliberate architectural decision, 
 ## Commands
 
 ```bash
-npm start          # dev server
-npm run build      # production build
-npm test           # unit tests
-npm run format     # Prettier formatting
+npm start            # dev server
+npm run build        # production build
+npm test             # unit tests
+npm run format       # Prettier formatting
+npm run api:generate # regenerate backend API types from /q/openapi (see ADR-0001)
+npm run api:check    # verify committed types match the live backend contract (used in CI)
 ```

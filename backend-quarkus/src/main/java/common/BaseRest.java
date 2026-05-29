@@ -2,6 +2,9 @@ package common;
 
 import jakarta.ws.rs.*;
 import java.util.List;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 /**
  * Base para recursos REST do CRUD padrão.
@@ -12,6 +15,11 @@ import java.util.List;
  *   <li><b>id</b> (Long) é identificador <b>interno</b> (PK, FKs, joins, logs técnicos),
  *       nunca trafega em endpoints públicos.</li>
  * </ul>
+ *
+ * <p>As anotações OpenAPI declaradas aqui (operações e respostas) são herdadas
+ * pelas subclasses e aparecem no contrato gerado em <code>/q/openapi</code>
+ * e no Swagger UI em <code>/q/swagger-ui</code>. Cada {@code *Rest} concreto
+ * deve declarar seu próprio {@code @Tag} para agrupar os endpoints por entidade.</p>
  */
 public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
@@ -20,6 +28,11 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
     @POST
+    @Operation(summary = "Cria um novo registro",
+               description = "Cria um novo registro a partir do EditDTO informado.")
+    @APIResponse(responseCode = "204", description = "Registro criado com sucesso")
+    @APIResponse(responseCode = "400", description = "Payload inválido (RFC 7807)")
+    @APIResponse(responseCode = "409", description = "Conflito de regra de negócio (RFC 7807)")
     public void inserir(EditDTO editDTO) {
 
         this.service().inserir(editDTO); // return Response.status(Response.Status.CREATED).entity(novoUsuario).build();
@@ -27,12 +40,22 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
     @PUT
     @Path("/{uuid}")
-    public void atualizar(@PathParam("uuid") String uuid, EditDTO editDTO) {
+    @Operation(summary = "Atualiza um registro existente",
+               description = "Atualiza o registro identificado pelo UUID público.")
+    @APIResponse(responseCode = "204", description = "Registro atualizado com sucesso")
+    @APIResponse(responseCode = "400", description = "Payload inválido (RFC 7807)")
+    @APIResponse(responseCode = "404", description = "Registro não encontrado (RFC 7807)")
+    @APIResponse(responseCode = "409", description = "Conflito de regra de negócio (RFC 7807)")
+    public void atualizar(@Parameter(description = "UUID público do registro") @PathParam("uuid") String uuid,
+                          EditDTO editDTO) {
 
         this.service().atualizarPorUUID(uuid, editDTO);
     }
 
     @GET
+    @Operation(summary = "Lista os registros ativos",
+               description = "Retorna a lista dos registros com status ATIVO.")
+    @APIResponse(responseCode = "200", description = "Lista retornada")
     public List<ListDTO> listar() {
 
         return this.service().listarDTO();
@@ -40,7 +63,11 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
     @GET
     @Path("/{uuid}")
-    public EditDTO buscarPorUUID(@PathParam("uuid") String uuid) {
+    @Operation(summary = "Busca um registro por UUID",
+               description = "Retorna o EditDTO do registro identificado pelo UUID público.")
+    @APIResponse(responseCode = "200", description = "Registro encontrado")
+    @APIResponse(responseCode = "404", description = "Registro não encontrado (RFC 7807)")
+    public EditDTO buscarPorUUID(@Parameter(description = "UUID público do registro") @PathParam("uuid") String uuid) {
 
         EditDTO editDTO = this.service().buscarEditDTOporUUID(uuid);
 
@@ -52,7 +79,11 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
     @DELETE
     @Path("/inativar/{uuid}")
-    public void inativarPorUUID(@PathParam("uuid") String uuid) {
+    @Operation(summary = "Inativa um registro (soft delete)",
+               description = "Marca o registro como INATIVO. O CRUD padrão não expõe hard delete (ver ADR-0005).")
+    @APIResponse(responseCode = "204", description = "Registro inativado com sucesso")
+    @APIResponse(responseCode = "404", description = "Registro não encontrado (RFC 7807)")
+    public void inativarPorUUID(@Parameter(description = "UUID público do registro") @PathParam("uuid") String uuid) {
 
         boolean inativado = this.service().inativarPorUUID(uuid);
 
