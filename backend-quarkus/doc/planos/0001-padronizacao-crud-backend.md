@@ -58,19 +58,15 @@
 
 ### 9. Create vs Update DTO — estratégia futura
 
-- **Objetivo**: definir a estratégia para quando criação e atualização precisarem divergir.
-- **Contexto**: ADR-0003 estabeleceu `EditDTO` único para criação e edição. Funciona enquanto os campos são iguais. Quando divergirem (campo `senha` que volta no fluxo dedicado, campos read-only no update, etc.), precisamos de mecanismo.
+- **Objetivo**: registrar opções para cenários futuros em que criação e atualização precisem divergir quanto à validação.
+- **Contexto**: ADR-0003 estabeleceu `EditDTO` único para criação e edição. No estado atual, isso continua suficiente e não exige decisão adicional agora. Se no futuro surgirem divergências reais de validação entre `POST` e `PUT`, este item serve como catálogo de estratégias possíveis a serem analisadas caso a caso.
 - **Decisões necessárias**:
   - **Grupos de validação Bean Validation**: `@NotBlank(groups = OnCreate.class)`, `@Validated(OnCreate.class)` no `*Rest`. Mantém DTO único, validação contextual.
   - **DTOs separados** (`UsuarioCreateDTO` / `UsuarioUpdateDTO`): mais explícito, mais boilerplate, quebra parcialmente o genérico.
   - **MapStruct com `@MappingTarget`**: já usamos (`updatedEntityFromDTO`). Resolve "campos que não devem ser sobrescritos no update".
-- **Recomendação prévia**: adotar **grupos de validação** como padrão; DTOs separados só em casos extremos (forma muito divergente). Já temos exemplo do `login` ignorado no update via MapStruct (`UsuarioMapper.java:18`).
-- **Escopo de mudança**:
-  - Criar interfaces `common.validation.OnCreate` e `common.validation.OnUpdate`.
-  - Documentar uso no `AGENTS.md`.
-  - Aplicar como exemplo em `UsuarioEditDTO` (mesmo que hoje não diferencie, deixar pronto).
-  - **ADR-0008**: registrar a decisão.
-- **Status**: pendente.
+  - **Observação atual**: nenhuma dessas opções precisa ser adotada agora. A escolha fica adiada para o momento em que existir uma divergência concreta de validação.
+- **Escopo de mudança**: nenhum neste momento. Se uma divergência real surgir no futuro, abrir análise específica e decidir entre grupos de validação, DTOs separados ou outra abordagem adequada ao caso.
+- **Status**: registrado como referência futura; sem ação imediata.
 
 ---
 

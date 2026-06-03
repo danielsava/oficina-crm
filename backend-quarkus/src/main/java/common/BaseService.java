@@ -30,7 +30,7 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
     @Transactional
-    public void atualizar(Long id, EditDTO editDTO) {
+    public void atualizar(Long id, @Valid EditDTO editDTO) {
 
         Entity e = buscarPorId(id);
 
@@ -41,7 +41,7 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
     @Transactional
-    public void atualizarPorUUID(String uuid, EditDTO editDTO) {
+    public void atualizarPorUUID(String uuid, @Valid EditDTO editDTO) {
 
         Entity e = buscarPorUUID(uuid);
 

@@ -1,5 +1,6 @@
 package common;
 
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import java.util.List;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -33,7 +34,7 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
     @APIResponse(responseCode = "204", description = "Registro criado com sucesso")
     @APIResponse(responseCode = "400", description = "Payload inválido (RFC 7807)")
     @APIResponse(responseCode = "409", description = "Conflito de regra de negócio (RFC 7807)")
-    public void inserir(EditDTO editDTO) {
+    public void inserir(@Valid EditDTO editDTO) {
 
         this.service().inserir(editDTO); // return Response.status(Response.Status.CREATED).entity(novoUsuario).build();
     }
@@ -46,8 +47,8 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
     @APIResponse(responseCode = "400", description = "Payload inválido (RFC 7807)")
     @APIResponse(responseCode = "404", description = "Registro não encontrado (RFC 7807)")
     @APIResponse(responseCode = "409", description = "Conflito de regra de negócio (RFC 7807)")
-    public void atualizar(@Parameter(description = "UUID público do registro") @PathParam("uuid") String uuid,
-                          EditDTO editDTO) {
+    public void atualizar(@Parameter(description = "UUID público do registro")
+            @PathParam("uuid") String uuid, @Valid EditDTO editDTO) {
 
         this.service().atualizarPorUUID(uuid, editDTO);
     }
