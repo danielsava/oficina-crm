@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-05-28 (concluído #8 — OpenAPI/Swagger; decidido não versionar APIs internas; adicionado agrupamento sugerido em sessões do agente)
+> **Última atualização**: 2026-06-03 (concluído #9 — opções para divergência futura entre criação e atualização registradas como referência; decisão adiada para análise caso a caso)
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -20,6 +20,7 @@
 | 2  | UUID como identificador público em URLs e DTOs                    | ADR-0002                                                              |
 | 3  | `EditDTO` como DTO único de formulário (`POST`, `PUT`, `GET /{uuid}`) | ADR-0003 (inclui dívida técnica da senha temporária `"123456"`)     |
 | 4  | `@Enumerated(EnumType.STRING)` obrigatório + `status VARCHAR(20)` | `AGENTS.md` (sem ADR; decisão técnica simples)                        |
+| 9  | Create vs Update DTO — opções para divergência futura de validação | Plano 0001 (sem ADR; tratar caso a caso quando houver necessidade real) |
 | 10 | Bug `BaseService.excluirPorUUID(Long → String)`                   | Corrigido junto com o ponto 2                                          |
 | 11 | Mensagem "Senha fraca" em check de e-mail duplicado               | Removido junto com o ponto 3 (trecho deletado)                         |
 | 5  | RFC 7807 — Problem Details para erros HTTP                        | ADR-0004                                                              |
@@ -53,20 +54,6 @@
   - **ADR-0006**: registrar a decisão completa.
 - **Risco/observação**: maior item da lista. Provavelmente vai consumir uma sessão inteira. Filtros dinâmicos têm risco de injection se não restringir whitelist de campos — relacionado ao ponto 17.
 - **Status**: pendente.
-
----
-
-### 9. Create vs Update DTO — estratégia futura
-
-- **Objetivo**: registrar opções para cenários futuros em que criação e atualização precisem divergir quanto à validação.
-- **Contexto**: ADR-0003 estabeleceu `EditDTO` único para criação e edição. No estado atual, isso continua suficiente e não exige decisão adicional agora. Se no futuro surgirem divergências reais de validação entre `POST` e `PUT`, este item serve como catálogo de estratégias possíveis a serem analisadas caso a caso.
-- **Decisões necessárias**:
-  - **Grupos de validação Bean Validation**: `@NotBlank(groups = OnCreate.class)`, `@Validated(OnCreate.class)` no `*Rest`. Mantém DTO único, validação contextual.
-  - **DTOs separados** (`UsuarioCreateDTO` / `UsuarioUpdateDTO`): mais explícito, mais boilerplate, quebra parcialmente o genérico.
-  - **MapStruct com `@MappingTarget`**: já usamos (`updatedEntityFromDTO`). Resolve "campos que não devem ser sobrescritos no update".
-  - **Observação atual**: nenhuma dessas opções precisa ser adotada agora. A escolha fica adiada para o momento em que existir uma divergência concreta de validação.
-- **Escopo de mudança**: nenhum neste momento. Se uma divergência real surgir no futuro, abrir análise específica e decidir entre grupos de validação, DTOs separados ou outra abordagem adequada ao caso.
-- **Status**: registrado como referência futura; sem ação imediata.
 
 ---
 
@@ -170,8 +157,6 @@
 ```
 7 (paginação) → independente, mas grande
 
-9 (Create/Update validation groups) → independente
-
 12, 14, 15, 16, 17 → independentes, pequenos
 
 13 (@Valid no controller) → desbloqueado pelo ADR-0004 (mapper de ConstraintViolationException)
@@ -179,14 +164,13 @@
 
 ## Ordem sugerida de execução
 
-1. **9** — Grupos de validação (padrão para o futuro, rápido)
-2. **13** — `@Valid` no `*Rest` (rápido, já desbloqueado pelo ADR-0004)
-3. **18** — `@Produces`/`@Consumes` (rápido)
-4. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
-5. **17** — Remover `atualizar(Long, Map)` (rápido)
-6. **12** — Revisar `UsuarioListDTO` (rápido)
-7. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
-8. **7** — Paginação, ordenação e filtros (sessão dedicada)
+1. **13** — `@Valid` no `*Rest` (rápido, já desbloqueado pelo ADR-0004)
+2. **18** — `@Produces`/`@Consumes` (rápido)
+3. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
+4. **17** — Remover `atualizar(Long, Map)` (rápido)
+5. **12** — Revisar `UsuarioListDTO` (rápido)
+6. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
+7. **7** — Paginação, ordenação e filtros (sessão dedicada)
 
 ## Agrupamento sugerido em sessões do agente
 
@@ -194,10 +178,9 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 
 | Sessão  | Pendências                                  | Natureza                                  | Por que agrupar (ou isolar)                                                                          |
 |---------|---------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------|
-| **S1**  | **#9**                                      | Design + ADR                              | Decisão arquitetural (validation groups vs. DTOs separados vs. MapStruct). Merece foco isolado.       |
-| **S2**  | **#13** + **#18**                           | Pequenas, encadeadas                      | Ambas mexem em `BaseRest`/`*Rest` com mudanças mínimas. Naturalmente complementares.                 |
-| **S3**  | **#14** + **#15** + **#17** + **#12** + **#16** | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR (ou só nota no `AGENTS.md`). Lote eficiente.                    |
-| **S4**  | **#7**                                      | Maior item, ADR próprio                   | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
+| **S1**  | **#13** + **#18**                           | Pequenas, encadeadas                      | Ambas mexem em `BaseRest`/`*Rest` com mudanças mínimas. Naturalmente complementares.                 |
+| **S2**  | **#14** + **#15** + **#17** + **#12** + **#16** | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR (ou só nota no `AGENTS.md`). Lote eficiente.                    |
+| **S3**  | **#7**                                      | Maior item, ADR próprio                   | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
 
 ### Diretrizes para abrir uma nova sessão
 
@@ -219,6 +202,7 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 | 2  | UUID como identificador público                                   | 2026-05-26 | ADR-0002            |
 | 3  | `EditDTO` único de formulário + dívida da senha temporária        | 2026-05-26 | ADR-0003            |
 | 4  | `@Enumerated(EnumType.STRING)` + `status VARCHAR(20)`             | 2026-05-26 | `AGENTS.md`         |
+| 9  | Create vs Update DTO — opções para divergência futura de validação | 2026-06-03 | Plano 0001 (sem ADR; tratar caso a caso) |
 | 5  | RFC 7807 — Problem Details para erros HTTP                        | 2026-05-27 | ADR-0004            |
 | 6  | Hard delete (`DELETE /{uuid}`) removido do `BaseRest`             | 2026-05-28 | ADR-0005            |
 | 8  | OpenAPI/Swagger (dev e prod) + não versionar CRUD interno         | 2026-05-28 | ADR-0006            |
