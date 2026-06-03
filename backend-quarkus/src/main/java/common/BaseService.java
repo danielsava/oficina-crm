@@ -51,22 +51,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         mapper().updatedEntityFromDTO(editDTO, e);
     }
 
-    @Transactional
-    public int atualizar(Long id, Map<String, Object> params) {
-
-        String query = params.keySet().stream()
-                .map(key -> key + " = :" + key)
-                .reduce((a, b) -> a + ", " + b)
-                .orElse("");
-
-        query = query + " where id = :id";
-
-        params.put("id", id);
-
-        return repository().update(query, params);
-
-    }
-
     public List<ListDTO> listarDTO() {
 
         return this.repository().find("status", EnumStatusEntity.ATIVO)
@@ -165,6 +149,24 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
     /*
+
+    //
+    //  Código removido por risco de SqlInjection
+    public int atualizar(Long id, Map<String, Object> params) {
+
+        String query = params.keySet().stream()
+                .map(key -> key + " = :" + key)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
+
+        query = query + " where id = :id";
+
+        params.put("id", id);
+
+        return repository().update(query, params);
+
+    }
+
     default List<E> listarPaginado(int pageIndex, int pageSize, String sortBy, String sortDirection) {
 
         return findAll(Sort.by(sortBy)
