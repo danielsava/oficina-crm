@@ -48,3 +48,4 @@ Decisões que afetam **backend e frontend simultaneamente** (ex.: contrato de AP
 | 0004 | [RFC 7807 (Problem Details) como contrato único de erro HTTP](./0004-rfc-7807-problem-details-para-erros-http.md)       | Accepted |
 | 0005 | [Remoção do hard delete (`DELETE /{uuid}`) do `BaseRest`](./0005-remocao-do-hard-delete-no-baserest.md)                  | Accepted |
 | 0006 | [OpenAPI/Swagger em dev e prod, sem versionamento de APIs internas de CRUD](./0006-openapi-swagger-e-nao-versionamento-de-apis-internas.md) | Accepted |
+| 0007 | [Media types explícitos no `BaseRest` para não depender dos defaults do Quarkus](./0007-media-types-explicitos-no-baserest.md) | Accepted |

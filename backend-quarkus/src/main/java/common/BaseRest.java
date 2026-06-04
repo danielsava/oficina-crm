@@ -2,10 +2,12 @@ package common;
 
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import java.util.List;
+import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+
+import java.util.List;
 
 /**
  * Base para recursos REST do CRUD padrão.
@@ -22,6 +24,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
  * e no Swagger UI em <code>/q/swagger-ui</code>. Cada {@code *Rest} concreto
  * deve declarar seu próprio {@code @Tag} para agrupar os endpoints por entidade.</p>
  */
+@Produces(MediaType.APPLICATION_JSON)
 public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
@@ -29,8 +32,8 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
     @POST
-    @Operation(summary = "Cria um novo registro",
-               description = "Cria um novo registro a partir do EditDTO informado.")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Cria um novo registro", description = "Cria um novo registro a partir do EditDTO informado.")
     @APIResponse(responseCode = "204", description = "Registro criado com sucesso")
     @APIResponse(responseCode = "400", description = "Payload inválido (RFC 7807)")
     @APIResponse(responseCode = "409", description = "Conflito de regra de negócio (RFC 7807)")
@@ -41,6 +44,7 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
     @PUT
     @Path("/{uuid}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Operation(summary = "Atualiza um registro existente",
                description = "Atualiza o registro identificado pelo UUID público.")
     @APIResponse(responseCode = "204", description = "Registro atualizado com sucesso")
@@ -64,8 +68,7 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
     @GET
     @Path("/{uuid}")
-    @Operation(summary = "Busca um registro por UUID",
-               description = "Retorna o EditDTO do registro identificado pelo UUID público.")
+    @Operation(summary = "Busca um registro por UUID", description = "Retorna o EditDTO do registro identificado pelo UUID público.")
     @APIResponse(responseCode = "200", description = "Registro encontrado")
     @APIResponse(responseCode = "404", description = "Registro não encontrado (RFC 7807)")
     public EditDTO buscarPorUUID(@Parameter(description = "UUID público do registro") @PathParam("uuid") String uuid) {
@@ -80,8 +83,7 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
 
     @DELETE
     @Path("/inativar/{uuid}")
-    @Operation(summary = "Inativa um registro (soft delete)",
-               description = "Marca o registro como INATIVO. O CRUD padrão não expõe hard delete (ver ADR-0005).")
+    @Operation(summary = "Inativa um registro (soft delete)", description = "Marca o registro como INATIVO. O CRUD padrão não expõe hard delete (ver ADR-0005).")
     @APIResponse(responseCode = "204", description = "Registro inativado com sucesso")
     @APIResponse(responseCode = "404", description = "Registro não encontrado (RFC 7807)")
     public void inativarPorUUID(@Parameter(description = "UUID público do registro") @PathParam("uuid") String uuid) {

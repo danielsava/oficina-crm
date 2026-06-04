@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-06-03 (concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
+> **Última atualização**: 2026-06-04 (concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -27,6 +27,7 @@
 | 5  | RFC 7807 — Problem Details para erros HTTP                        | ADR-0004                                                              |
 | 6  | Hard delete (`DELETE /{uuid}`) removido do `BaseRest`             | ADR-0005                                                              |
 | 8  | OpenAPI/Swagger (dev e prod) + decisão de não versionar CRUD interno | ADR-0006                                                          |
+| 18 | `@Produces` explícito no `BaseRest` + `@Consumes` apenas em `POST`/`PUT` | ADR-0007                                                          |
 
 ---
 
@@ -122,24 +123,10 @@
 
 ---
 
-### 18. `@Produces` / `@Consumes` explícitos
-
-- **Objetivo**: tornar o contrato HTTP explícito em vez de depender dos defaults Quarkus.
-- **Contexto**: hoje `UsuarioRest` (e o `BaseRest`) não declaram `@Produces`/`@Consumes`. Funciona porque o Jackson é o default. Para enterprise + OpenAPI, explicitar melhora documentação e remove surpresas.
-- **Decisões necessárias**:
-  - Anotar no `BaseRest` (vale para todos os métodos) ou em cada método?
-  - `application/json` apenas, ou também `application/problem+json` (para errors — relacionado ao ponto 5)?
-- **Recomendação prévia**: anotar no `BaseRest` (class-level) com `@Produces(MediaType.APPLICATION_JSON)` e `@Consumes(MediaType.APPLICATION_JSON)`. Exception mappers do ponto 5 definem seu próprio `Content-Type` (`application/problem+json`).
-- **Escopo de mudança**: 2 anotações no `BaseRest`.
-- **Status**: pendente. Sem ADR (decisão técnica pequena).
-
----
-
 ## Itens que podem entrar em paralelo (sem dependência)
 
 - **14** (DDL NOT NULL) e **15** (senhaHash 255) podem ser feitos juntos em uma migração de uma linha cada.
 - **17** (remover método inseguro) é independente.
-- **18** (`@Produces`/`@Consumes`) é independente.
 
 ## Dependências entre itens
 
@@ -152,12 +139,11 @@
 
 ## Ordem sugerida de execução
 
-1. **18** — `@Produces`/`@Consumes` (rápido)
-2. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
-3. **17** — Remover `atualizar(Long, Map)` (rápido)
-4. **12** — Revisar `UsuarioListDTO` (rápido)
-5. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
-6. **7** — Paginação, ordenação e filtros (sessão dedicada)
+1. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
+2. **17** — Remover `atualizar(Long, Map)` (rápido)
+3. **12** — Revisar `UsuarioListDTO` (rápido)
+4. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
+5. **7** — Paginação, ordenação e filtros (sessão dedicada)
 
 ## Agrupamento sugerido em sessões do agente
 
@@ -165,9 +151,8 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 
 | Sessão  | Pendências                                  | Natureza                                  | Por que agrupar (ou isolar)                                                                          |
 |---------|---------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------|
-| **S1**  | **#18**                                     | Pequena, isolada                          | Ajuste técnico curto no `BaseRest`, adequado para uma sessão rápida.                                 |
-| **S2**  | **#14** + **#15** + **#17** + **#12** + **#16** | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR (ou só nota no `AGENTS.md`). Lote eficiente.                    |
-| **S3**  | **#7**                                      | Maior item, ADR próprio                   | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
+| **S1**  | **#14** + **#15** + **#17** + **#12** + **#16** | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR (ou só nota no `AGENTS.md`). Lote eficiente.                    |
+| **S2**  | **#7**                                      | Maior item, ADR próprio                   | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
 
 ### Diretrizes para abrir uma nova sessão
 
@@ -196,3 +181,4 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 | 8  | OpenAPI/Swagger (dev e prod) + não versionar CRUD interno         | 2026-05-28 | ADR-0006            |
 | 10 | Bug `excluirPorUUID(Long → String)`                               | 2026-05-26 | (corrigido junto com #2) |
 | 11 | Mensagem "Senha fraca" em check de e-mail duplicado               | 2026-05-26 | (removido junto com #3) |
+| 18 | `@Produces` explícito no `BaseRest` + `@Consumes` apenas em `POST`/`PUT` | 2026-06-04 | ADR-0007 |
