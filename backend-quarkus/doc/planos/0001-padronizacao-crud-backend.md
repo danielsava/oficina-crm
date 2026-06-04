@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-06-04 (concluído #14 — `NOT NULL` adicionado em `version`, `created_at` e `updated_at` em `V1__init.sql`, alinhando DDL com `BaseEntity`; concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluído #17 — remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)`; concluído #16 — índice parcial em `status = 'ATIVO'` adotado como decisão caso a caso, registrado na ADR-0008 e no `AGENTS.md`; concluído #15 — `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
+> **Última atualização**: 2026-06-04 (concluído #12 — `UsuarioListDTO` mantido como está; ADR-0002 reafirmado (não expor `id` numérico), `status` e `avatar` mantidos conforme atual; concluído #14 — `NOT NULL` adicionado em `version`, `created_at` e `updated_at` em `V1__init.sql`, alinhando DDL com `BaseEntity`; concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluído #17 — remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)`; concluído #16 — índice parcial em `status = 'ATIVO'` adotado como decisão caso a caso, registrado na ADR-0008 e no `AGENTS.md`; concluído #15 — `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -32,6 +32,7 @@
 | 16 | Índice parcial em `status = 'ATIVO'` avaliado caso a caso, não como padrão | ADR-0008 + `AGENTS.md`                                      |
 | 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | Migração (`V1__init.sql`; sem ADR)                                    |
 | 14 | `NOT NULL` em `version`, `created_at`, `updated_at` em `V1__init.sql` | Migração (`V1__init.sql`; sem ADR)                              |
+| 12 | `UsuarioListDTO` — campos expostos revisados (sem mudança)        | Plano 0001 (ADR-0002 reafirmado; sem novo ADR)                        |
 
 ---
 
@@ -63,31 +64,16 @@
 
 ---
 
-### 12. `UsuarioListDTO` — revisar campos expostos
-
-- **Objetivo**: confirmar que o `ListDTO` expõe o mínimo necessário para a listagem (sem vazar `senhaHash`, e com `uuid` para navegação).
-- **Contexto**: já adicionamos `uuid` no ponto 2. Falta revisar se a lista de campos atual (`uuid, nome, login, email, avatar`) é apropriada ou se deve incluir/excluir algo. Avatar em URL? Status (para filtrar inativos no frontend)?
-- **Decisões necessárias**:
-  - Manter `avatar` no listDTO ou só no editDTO?
-  - Incluir `status` (já filtramos por `ATIVO` no `listarDTO()`, mas se um dia listarmos inativos, precisa)?
-- **Escopo de mudança**: pequeno; ajustar o record.
-- **Status**: pendente (provavelmente não precisará de ADR — decisão pequena por entidade).
-
----
-
 ## Dependências entre itens
 
 ```
 7 (paginação) → independente, mas grande
 
-12 → independente, pequeno
-
 ```
 
 ## Ordem sugerida de execução
 
-1. **12** — Revisar `UsuarioListDTO` (rápido)
-2. **7** — Paginação, ordenação e filtros (sessão dedicada)
+1. **7** — Paginação, ordenação e filtros (sessão dedicada)
 
 ## Agrupamento sugerido em sessões do agente
 
@@ -95,8 +81,7 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 
 | Sessão  | Pendências                                  | Natureza                                  | Por que agrupar (ou isolar)                                                                          |
 |---------|---------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------|
-| **S1**  | **#12**                     | Mecânica, isolada                     | Item pequeno, baixo risco, sem ADR.                                      |
-| **S2**  | **#7**                    | Maior item, ADR próprio              | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
+| **S1**  | **#7**                    | Maior item, ADR próprio              | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
 
 ### Diretrizes para abrir uma nova sessão
 
@@ -130,3 +115,4 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 | 16 | Índice parcial em `status = 'ATIVO'` avaliado caso a caso, não como padrão | 2026-06-04 | ADR-0008 + `AGENTS.md` |
 | 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
 | 14 | `NOT NULL` em `version`, `created_at`, `updated_at` em `V1__init.sql` | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
+| 12 | `UsuarioListDTO` — campos expostos revisados (sem mudança)        | 2026-06-04 | Plano 0001 (ADR-0002 reafirmado; sem novo ADR) |

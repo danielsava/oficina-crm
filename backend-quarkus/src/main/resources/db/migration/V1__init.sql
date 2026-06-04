@@ -17,8 +17,7 @@ CREATE TABLE iam.tb_usuario (
     nome VARCHAR(150) NOT NULL,
     login VARCHAR(50) NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,
-    email VARCHAR(150) NOT NULL,
-    avatar VARCHAR(255)
+    email VARCHAR(150) NOT NULL
 );
 
 CREATE UNIQUE INDEX unique_tb_usuario_uuid  ON iam.tb_usuario (uuid);

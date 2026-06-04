@@ -23,10 +23,6 @@ public record UsuarioEditDTO (
     @NotBlank(message = "Informe o email")
     @Size(max = 150, message = "Email deve ter no máximo 150 caracteres")
     @Schema(description = "Email do usuário (único)", example = "maria.silva@exemplo.com", maxLength = 150, required = true)
-    String email,
-
-    @Size(max = 255, message = "Avatar deve ter no máximo 255 caracteres")
-    @Schema(description = "URL ou caminho do avatar do usuário", maxLength = 255)
-    String avatar
+    String email
 
 ) {  }

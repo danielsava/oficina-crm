@@ -23,9 +23,6 @@ public class Usuario extends BaseEntity {
     @Column(name = "email")
     private String email;
 
-    @Column(name = "avatar")
-    private String avatar;
-
 
     public String getNome() {
         return nome;
@@ -57,14 +54,6 @@ public class Usuario extends BaseEntity {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getAvatar() {
-        return avatar;
-    }
-
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
     }
 
 }

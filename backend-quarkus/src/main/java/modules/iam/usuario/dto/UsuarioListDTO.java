@@ -17,9 +17,6 @@ public record UsuarioListDTO (
     String login,
 
     @Schema(description = "Email", example = "maria.silva@exemplo.com")
-    String email,
-
-    @Schema(description = "URL ou caminho do avatar")
-    String avatar
+    String email
 
 ) { }
