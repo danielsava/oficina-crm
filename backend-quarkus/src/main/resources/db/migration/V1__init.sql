@@ -16,7 +16,7 @@ CREATE TABLE iam.tb_usuario (
     updated_at TIMESTAMP,
     nome VARCHAR(150) NOT NULL,
     login VARCHAR(50) NOT NULL,
-    senha_hash VARCHAR(100) NOT NULL,
+    senha_hash VARCHAR(255) NOT NULL,
     email VARCHAR(150) NOT NULL,
     avatar VARCHAR(255)
 );

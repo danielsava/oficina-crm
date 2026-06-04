@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-06-04 (concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluído #17 — remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)`; concluído #16 — índice parcial em `status = 'ATIVO'` adotado como decisão caso a caso, registrado na ADR-0008 e no `AGENTS.md`; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
+> **Última atualização**: 2026-06-04 (concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluído #17 — remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)`; concluído #16 — índice parcial em `status = 'ATIVO'` adotado como decisão caso a caso, registrado na ADR-0008 e no `AGENTS.md`; concluído #15 — `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -30,6 +30,7 @@
 | 18 | `@Produces` explícito no `BaseRest` + `@Consumes` apenas em `POST`/`PUT` | ADR-0007                                                          |
 | 17 | Remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)` | Código (`BaseService`; sem ADR)                               |
 | 16 | Índice parcial em `status = 'ATIVO'` avaliado caso a caso, não como padrão | ADR-0008 + `AGENTS.md`                                      |
+| 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | Migração (`V1__init.sql`; sem ADR)                                    |
 
 ---
 
@@ -89,31 +90,22 @@
 
 ---
 
-### 15. `senhaHash VARCHAR(100)` → `VARCHAR(255)`
-
-- **Objetivo**: prevenir estouro de coluna se o algoritmo de hash mudar.
-- **Contexto**: BCrypt gera ~60 chars; 100 cabe. Se migrarmos para Argon2 (mais longo), estoura. `VARCHAR(255)` é o padrão defensivo, sem custo real.
-- **Escopo de mudança**: `V1__init.sql` → `senha_hash VARCHAR(255) NOT NULL`.
-- **Status**: pendente. Item pequeno, sem ADR. Pode entrar junto com o ponto 14.
-
----
-
 ## Itens que podem entrar em paralelo (sem dependência)
 
-- **14** (DDL NOT NULL) e **15** (senhaHash 255) podem ser feitos juntos em uma migração de uma linha cada.
+- **14** (DDL NOT NULL) pode ser feito em uma migração curta.
 
 ## Dependências entre itens
 
 ```
 7 (paginação) → independente, mas grande
 
-12, 14, 15 → independentes, pequenos
+12, 14 → independentes, pequenos
 
 ```
 
 ## Ordem sugerida de execução
 
-1. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
+1. **14** — DDL NOT NULL em `version`, `created_at`, `updated_at` (rápido)
 2. **12** — Revisar `UsuarioListDTO` (rápido)
 3. **7** — Paginação, ordenação e filtros (sessão dedicada)
 
@@ -123,7 +115,7 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 
 | Sessão  | Pendências                                  | Natureza                                  | Por que agrupar (ou isolar)                                                                          |
 |---------|---------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------|
-| **S1**  | **#14** + **#15** + **#12** | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR. Lote eficiente.                    |
+| **S1**  | **#14** + **#12**           | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR. Lote eficiente.                    |
 | **S2**  | **#7**                    | Maior item, ADR próprio              | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
 
 ### Diretrizes para abrir uma nova sessão
@@ -156,3 +148,4 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 | 18 | `@Produces` explícito no `BaseRest` + `@Consumes` apenas em `POST`/`PUT` | 2026-06-04 | ADR-0007 |
 | 17 | Remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)` | 2026-06-04 | Código (`BaseService`; sem ADR) |
 | 16 | Índice parcial em `status = 'ATIVO'` avaliado caso a caso, não como padrão | 2026-06-04 | ADR-0008 + `AGENTS.md` |
+| 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
