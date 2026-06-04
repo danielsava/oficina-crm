@@ -45,21 +45,18 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
     @PUT
     @Path("/{uuid}")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Atualiza um registro existente",
-               description = "Atualiza o registro identificado pelo UUID público.")
+    @Operation(summary = "Atualiza um registro existente", description = "Atualiza o registro identificado pelo UUID público.")
     @APIResponse(responseCode = "204", description = "Registro atualizado com sucesso")
     @APIResponse(responseCode = "400", description = "Payload inválido (RFC 7807)")
     @APIResponse(responseCode = "404", description = "Registro não encontrado (RFC 7807)")
     @APIResponse(responseCode = "409", description = "Conflito de regra de negócio (RFC 7807)")
-    public void atualizar(@Parameter(description = "UUID público do registro")
-            @PathParam("uuid") String uuid, @Valid EditDTO editDTO) {
+    public void atualizar(@Parameter(description = "UUID") @PathParam("uuid") String uuid, @Valid EditDTO editDTO) {
 
         this.service().atualizarPorUUID(uuid, editDTO);
     }
 
     @GET
-    @Operation(summary = "Lista os registros ativos",
-               description = "Retorna a lista dos registros com status ATIVO.")
+    @Operation(summary = "Lista os registros ativos", description = "Retorna a lista dos registros com status ATIVO.")
     @APIResponse(responseCode = "200", description = "Lista retornada")
     public List<ListDTO> listar() {
 
@@ -71,7 +68,7 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
     @Operation(summary = "Busca um registro por UUID", description = "Retorna o EditDTO do registro identificado pelo UUID público.")
     @APIResponse(responseCode = "200", description = "Registro encontrado")
     @APIResponse(responseCode = "404", description = "Registro não encontrado (RFC 7807)")
-    public EditDTO buscarPorUUID(@Parameter(description = "UUID público do registro") @PathParam("uuid") String uuid) {
+    public EditDTO buscarPorUUID(@Parameter(description = "UUID") @PathParam("uuid") String uuid) {
 
         EditDTO editDTO = this.service().buscarEditDTOporUUID(uuid);
 
@@ -86,7 +83,7 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
     @Operation(summary = "Inativa um registro (soft delete)", description = "Marca o registro como INATIVO. O CRUD padrão não expõe hard delete (ver ADR-0005).")
     @APIResponse(responseCode = "204", description = "Registro inativado com sucesso")
     @APIResponse(responseCode = "404", description = "Registro não encontrado (RFC 7807)")
-    public void inativarPorUUID(@Parameter(description = "UUID público do registro") @PathParam("uuid") String uuid) {
+    public void inativarPorUUID(@Parameter(description = "UUID") @PathParam("uuid") String uuid) {
 
         boolean inativado = this.service().inativarPorUUID(uuid);
 
