@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-06-03 (concluído #9 — opções para divergência futura entre criação e atualização registradas como referência; decisão adiada para análise caso a caso)
+> **Última atualização**: 2026-06-03 (concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -21,6 +21,7 @@
 | 3  | `EditDTO` como DTO único de formulário (`POST`, `PUT`, `GET /{uuid}`) | ADR-0003 (inclui dívida técnica da senha temporária `"123456"`)     |
 | 4  | `@Enumerated(EnumType.STRING)` obrigatório + `status VARCHAR(20)` | `AGENTS.md` (sem ADR; decisão técnica simples)                        |
 | 9  | Create vs Update DTO — opções para divergência futura de validação | Plano 0001 (sem ADR; tratar caso a caso quando houver necessidade real) |
+| 13 | `@Valid` no controller e no service                               | Código (`BaseRest` + `BaseService`; sem ADR)                          |
 | 10 | Bug `BaseService.excluirPorUUID(Long → String)`                   | Corrigido junto com o ponto 2                                          |
 | 11 | Mensagem "Senha fraca" em check de e-mail duplicado               | Removido junto com o ponto 3 (trecho deletado)                         |
 | 5  | RFC 7807 — Problem Details para erros HTTP                        | ADR-0004                                                              |
@@ -66,18 +67,6 @@
   - Incluir `status` (já filtramos por `ATIVO` no `listarDTO()`, mas se um dia listarmos inativos, precisa)?
 - **Escopo de mudança**: pequeno; ajustar o record.
 - **Status**: pendente (provavelmente não precisará de ADR — decisão pequena por entidade).
-
----
-
-### 13. `@Valid` no controller vs service
-
-- **Objetivo**: garantir que a validação Bean Validation dispare consistentemente.
-- **Contexto**: hoje `@Valid` está em `BaseService.inserir(EditDTO)`. Funciona via interceptação CDI, mas o ponto canônico em JAX-RS é o `*Rest`. Hoje `BaseRest.inserir(EditDTO editDTO)` **não** tem `@Valid`.
-- **Decisões necessárias**: mover, duplicar ou manter? Recomendação: **adicionar `@Valid` no `BaseRest`** (camada REST) e manter no service como segurança adicional. Validação em duas camadas é aceitável e barata.
-- **Escopo de mudança**:
-  - Adicionar `@Valid` em `BaseRest.inserir`, `BaseRest.atualizar`.
-  - Resolve junto: erros de validação serão capturados pelo `ConstraintViolationExceptionMapper` do ponto 5.
-- **Status**: pendente. **Dependente do ponto 5** (sem o mapper, validação no `*Rest` retorna 400 com payload inconsistente).
 
 ---
 
@@ -159,18 +148,16 @@
 
 12, 14, 15, 16, 17 → independentes, pequenos
 
-13 (@Valid no controller) → desbloqueado pelo ADR-0004 (mapper de ConstraintViolationException)
 ```
 
 ## Ordem sugerida de execução
 
-1. **13** — `@Valid` no `*Rest` (rápido, já desbloqueado pelo ADR-0004)
-2. **18** — `@Produces`/`@Consumes` (rápido)
-3. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
-4. **17** — Remover `atualizar(Long, Map)` (rápido)
-5. **12** — Revisar `UsuarioListDTO` (rápido)
-6. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
-7. **7** — Paginação, ordenação e filtros (sessão dedicada)
+1. **18** — `@Produces`/`@Consumes` (rápido)
+2. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
+3. **17** — Remover `atualizar(Long, Map)` (rápido)
+4. **12** — Revisar `UsuarioListDTO` (rápido)
+5. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
+6. **7** — Paginação, ordenação e filtros (sessão dedicada)
 
 ## Agrupamento sugerido em sessões do agente
 
@@ -178,7 +165,7 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 
 | Sessão  | Pendências                                  | Natureza                                  | Por que agrupar (ou isolar)                                                                          |
 |---------|---------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------|
-| **S1**  | **#13** + **#18**                           | Pequenas, encadeadas                      | Ambas mexem em `BaseRest`/`*Rest` com mudanças mínimas. Naturalmente complementares.                 |
+| **S1**  | **#18**                                     | Pequena, isolada                          | Ajuste técnico curto no `BaseRest`, adequado para uma sessão rápida.                                 |
 | **S2**  | **#14** + **#15** + **#17** + **#12** + **#16** | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR (ou só nota no `AGENTS.md`). Lote eficiente.                    |
 | **S3**  | **#7**                                      | Maior item, ADR próprio                   | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
 
@@ -203,6 +190,7 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 | 3  | `EditDTO` único de formulário + dívida da senha temporária        | 2026-05-26 | ADR-0003            |
 | 4  | `@Enumerated(EnumType.STRING)` + `status VARCHAR(20)`             | 2026-05-26 | `AGENTS.md`         |
 | 9  | Create vs Update DTO — opções para divergência futura de validação | 2026-06-03 | Plano 0001 (sem ADR; tratar caso a caso) |
+| 13 | `@Valid` no controller e no service                               | 2026-06-03 | Código (`BaseRest` + `BaseService`; sem ADR) |
 | 5  | RFC 7807 — Problem Details para erros HTTP                        | 2026-05-27 | ADR-0004            |
 | 6  | Hard delete (`DELETE /{uuid}`) removido do `BaseRest`             | 2026-05-28 | ADR-0005            |
 | 8  | OpenAPI/Swagger (dev e prod) + não versionar CRUD interno         | 2026-05-28 | ADR-0006            |
