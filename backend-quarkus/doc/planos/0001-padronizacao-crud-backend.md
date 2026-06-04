@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-06-04 (concluído #12 — `UsuarioListDTO` mantido como está; ADR-0002 reafirmado (não expor `id` numérico), `status` e `avatar` mantidos conforme atual; concluído #14 — `NOT NULL` adicionado em `version`, `created_at` e `updated_at` em `V1__init.sql`, alinhando DDL com `BaseEntity`; concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluído #17 — remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)`; concluído #16 — índice parcial em `status = 'ATIVO'` adotado como decisão caso a caso, registrado na ADR-0008 e no `AGENTS.md`; concluído #15 — `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
+> **Última atualização**: 2026-06-04 (análise do #7 concluída — paginação/ordenação/filtros: decisões consolidadas em sessão dedicada (S1), implementação delegada ao plano [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md) (modo básico) e plano [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md) (modo avançado, apenas planejamento por enquanto); concluído #12 — `UsuarioListDTO` mantido como está; ADR-0002 reafirmado (não expor `id` numérico), `status` e `avatar` mantidos conforme atual; concluído #14 — `NOT NULL` adicionado em `version`, `created_at` e `updated_at` em `V1__init.sql`, alinhando DDL com `BaseEntity`; concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluído #17 — remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)`; concluído #16 — índice parcial em `status = 'ATIVO'` adotado como decisão caso a caso, registrado na ADR-0008 e no `AGENTS.md`; concluído #15 — `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -33,55 +33,26 @@
 | 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | Migração (`V1__init.sql`; sem ADR)                                    |
 | 14 | `NOT NULL` em `version`, `created_at`, `updated_at` em `V1__init.sql` | Migração (`V1__init.sql`; sem ADR)                              |
 | 12 | `UsuarioListDTO` — campos expostos revisados (sem mudança)        | Plano 0001 (ADR-0002 reafirmado; sem novo ADR)                        |
+| 7  | Paginação, ordenação e filtros — análise concluída                | Decisões consolidadas; implementação delegada aos planos [`0002`](0002-paginacao-ordenacao-filtros-backend.md) (básico) e [`0003`](0003-busca-avancada-backend.md) (avançado, planejamento). ADR-0009 a ser criada com a implementação do plano 0002. |
 
 ---
 
 ## Pendências (ordem recomendada)
 
-### 7. Paginação, ordenação e filtros no contrato base
-
-- **Objetivo**: definir o contrato HTTP padrão de listagem (paginação obrigatória, ordenação e filtros opcionais).
-- **Contexto**: hoje `GET /` retorna `List<ListDTO>` completo. Não escala. Há rascunho comentado em `BaseService.java` (linhas finais). Decisão precisa ser tomada **antes** de replicar entidades, senão multiplica débito.
-- **Decisões necessárias**:
-  - **Estratégia de paginação**:
-    - Offset/limit: `?page=0&size=20` (simples, mas inconsistente em datasets que mudam durante a navegação).
-    - Cursor: `?cursor=abc&size=20` (correto, mas exige cursor estável).
-    - Recomendação: **offset/limit** para CRUD admin (telas internas), suficiente.
-  - **Formato da resposta**: envelope (`{ content: [...], totalElements, totalPages, page, size }`) ou só array com headers (`X-Total-Count`)?
-    - Recomendação: **envelope**, melhor DX para Angular/PrimeNG (que esperam objeto).
-  - **Sort**: `?sort=nome,asc&sort=createdAt,desc` (Spring style) ou `?sort=nome:asc,createdAt:desc`?
-  - **Filtros**: query params livres (`?nome=joao`), ou objeto de filtro estruturado, ou DSL (RSQL/`?filter=nome==joao*`)?
-    - Recomendação: começar com **query params livres** (mais campo=valor), e cada `*Rest` documenta os filtros que aceita. RSQL pode entrar depois se houver demanda real.
-  - **Default `size`**: 20? 50? Máximo permitido (clamp)?
-- **Escopo de mudança**:
-  - Criar `common/Pagina.java` (record envelope).
-  - Refatorar `BaseService.listarDTO()` para aceitar `int page, int size, Sort sort, Map<String,Object> filters`.
-  - Refatorar `BaseRest.listar()` para receber `@QueryParam` correspondentes.
-  - Validar limites (size máximo).
-  - **ADR-0006**: registrar a decisão completa.
-- **Risco/observação**: maior item da lista. Provavelmente vai consumir uma sessão inteira. Filtros dinâmicos têm risco de injection se não restringir whitelist de campos — relacionado ao ponto 17.
-- **Status**: pendente.
+> Não há pendências de análise neste plano. A última (item #7) teve as decisões consolidadas na sessão S1 e a implementação foi delegada a planos próprios:
+>
+> - [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md) — modo básico (paginação + ordenação + filtros por coluna), pronto para implementação.
+> - [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md) — modo avançado (POST `/buscar` com `FiltroDTO`), apenas planejamento; implementação só quando o desenho do frontend exigir.
 
 ---
-
-## Dependências entre itens
-
-```
-7 (paginação) → independente, mas grande
-
-```
-
-## Ordem sugerida de execução
-
-1. **7** — Paginação, ordenação e filtros (sessão dedicada)
 
 ## Agrupamento sugerido em sessões do agente
 
 Estratégia para preservar a qualidade da análise do agente de IA, evitando contexto inchado em sessões longas. Cada sessão deve ser **iniciada do zero**, com prompt direto referenciando este plano e as pendências a tratar. Toda a "memória" necessária está nos ADRs, no `AGENTS.md` e neste plano — o agente relê sob demanda.
 
-| Sessão  | Pendências                                  | Natureza                                  | Por que agrupar (ou isolar)                                                                          |
-|---------|---------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------|
-| **S1**  | **#7**                    | Maior item, ADR próprio              | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
+| Sessão  | Pendências | Natureza                       | Por que agrupar (ou isolar)                                                                          |
+|---------|------------|--------------------------------|------------------------------------------------------------------------------------------------------|
+| **S1**  | **#7**     | Maior item, ADR próprio        | Paginação/ordenação/filtros — sessão dedicada concluída. Análise consolidada nos planos 0002 e 0003. |
 
 ### Diretrizes para abrir uma nova sessão
 
@@ -116,3 +87,4 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 | 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
 | 14 | `NOT NULL` em `version`, `created_at`, `updated_at` em `V1__init.sql` | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
 | 12 | `UsuarioListDTO` — campos expostos revisados (sem mudança)        | 2026-06-04 | Plano 0001 (ADR-0002 reafirmado; sem novo ADR) |
+| 7  | Paginação, ordenação e filtros — análise concluída                | 2026-06-04 | Decisões consolidadas em [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md) (modo básico) e [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md) (modo avançado, planejamento). ADR-0009 a ser criada com a implementação do plano 0002. |
