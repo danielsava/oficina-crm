@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-06-04 (concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
+> **Última atualização**: 2026-06-04 (concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluído #17 — remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)`; concluído #16 — índice parcial em `status = 'ATIVO'` adotado como decisão caso a caso, registrado na ADR-0008 e no `AGENTS.md`; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -28,6 +28,8 @@
 | 6  | Hard delete (`DELETE /{uuid}`) removido do `BaseRest`             | ADR-0005                                                              |
 | 8  | OpenAPI/Swagger (dev e prod) + decisão de não versionar CRUD interno | ADR-0006                                                          |
 | 18 | `@Produces` explícito no `BaseRest` + `@Consumes` apenas em `POST`/`PUT` | ADR-0007                                                          |
+| 17 | Remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)` | Código (`BaseService`; sem ADR)                               |
+| 16 | Índice parcial em `status = 'ATIVO'` avaliado caso a caso, não como padrão | ADR-0008 + `AGENTS.md`                                      |
 
 ---
 
@@ -96,54 +98,24 @@
 
 ---
 
-### 16. Índice parcial em `status = 'ATIVO'`
-
-- **Objetivo**: otimizar listagens que filtram sempre `status = ATIVO`.
-- **Contexto**: `BaseService.listarDTO()` filtra `status = ATIVO`. Em tabelas com muitos inativos, índice parcial ajuda. Discussão pertinente como **padrão para todas as tabelas** ou só onde a cardinalidade justificar.
-- **Decisões necessárias**:
-  - Criar índice parcial padrão em todas as tabelas (regra geral), ou caso a caso?
-  - Faz parte do padrão de "criar tabela" deste projeto?
-- **Recomendação prévia**: **caso a caso**. Em tabelas pequenas (`tb_usuario` raramente passa de centenas), o índice é desperdício de manutenção. Criar índice parcial só quando o `EXPLAIN` mostrar problema real.
-- **Escopo de mudança**: documentar a regra no `AGENTS.md` ("avalie criar índice parcial em `status` se a tabela for grande e a leitura de ativos for hot path").
-- **Status**: pendente. Provavelmente vira nota no `AGENTS.md`, sem ADR.
-
----
-
-### 17. `BaseService.atualizar(Long, Map<String,Object>)` — risco de injection
-
-- **Objetivo**: eliminar superfície de risco de injeção HQL/JPQL.
-- **Contexto**: `BaseService.java:42-55` constrói query concatenando chaves do `Map` (`key + " = :" + key`). Se um dia o `Map` vier de input externo (PATCH dinâmico), abre porta para injection. Hoje não está exposto no `BaseRest`, mas o método existe.
-- **Decisões necessárias**:
-  - **A) Remover o método**: mais seguro. Quando precisarmos de PATCH, criamos endpoint específico com whitelist de campos.
-  - **B) Manter, mas validar `key` contra whitelist** (`Set<String>` de campos permitidos, idealmente derivado por reflexão).
-  - **C) Manter e marcar como `@Deprecated` + Javadoc proibindo uso com input externo**.
-- **Recomendação prévia**: **A — remover**. Não está sendo usado, e quando precisarmos a forma certa é endpoint dedicado.
-- **Escopo de mudança**: deletar método e qualquer referência (não há).
-- **Status**: pendente. Sem ADR (limpeza simples).
-
----
-
 ## Itens que podem entrar em paralelo (sem dependência)
 
 - **14** (DDL NOT NULL) e **15** (senhaHash 255) podem ser feitos juntos em uma migração de uma linha cada.
-- **17** (remover método inseguro) é independente.
 
 ## Dependências entre itens
 
 ```
 7 (paginação) → independente, mas grande
 
-12, 14, 15, 16, 17 → independentes, pequenos
+12, 14, 15 → independentes, pequenos
 
 ```
 
 ## Ordem sugerida de execução
 
 1. **14**, **15** — DDL NOT NULL + `senha_hash VARCHAR(255)` (rápidos, juntos)
-2. **17** — Remover `atualizar(Long, Map)` (rápido)
-3. **12** — Revisar `UsuarioListDTO` (rápido)
-4. **16** — Índice parcial (provavelmente vira só nota no `AGENTS.md`)
-5. **7** — Paginação, ordenação e filtros (sessão dedicada)
+2. **12** — Revisar `UsuarioListDTO` (rápido)
+3. **7** — Paginação, ordenação e filtros (sessão dedicada)
 
 ## Agrupamento sugerido em sessões do agente
 
@@ -151,8 +123,8 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 
 | Sessão  | Pendências                                  | Natureza                                  | Por que agrupar (ou isolar)                                                                          |
 |---------|---------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------|
-| **S1**  | **#14** + **#15** + **#17** + **#12** + **#16** | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR (ou só nota no `AGENTS.md`). Lote eficiente.                    |
-| **S2**  | **#7**                                      | Maior item, ADR próprio                   | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
+| **S1**  | **#14** + **#15** + **#12** | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR. Lote eficiente.                    |
+| **S2**  | **#7**                    | Maior item, ADR próprio              | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
 
 ### Diretrizes para abrir uma nova sessão
 
@@ -182,3 +154,5 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 | 10 | Bug `excluirPorUUID(Long → String)`                               | 2026-05-26 | (corrigido junto com #2) |
 | 11 | Mensagem "Senha fraca" em check de e-mail duplicado               | 2026-05-26 | (removido junto com #3) |
 | 18 | `@Produces` explícito no `BaseRest` + `@Consumes` apenas em `POST`/`PUT` | 2026-06-04 | ADR-0007 |
+| 17 | Remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)` | 2026-06-04 | Código (`BaseService`; sem ADR) |
+| 16 | Índice parcial em `status = 'ATIVO'` avaliado caso a caso, não como padrão | 2026-06-04 | ADR-0008 + `AGENTS.md` |
