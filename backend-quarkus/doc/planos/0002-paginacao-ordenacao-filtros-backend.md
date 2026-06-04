@@ -79,6 +79,65 @@ public record Pagina<T>(
 | `page` além do total | retorna `content: []` (não é erro) |
 | Validação | `@Min` / `@Max` em Bean Validation, no `@QueryParam` do `BaseRest` |
 
+## Decisões de implementação já discutidas (rationale resumido)
+
+Pontos discutidos na sessão S1 que não cabiam dentro das 5 decisões consolidadas, mas que orientam escolhas concretas na hora de implementar. Servem para evitar re-questionamento em sessões futuras.
+
+### R1. Por que `ILIKE '%valor%'` automático em campos `String` (e não igualdade exata)
+
+- Filtros de tela admin são predominantemente "filtre por trecho de nome/login/email", não "exatamente igual a X".
+- Igualdade exata em `String` é caso raro no CRUD; quando aparecer (ex.: validação de unicidade), o `*Service` pode expor método dedicado em vez de filtro genérico.
+- A convenção de "campo String → ILIKE" reduz boilerplate por entidade.
+- Risco: se uma entidade tiver campo `String` que precisa de igualdade exata (ex.: código de produto), o `*Service` sobrescreve `aplicarFiltros` para esse campo específico. Caso esperado de ser raro.
+
+### R2. Por que "ignorar silenciosamente" filtros fora da whitelist (e não rejeitar com 400)
+
+- Clientes podem precisar enviar query params para finalidades não relacionadas a filtro (analytics, cache busting, debug, parâmetros de UI persistidos na URL).
+- Rejeitar com 400 cria fricção desnecessária e acopla cliente ao conhecimento exato do contrato do backend.
+- O modelo "explícito no `*Rest`" já garante que só os filtros desejados sejam aplicados; o resto é ruído inofensivo.
+- Para a segurança o que importa é o que **entra** na query, não o que é **ignorado**. A whitelist no `*Service` resolve o lado do que entra.
+- Comportamento alinhado com Spring Data, JAX-RS padrão e a maioria das APIs REST corporativas.
+
+### R3. Por que `status = ATIVO` implícito continua, com regra de override
+
+- Comportamento atual do `BaseService.listarDTO()` já filtra `status = ATIVO`. Manter preserva semântica do CRUD admin e evita expor inativos por engano.
+- Quando o `*Rest` concreto declara `@QueryParam("status")`, é decisão deliberada de permitir filtrar status. Nesse caso, o filtro explícito **substitui** o implícito (caso contrário seria impossível listar inativos via tela).
+- Implementação cuidadosa: ao montar a query, verificar se `status` está presente nos filtros aceitos da requisição **antes** de adicionar `status = ATIVO`. Cobrir com teste manual ambos os cenários (com e sem `status` na request).
+- Quando autenticação/autorização entrar no projeto, revisitar essa regra para amarrar com perfil do usuário (admin vs operador).
+
+### R4. Por que reflexão para inferir tipo de campo (e não `Map<String, TipoFiltro>` declarativo)
+
+- Reflexão sobre `Class<Entity>` é determinística: `entity.getDeclaredField("nome").getType()` devolve o tipo Java do campo, suficiente para escolher entre ILIKE, igualdade, range.
+- Declarar `Map<String, TipoFiltro>` por entidade dobraria o trabalho (campo já está declarado na entidade JPA; declarar de novo é repetição) e ficaria fora de sincronia se alguém alterar tipo do campo sem atualizar o map.
+- Reflexão acontece **uma vez** por request (ou pode ser cacheada em `static Map<Class, Map<String, Class>>` no `BaseService` se vier a ser hot path).
+- Se algum filtro precisar de tipo diferente do tipo natural do campo (ex.: campo `LocalDateTime` mas filtro aceita só `LocalDate`), `*Service` sobrescreve `aplicarFiltros` pontualmente.
+- Decisão pragmática: começar com reflexão; evoluir para declarativo só se aparecer caso real que justifique.
+
+### R5. Por que sobrescrever `listar()` no `*Rest` concreto (e não usar só `UriInfo` no `BaseRest`)
+
+- O `BaseRest` poderia receber `UriInfo` e passar `MultivaluedMap<String,String>` opaco para o `BaseService`, sem precisar declarar nada nos `*Rest` concretos.
+- **Custo dessa simplificação**: o contrato OpenAPI gerado teria zero informação sobre os filtros suportados por cada entidade. O `frontend-ultima`, que gera tipos via `openapi-typescript`, não saberia que `GET /usuario` aceita `?nome=...&login=...` — tudo seria string opaca.
+- Declarar os filtros como `@QueryParam` no `*Rest` concreto (com `@Parameter` e tipo correto) faz cada entidade aparecer no contrato com os filtros tipados, alimentando o frontend com tipos precisos.
+- Custo: 4-5 linhas de boilerplate por `*Rest`. Aceitável pela qualidade da documentação e do contrato.
+- O `BaseService` continua recebendo `MultivaluedMap` internamente para aplicar a whitelist — a tipagem é tema do contrato HTTP, não da camada de serviço.
+
+### R6. Por que `Pagina` (português) e não `Page`
+
+- Já registrado na decisão 2 acima. Resumo aqui apenas para rastreabilidade: evitar colisão com `io.quarkus.panache.common.Page` e qualquer outra `Page` que apareça em libs futuras. Permite usar ambos no mesmo arquivo sem importação qualificada.
+
+### R7. Por que sort com direção obrigatória
+
+- Direção implícita ("se omitir, assume `asc`") é fonte clássica de bug ("achei que era desc por padrão; sempre foi asc; só descobri em produção").
+- Custo de tornar explícito: usuário escreve `,asc` ou `,desc` no query param. Trivial.
+- Ganho: contrato sem ambiguidade; mensagem de erro clara quando alguém esquece (400 + Problem Details).
+- Mesma linha de raciocínio da postura geral do projeto: "validação rigorosa, sem implicitude".
+
+### R8. Por que sem limite de número de critérios de sort
+
+- Risco de sort patológico (10+ critérios) é teórico; a whitelist de campos já filtra qualquer tentativa de sort em campo sem índice.
+- Limite arbitrário (`max=3` ou `max=5`) cria fricção sem ganho real.
+- Se aparecer abuso em produção (improvável em CRUD admin), adicionar limite depois é mudança não-quebrante (rejeitar com 400 quando `sort.size() > N`).
+
 ## Escopo de implementação
 
 ### Arquivos a criar
