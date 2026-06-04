@@ -11,9 +11,9 @@ CREATE TABLE iam.tb_usuario (
     id BIGINT PRIMARY KEY DEFAULT nextval('core.global_id_seq'),
     uuid UUID NOT NULL, -- DEFAULT gen_random_uuid()
     status VARCHAR(40) NOT NULL,
-    version BIGINT,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP,
+    version BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
     nome VARCHAR(150) NOT NULL,
     login VARCHAR(50) NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,

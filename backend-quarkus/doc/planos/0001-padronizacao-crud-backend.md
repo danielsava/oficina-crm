@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-06-04 (concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluído #17 — remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)`; concluído #16 — índice parcial em `status = 'ATIVO'` adotado como decisão caso a caso, registrado na ADR-0008 e no `AGENTS.md`; concluído #15 — `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
+> **Última atualização**: 2026-06-04 (concluído #14 — `NOT NULL` adicionado em `version`, `created_at` e `updated_at` em `V1__init.sql`, alinhando DDL com `BaseEntity`; concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluído #17 — remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)`; concluído #16 — índice parcial em `status = 'ATIVO'` adotado como decisão caso a caso, registrado na ADR-0008 e no `AGENTS.md`; concluído #15 — `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -31,6 +31,7 @@
 | 17 | Remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)` | Código (`BaseService`; sem ADR)                               |
 | 16 | Índice parcial em `status = 'ATIVO'` avaliado caso a caso, não como padrão | ADR-0008 + `AGENTS.md`                                      |
 | 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | Migração (`V1__init.sql`; sem ADR)                                    |
+| 14 | `NOT NULL` em `version`, `created_at`, `updated_at` em `V1__init.sql` | Migração (`V1__init.sql`; sem ADR)                              |
 
 ---
 
@@ -74,40 +75,19 @@
 
 ---
 
-### 14. Divergências DDL ↔ entidade (`version`, `created_at`, `updated_at`)
-
-- **Objetivo**: alinhar `NOT NULL` entre as anotações JPA e a DDL.
-- **Contexto**: `BaseEntity` declara `version`, `createdAt`, `updatedAt` como `nullable = false`. `V1__init.sql` declara essas colunas **sem** `NOT NULL`. Funciona em runtime (Hibernate preenche), mas é divergência documental que confunde leitura do SQL.
-- **Decisões necessárias**: alinhar — adicionar `NOT NULL` na DDL. Não há discussão real, só execução.
-- **Escopo de mudança**:
-  - Em `V1__init.sql` (diretiva temporária permite editar o V1):
-    ```sql
-    version    BIGINT       NOT NULL,
-    created_at TIMESTAMP    NOT NULL,
-    updated_at TIMESTAMP    NOT NULL,
-    ```
-- **Status**: pendente. Item pequeno, sem ADR.
-
----
-
-## Itens que podem entrar em paralelo (sem dependência)
-
-- **14** (DDL NOT NULL) pode ser feito em uma migração curta.
-
 ## Dependências entre itens
 
 ```
 7 (paginação) → independente, mas grande
 
-12, 14 → independentes, pequenos
+12 → independente, pequeno
 
 ```
 
 ## Ordem sugerida de execução
 
-1. **14** — DDL NOT NULL em `version`, `created_at`, `updated_at` (rápido)
-2. **12** — Revisar `UsuarioListDTO` (rápido)
-3. **7** — Paginação, ordenação e filtros (sessão dedicada)
+1. **12** — Revisar `UsuarioListDTO` (rápido)
+2. **7** — Paginação, ordenação e filtros (sessão dedicada)
 
 ## Agrupamento sugerido em sessões do agente
 
@@ -115,7 +95,7 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 
 | Sessão  | Pendências                                  | Natureza                                  | Por que agrupar (ou isolar)                                                                          |
 |---------|---------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------|
-| **S1**  | **#14** + **#12**           | Mecânicas, agrupadas                  | Itens pequenos, baixo risco, sem ADR. Lote eficiente.                    |
+| **S1**  | **#12**                     | Mecânica, isolada                     | Item pequeno, baixo risco, sem ADR.                                      |
 | **S2**  | **#7**                    | Maior item, ADR próprio              | Paginação/ordenação/filtros é a maior decisão restante. Sessão dedicada e provavelmente longa.       |
 
 ### Diretrizes para abrir uma nova sessão
@@ -149,3 +129,4 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 | 17 | Remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)` | 2026-06-04 | Código (`BaseService`; sem ADR) |
 | 16 | Índice parcial em `status = 'ATIVO'` avaliado caso a caso, não como padrão | 2026-06-04 | ADR-0008 + `AGENTS.md` |
 | 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
+| 14 | `NOT NULL` em `version`, `created_at`, `updated_at` em `V1__init.sql` | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
