@@ -1,7 +1,7 @@
 # Plano de Padronização do CRUD — Backend (Pendências)
 
 > **Status**: vivo (editável conforme avançamos)
-> **Última atualização**: 2026-06-04 (análise do #7 concluída — paginação/ordenação/filtros: decisões consolidadas em sessão dedicada (S1), implementação delegada ao plano [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md) (modo básico) e plano [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md) (modo avançado, apenas planejamento por enquanto); concluído #12 — `UsuarioListDTO` mantido como está; ADR-0002 reafirmado (não expor `id` numérico), `status` e `avatar` mantidos conforme atual; concluído #14 — `NOT NULL` adicionado em `version`, `created_at` e `updated_at` em `V1__init.sql`, alinhando DDL com `BaseEntity`; concluído #18 — `@Produces` explícito no `BaseRest` e `@Consumes` apenas em `POST`/`PUT`, registrado na ADR-0007; concluído #17 — remoção do método inseguro `BaseService.atualizar(Long, Map<String,Object>)`; concluído #16 — índice parcial em `status = 'ATIVO'` adotado como decisão caso a caso, registrado na ADR-0008 e no `AGENTS.md`; concluído #15 — `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`; concluídos #9 — opções para divergência futura registradas como referência; #13 — `@Valid` duplicado em `Rest` e `Service`)
+> **Última atualização**: 2026-06-04 (#7 reimplementado via plano [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md) com `POST /buscar` + `FiltroDTO` estruturado; plano [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md) descontinuado; ADR-0009 reescrita in-place refletindo a decisão final; demais itens (#12, #14, #18, #17, #16, #15, #9, #13) seguem conforme atualizações anteriores)
 > **Contexto-mãe**: revisão arquitetural do esqueleto CRUD genérico (`common.*`) usando a entidade `Usuario` como referência de implementação.
 
 ## Como ler este documento
@@ -33,16 +33,16 @@
 | 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | Migração (`V1__init.sql`; sem ADR)                                    |
 | 14 | `NOT NULL` em `version`, `created_at`, `updated_at` em `V1__init.sql` | Migração (`V1__init.sql`; sem ADR)                              |
 | 12 | `UsuarioListDTO` — campos expostos revisados (sem mudança)        | Plano 0001 (ADR-0002 reafirmado; sem novo ADR)                        |
-| 7  | Paginação, ordenação e filtros — modo básico implementado         | Decisões consolidadas, implementação concluída via plano [`0002`](0002-paginacao-ordenacao-filtros-backend.md) e registrada na [ADR-0009](../adr/0009-paginacao-ordenacao-filtros-no-baserest.md). Modo avançado segue em [`0003`](0003-busca-avancada-backend.md). |
+| 7  | Paginação, ordenação e filtros — implementação concluída via `POST /buscar` + `FiltroDTO` | Implementação concluída via plano [`0003`](0003-busca-avancada-backend.md) e registrada na [ADR-0009](../adr/0009-paginacao-ordenacao-filtros-no-baserest.md) (reescrita in-place). Plano [`0002`](0002-paginacao-ordenacao-filtros-backend.md) descontinuado e substituído por completo. |
 
 ---
 
 ## Pendências (ordem recomendada)
 
-> Não há pendências de análise neste plano. A última (item #7) teve as decisões consolidadas na sessão S1 e a implementação foi delegada a planos próprios:
+> Não há pendências de análise neste plano. O item #7 (paginação/ordenação/filtros) foi reimplementado:
 >
-> - [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md) — modo básico (paginação + ordenação + filtros por coluna), pronto para implementação.
-> - [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md) — modo avançado (POST `/buscar` com `FiltroDTO`), apenas planejamento; implementação só quando o desenho do frontend exigir.
+> - [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md) — **descontinuado**. Foi a primeira tentativa (`GET /` com query string + convenção implícita por tipo), substituída por completo pelo plano 0003.
+> - [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md) — **implementado**. `POST /buscar` com `FiltroDTO` estruturado (operadores explícitos, AND/OR únicos, sem aninhamento). Registrado na [ADR-0009](../adr/0009-paginacao-ordenacao-filtros-no-baserest.md) (reescrita in-place).
 
 ---
 
@@ -87,4 +87,4 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 | 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
 | 14 | `NOT NULL` em `version`, `created_at`, `updated_at` em `V1__init.sql` | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
 | 12 | `UsuarioListDTO` — campos expostos revisados (sem mudança)        | 2026-06-04 | Plano 0001 (ADR-0002 reafirmado; sem novo ADR) |
-| 7  | Paginação, ordenação e filtros — modo básico implementado         | 2026-06-04 | Implementação concluída via [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md), registrada na [ADR-0009](../adr/0009-paginacao-ordenacao-filtros-no-baserest.md). Modo avançado segue em [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md). |
+| 7  | Paginação, ordenação e filtros — implementação via `POST /buscar` + `FiltroDTO` | 2026-06-04 | Implementação concluída via [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md), registrada na [ADR-0009](../adr/0009-paginacao-ordenacao-filtros-no-baserest.md) (reescrita in-place). Plano [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md) descontinuado. |

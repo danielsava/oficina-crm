@@ -1,9 +1,34 @@
 # Plano de Implementação — Paginação, Ordenação e Filtros (Caminho B Básico)
 
-> **Status**: concluído (implementação aplicada; ADR-0009 publicada)
-> **Última atualização**: 2026-06-04 (rev.5 — `DEFAULT_SORT` reduzido a `[id desc]` para remover opinião de UX do backend, mantendo apenas o contrato técnico mínimo de paginação consistente; rev.4 — `defaultSort()` deixa de ser ponto de extensão por `*Service` e vira constante fixa no `BaseService`; rev.3 — whitelist única `camposPermitidos()` derivada automaticamente do `ListDTO`, eliminando `camposSortaveis()`/`camposFiltraveis()` por entidade; rev.2 — filtros captados via `UriInfo` no `BaseRest`, sem `@QueryParam` tipados por entidade nos `*Rest` concretos. Ver R4 e R5 para o rationale.)
-> **Origem**: item #7 do plano [`0001-padronizacao-crud-backend.md`](0001-padronizacao-crud-backend.md), com análise das 5 decisões realizada na sessão dedicada (S1).
-> **Plano relacionado (futuro)**: [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md) — modo avançado de busca (POST `/buscar` com `FiltroDTO`), planejado mas não implementado neste plano.
+> **Status**: **Descontinuado / Substituído pelo plano [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md)**
+> **Última atualização**: 2026-06-04 (descontinuado — ver nota abaixo)
+> **Origem**: item #7 do plano [`0001-padronizacao-crud-backend.md`](0001-padronizacao-crud-backend.md).
+>
+> ## Nota sobre descontinuação
+>
+> Este plano foi a primeira tentativa de padronizar paginação/ordenação/filtros via `GET /` com query string e convenção implícita de operadores por tipo do campo. Após implementação inicial e análise comparativa, optou-se por substituí-lo por completo pelo plano [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md), que adota um único endpoint `POST /buscar` com `FiltroDTO` estruturado (operadores explícitos, AND/OR únicos, sem aninhamento).
+>
+> Os motivos da substituição estão registrados em detalhe na nova [ADR-0009](../adr/0009-paginacao-ordenacao-filtros-no-baserest.md) (reescrita in-place) e na seção "Objetivo" do plano 0003. Resumo: convenção implícita de operadores espalhava complexidade entre cliente e servidor; o `GET /` não expressava OR/BETWEEN/IS_NULL/NOT_EQ; o contrato OpenAPI ficava pobre nos filtros.
+>
+> **Artefatos do plano 0002 que sobrevivem**, reusados pelo plano 0003 e mantidos no código atual:
+>
+> - `common.Pagina<T>` — envelope de resposta paginada.
+> - `common.SortCriterio`, `common.SortDirecao`, `common.SortParser` — parse e validação de sort.
+> - `common.BaseService.camposPermitidos()` — whitelist única derivada do `ListDTO`.
+> - `common.BaseService.DEFAULT_SORT = [id desc]` — sort default técnico (paginação consistente, sem opinião de UX).
+> - Caches estáticos de campos da entidade e do `ListDTO` (`CACHE_CAMPOS_ENTIDADE`, `CACHE_CAMPOS_LISTDTO`).
+> - `infra.exception.IllegalArgumentExceptionMapper` — mapeamento de erros de validação para 400 + Problem Details.
+>
+> **Artefatos do plano 0002 que foram REMOVIDOS** ao implementar o plano 0003:
+>
+> - `common.FiltroAplicado` — record auxiliar do `aplicarFiltros` antigo.
+> - `BaseService.listarDTO(int, int, List<String>, MultivaluedMap)` + auxiliares (`aplicarFiltros`, `combinarComStatusAtivo`, `montarSort` na assinatura antiga, `converterValor`).
+> - `BaseRest.listar(int, int, List<String>, UriInfo)` — o `GET /` paginado não existe mais.
+> - Constante `BaseService.PARAMS_RESERVADOS`.
+>
+> O conteúdo abaixo é mantido por **referência histórica** — descreve a versão descontinuada do contrato.
+
+---
 
 ## Como ler este documento
 

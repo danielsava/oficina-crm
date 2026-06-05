@@ -1,7 +1,7 @@
 # Plano de Implementação — Busca Paginada com Filtros (Caminho B Único) — Backend
 
-> **Status**: pendente (planejamento revisado; implementação a executar)
-> **Última atualização**: 2026-06-04 (rev.2 — após análise comparativa com a implementação do plano 0002, o desenho foi simplificado e passa a ser o **mecanismo único** de listagem com filtros. Decisões revisadas: operador lógico único por requisição (AND **ou** OR, sem aninhamento), whitelist herdada do `ListDTO` (rev.3 do plano 0002), `DEFAULT_SORT = [id desc]` (rev.5 do plano 0002), sem limite de quantidade de critérios, sem dependência de `openapi-typescript`. O plano 0002 será **removido** quando este plano for implementado.)
+> **Status**: **concluído** (implementação aplicada; ADR-0009 reescrita in-place; plano 0002 descontinuado)
+> **Última atualização**: 2026-06-04 (implementação seguindo a "Ordem de execução" abaixo: ADR-0009 reescrita; `common.FiltroDTO`, `CriterioFiltro`, `OperadorFiltro`, `OperadorLogico` e `FiltroAvancadoQueryBuilder` criados; `BaseService.buscarAvancado(FiltroDTO)` e `BaseRest.POST /buscar` adicionados; código do plano 0002 removido — `FiltroAplicado`, `listarDTO` e auxiliares, `BaseRest.listar`, `PARAMS_RESERVADOS`; testes unitários do `FiltroAvancadoQueryBuilder` criados; `AGENTS.md`, plano 0001 (#7) e plano 0002 atualizados.)
 > **Escopo**: apenas backend. O plano do frontend será criado em momento posterior.
 > **Origem**: extensão natural do modo básico definido em [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md). Após implementação do 0002 e análise comparativa, decidiu-se substituir o 0002 por este plano (que cobre todos os casos com contrato explícito).
 

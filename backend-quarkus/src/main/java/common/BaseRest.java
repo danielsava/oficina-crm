@@ -1,17 +1,19 @@
 package common;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.UriInfo;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-
-import java.util.List;
 
 /**
  * Base para recursos REST do CRUD padrão.
@@ -23,17 +25,22 @@ import java.util.List;
  *       nunca trafega em endpoints públicos.</li>
  * </ul>
  *
- * <p>O {@code GET /} retorna o envelope paginado {@link Pagina} (ver ADR-0009).
- * Os parâmetros de paginação e ordenação ({@code page}, {@code size},
- * {@code sort}) são declarados aqui e aparecem no contrato OpenAPI. Os
- * <b>filtros por coluna</b> são captados via {@link UriInfo} e autorizados
- * pela whitelist única do {@code BaseService}, que é derivada automaticamente
- * dos componentes do {@code ListDTO} (princípio: "o que aparece na tabela do
- * frontend é o que pode ser filtrado/ordenado"). Não há declaração tipada por
- * entidade no {@code *Rest} nem método de whitelist por {@code *Service}.
- * Subclasses que precisarem destacar um filtro específico na documentação
- * (caso raro) podem sobrescrever {@link #listar(int, int, List, UriInfo)}
- * pontualmente.</p>
+ * <p>Endpoints expostos:</p>
+ * <ul>
+ *   <li>{@code POST /}                       — cria um novo registro a partir do {@code EditDTO}.</li>
+ *   <li>{@code PUT  /{uuid}}                 — atualiza o registro identificado pelo UUID.</li>
+ *   <li>{@code GET  /{uuid}}                 — retorna o {@code EditDTO} para alimentar o formulário de edição.</li>
+ *   <li>{@code POST /buscar}                 — busca paginada com filtros estruturados; retorna {@link Pagina} de {@code ListDTO}.</li>
+ *   <li>{@code DELETE /inativar/{uuid}}      — soft delete (status = INATIVO).</li>
+ * </ul>
+ *
+ * <p>O CRUD genérico expõe apenas soft delete ({@code DELETE /inativar/{uuid}});
+ * hard delete <b>não</b> é exposto pelo {@code BaseRest} (ver ADR-0005).</p>
+ *
+ * <p>A listagem com paginação acontece <b>exclusivamente</b> via
+ * {@code POST /buscar} (corpo {@link FiltroDTO}). Não há {@code GET /}
+ * paginado — o contrato HTTP completo da busca está documentado na
+ * ADR-0009.</p>
  *
  * <p>As anotações OpenAPI declaradas aqui (operações e respostas) são herdadas
  * pelas subclasses. Cada {@code *Rest} concreto deve declarar seu próprio
@@ -70,32 +77,28 @@ public abstract class BaseRest<Entity extends BaseEntity, EditDTO, ListDTO> {
         this.service().atualizarPorUUID(uuid, editDTO);
     }
 
-    @GET
+    @POST
+    @Path("/buscar")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Operation(
-            summary = "Lista os registros (paginado)",
-            description = "Retorna o envelope Pagina com os registros que atendem aos filtros, "
-                    + "ordenados conforme o parâmetro 'sort'. Por padrão, apenas registros com "
-                    + "status ATIVO são retornados (a requisição pode incluir o filtro 'status' "
-                    + "para sobrepor esse default, desde que 'status' faça parte do ListDTO). "
-                    + "Filtros por coluna são captados via query params livres e autorizados pela "
-                    + "whitelist única derivada automaticamente do ListDTO (ver ADR-0009)."
+            summary = "Busca paginada com filtros estruturados",
+            description = "Aceita filtros com operadores explícitos e combinação lógica AND ou OR "
+                    + "(única por requisição, sem aninhamento). Retorna o envelope Pagina<ListDTO>. "
+                    + "POST é usado como mecanismo de transporte para uma query estruturada — não cria recurso. "
+                    + "Filtro implícito status = ATIVO é aplicado por padrão (sempre com AND ao bloco de critérios "
+                    + "do cliente) e substituído quando a requisição inclui algum critério com campo = 'status' "
+                    + "(desde que 'status' faça parte do ListDTO). Ver ADR-0009."
     )
-    @APIResponse(responseCode = "200", description = "Página retornada")
-    @APIResponse(responseCode = "400", description = "Parâmetros inválidos: page<0, size fora de [1,100], sort em formato inválido ou campo fora da whitelist (RFC 7807)")
-    public Pagina<ListDTO> listar(
-            @Parameter(description = "Índice zero-based da página.", example = "0")
-            @QueryParam("page") @DefaultValue("0") @Min(0) int page,
+    @APIResponse(responseCode = "200", description = "Página de resultados retornada")
+    @APIResponse(
+            responseCode = "400",
+            description = "Payload inválido: page/size fora dos limites, campo fora da whitelist, "
+                    + "operador incompatível com tipo do campo, combinação operador↔valor inválida, "
+                    + "sort em formato inválido ou falha de conversão de valor (RFC 7807)"
+    )
+    public Pagina<ListDTO> buscar(@Valid FiltroDTO filtro) {
 
-            @Parameter(description = "Tamanho da página. Intervalo aceito: [1, 100].", example = "20")
-            @QueryParam("size") @DefaultValue("20") @Min(1) @Max(100) int size,
-
-            @Parameter(description = "Critérios de ordenação no formato 'campo,asc' ou 'campo,desc'. Pode ser repetido para múltiplos critérios.")
-            @QueryParam("sort") List<String> sort,
-
-            @Context UriInfo uriInfo
-    ) {
-
-        return this.service().listarDTO(page, size, sort, uriInfo.getQueryParameters());
+        return this.service().buscarAvancado(filtro);
     }
 
     @GET

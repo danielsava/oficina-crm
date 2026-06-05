@@ -2,25 +2,20 @@ package common;
 
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.core.MultivaluedMap;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,34 +25,34 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Base de Service para o CRUD padrão.
  *
- * <p>Provê a implementação genérica de listagem paginada
- * ({@link #listarDTO(int, int, List, MultivaluedMap)}), com:</p>
+ * <p>Provê a implementação genérica de busca paginada com filtros
+ * estruturados ({@link #buscarAvancado(FiltroDTO)}), com:</p>
  *
  * <ul>
  *   <li>Paginação offset/limit via {@link Page}.</li>
  *   <li>Ordenação por múltiplos campos validados contra a whitelist única
- *       {@link #camposPermitidos()}.</li>
- *   <li>Filtros por coluna validados contra a mesma whitelist
- *       {@link #camposPermitidos()}, com convenção de operadores por tipo
- *       (String → ILIKE; enum/UUID/número/boolean → igualdade; data/número
- *       com sufixos {@code From}/{@code To} → range; query param repetido
- *       → IN).</li>
- *   <li>Filtro fixo {@code status = ATIVO} aplicado por padrão, mas
- *       substituído quando a requisição já filtra explicitamente por
- *       {@code status} (e {@code status} faz parte do {@code ListDTO}).</li>
+ *       {@link #camposPermitidos()}, derivada do {@code ListDTO}.</li>
+ *   <li>Filtros estruturados (operadores explícitos, AND ou OR únicos por
+ *       requisição, sem aninhamento) traduzidos por
+ *       {@link FiltroAvancadoQueryBuilder}.</li>
+ *   <li>Filtro fixo {@code status = ATIVO} aplicado por padrão, sempre com
+ *       {@code AND} ao bloco de critérios do cliente, substituído quando a
+ *       requisição inclui algum critério com {@code campo = "status"} (e
+ *       {@code status} faz parte do {@code ListDTO}).</li>
  * </ul>
  *
- * <p>Pontos de extensão sobrescritíveis: {@link #camposPermitidos()} (raro,
- * pois o default deriva do {@code ListDTO}) e
- * {@link #aplicarFiltros(MultivaluedMap)} (raro, pois o default cobre a
- * convenção de tipos por reflexão).</p>
+ * <p>O endpoint público correspondente é {@code POST /buscar}, herdado pelo
+ * {@link BaseRest}. Não há {@code GET /} paginado — ver ADR-0009.</p>
  *
- * <p>A ordenação default ({@code id desc}) é fixa, mínima e não sobrescritível
- * — atende apenas ao requisito técnico de paginação consistente. Ordenação
- * com significado de apresentação (alfabética, cronológica, etc.) é decisão
- * de UX e vive no frontend, que envia {@code ?sort=...} quando necessário.</p>
+ * <p>Pontos de extensão: {@link #camposPermitidos()} (raro; default deriva do
+ * {@code ListDTO}) e {@link #buscarAvancado(FiltroDTO)} (raro; default cobre o
+ * caso comum). O sort default ({@code id desc}) é fixo, mínimo e não
+ * sobrescritível — atende apenas ao requisito técnico de paginação
+ * consistente.</p>
  *
  * @see Pagina
+ * @see FiltroDTO
+ * @see FiltroAvancadoQueryBuilder
  * @see BaseRest
  */
 public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
@@ -77,28 +72,20 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
     private static final Map<Class<?>, Set<String>> CACHE_CAMPOS_LISTDTO = new ConcurrentHashMap<>();
 
     /**
-     * Query params consumidos pelo próprio {@link BaseRest} (paginação e
-     * ordenação) e que, portanto, <b>não</b> devem ser tratados como
-     * candidatos a filtro nem como "ignorados" no log de depuração.
-     */
-    private static final Set<String> PARAMS_RESERVADOS = Set.of("page", "size", "sort");
-
-    /**
      * Ordenação default fixa aplicada quando o cliente não envia {@code sort}.
      *
      * <p>Usa <b>somente</b> {@code id desc} (PK herdada de {@link BaseEntity},
      * existente em toda entidade do CRUD). É o contrato técnico mínimo
      * exigido pela paginação offset/limit: sem um {@code ORDER BY} que
      * produza ordem total, PostgreSQL não garante a mesma ordem entre
-     * requisições sequenciais ({@code ?page=0} seguido de {@code ?page=1}),
+     * requisições sequenciais ({@code page=0} seguido de {@code page=1}),
      * o que causa registros duplicados/ausentes entre páginas. A PK é única
      * por construção e atende esse requisito.</p>
      *
      * <p><b>Sem opinião de UX</b>: o backend não escolhe "mais recentes
      * primeiro" nem qualquer outro critério de apresentação. Telas que
-     * queiram ordenação inicial específica (alfabética por nome, cronológica
-     * por {@code createdAt}, etc.) DEVEM enviar {@code ?sort=...}
-     * explicitamente.</p>
+     * queiram ordenação inicial específica DEVEM enviar {@code sort}
+     * explicitamente no {@code FiltroDTO}.</p>
      *
      * <p>Esta lista é fonte interna do backend e <b>não</b> passa pela
      * validação contra {@link #camposPermitidos()} — por isso pode usar o
@@ -151,29 +138,44 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
     /**
-     * Listagem paginada, ordenada e filtrada, retornando o envelope
+     * Busca paginada com filtros estruturados, retornando o envelope
      * {@link Pagina} com a página atual de {@code ListDTO}.
      *
-     * @param page         índice zero-based da página (já validado em
-     *                     {@code >= 0} pelo {@link BaseRest}).
-     * @param size         tamanho de página (já validado no intervalo
-     *                     {@code [1, 100]} pelo {@link BaseRest}).
-     * @param sortBruto    valores brutos do query param {@code sort}.
-     *                     {@code null}/vazio aplica o {@link #DEFAULT_SORT}.
-     * @param queryParams  todos os query params da requisição; só os campos
-     *                     pertencentes a {@link #camposPermitidos()} são
-     *                     aplicados.
+     * <p>Sequência:</p>
+     * <ol>
+     *   <li>Parseia {@code filtro.sort()} via {@link SortParser} (validação
+     *       sintática).</li>
+     *   <li>Valida cada campo do sort contra {@link #camposPermitidos()}.</li>
+     *   <li>Aplica {@link #DEFAULT_SORT} quando o cliente não envia sort.</li>
+     *   <li>Constrói o trecho JPQL dos critérios via
+     *       {@link FiltroAvancadoQueryBuilder} (whitelist, operador↔tipo,
+     *       combinação operador↔valor, conversão).</li>
+     *   <li>Combina com o filtro implícito {@code status = ATIVO} (sempre com
+     *       {@code AND}) quando o cliente não filtra explicitamente por
+     *       {@code status} e {@code status} faz parte do {@code ListDTO}.</li>
+     *   <li>Executa a query paginada com projeção em {@code ListDTO} e
+     *       calcula o envelope.</li>
+     * </ol>
+     *
+     * @param filtro payload da busca (Bean Validation aplicado no
+     *               {@link BaseRest}). Nulo é tratado como filtro vazio.
      */
-    public Pagina<ListDTO> listarDTO(int page, int size, List<String> sortBruto, MultivaluedMap<String, String> queryParams) {
+    public Pagina<ListDTO> buscarAvancado(FiltroDTO filtro) {
 
-        // 1. Parseia o sort vindo do cliente (validação sintática).
-        List<SortCriterio> criteriosCliente = SortParser.parse(sortBruto);
+        FiltroDTO efetivo = filtro == null
+                ? new FiltroDTO(0, 20, List.of(), OperadorLogico.AND, List.of())
+                : filtro;
 
-        // 2. Valida campos vindos do cliente contra a whitelist (mesma usada para filtros).
-        //    O DEFAULT_SORT é fonte interna do backend e por isso não passa pela whitelist
-        //    (usa campos técnicos como 'id' e 'createdAt' que normalmente não estão no ListDTO).
+        int page = efetivo.page();
+        int size = efetivo.size() <= 0 ? 20 : efetivo.size();
+
+        // 1. Sort.
+        List<SortCriterio> criteriosCliente = SortParser.parse(efetivo.sort());
+
         Set<String> permitidos = camposPermitidos();
+
         for (SortCriterio c : criteriosCliente) {
+
             if (!permitidos.contains(c.campo()))
                 throw new IllegalArgumentException(
                         "Campo '" + c.campo() + "' não é permitido para ordenação. "
@@ -181,29 +183,40 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
                 );
         }
 
-        // 3. Aplica DEFAULT_SORT quando cliente não enviou sort.
-        List<SortCriterio> criterios = criteriosCliente.isEmpty() ? DEFAULT_SORT : criteriosCliente;
+        List<SortCriterio> criteriosSort = criteriosCliente.isEmpty() ? DEFAULT_SORT : criteriosCliente;
 
-        // 4. Monta o Sort do Panache.
-        Sort sort = montarSort(criterios);
+        Sort sort = montarSort(criteriosSort);
 
-        // 5. Aplica filtros (whitelist + convenção de tipos).
-        FiltroAplicado filtro = aplicarFiltros(queryParams);
+        // 2. Filtros estruturados.
+        FiltroAvancadoQueryBuilder.Resultado resultado = FiltroAvancadoQueryBuilder.construir(
+                efetivo,
+                permitidos,
+                camposEntidade()
+        );
 
-        // 6. Combina com filtro fixo de status = ATIVO quando ausente da request.
-        FiltroAplicado efetivo = combinarComStatusAtivo(filtro, queryParams);
+        // 3. Combina com filtro implícito de status = ATIVO.
+        String jpql = resultado.jpql();
+        Map<String, Object> parametros = new LinkedHashMap<>(resultado.parametros());
 
-        // 7. Executa a query paginada.
+        boolean clienteFiltrouStatus = criterioMencionaStatus(efetivo);
+
+        if (!clienteFiltrouStatus) {
+
+            String trechoStatus = "status = :statusFixo";
+            parametros.put("statusFixo", EnumStatusEntity.ATIVO);
+
+            jpql = jpql.isBlank()
+                    ? trechoStatus
+                    : jpql + " and " + trechoStatus;
+        }
+
+        // 4. Executa.
         PanacheQuery<?> query;
 
-        if (efetivo.jpql().isBlank()) {
-
-            // Sem filtros: usa busca sem WHERE.
+        if (jpql.isBlank())
             query = repository().findAll(sort);
-        } else {
-
-            query = repository().find(efetivo.jpql(), sort, efetivo.parametros());
-        }
+        else
+            query = repository().find(jpql, sort, parametros);
 
         long totalElements = query.count();
 
@@ -232,13 +245,13 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
     // ----------------------------------------------------------------------
-    //  Pontos de extensão (whitelist e defaults)
+    //  Pontos de extensão (whitelist)
     // ----------------------------------------------------------------------
 
     /**
-     * Whitelist única de campos permitidos para <b>filtro</b> e <b>ordenação</b>,
-     * derivada automaticamente dos componentes declarados no record
-     * {@code ListDTO}.
+     * Whitelist única de campos permitidos para <b>filtro</b> e
+     * <b>ordenação</b>, derivada automaticamente dos componentes declarados
+     * no record {@code ListDTO}.
      *
      * <p>Princípio: o {@code ListDTO} representa exatamente o que o frontend
      * exibe na tabela; o usuário pode filtrar/ordenar pelas colunas que vê,
@@ -247,14 +260,9 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
      * existem na entidade mas não no DTO (ex.: {@code Usuario.senhaHash}).</p>
      *
      * <p>Para incluir um campo no filtro/sort, basta adicioná-lo ao
-     * {@code ListDTO}. Para suportar range em {@code createdAt} ou
-     * {@code updatedAt}, inclua-os no {@code ListDTO} da entidade.</p>
-     *
-     * <p>Os nomes dos componentes do record DEVEM corresponder aos atributos
-     * da entidade JPA, porque são usados diretamente como nomes de campo na
-     * cláusula JPQL ({@code where nome like ...}, {@code order by createdAt}).
-     * Renomeamentos de coluna no banco são absorvidos pelo {@code @Column}
-     * da entidade; o JPQL trabalha com o nome do atributo Java.</p>
+     * {@code ListDTO}. Os nomes dos componentes do record DEVEM corresponder
+     * aos atributos da entidade JPA, porque são usados diretamente como nomes
+     * de campo na cláusula JPQL.</p>
      *
      * <p>Resultado cacheado por classe de {@code ListDTO}. {@code *Service}
      * com necessidade incomum (campos calculados, projeções específicas) pode
@@ -269,16 +277,16 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
 
         if (tipoListDTO.isRecord()) {
 
-            Set<String> nomes = new java.util.LinkedHashSet<>();
+            Set<String> nomes = new LinkedHashSet<>();
 
-            for (java.lang.reflect.RecordComponent rc : tipoListDTO.getRecordComponents())
+            for (RecordComponent rc : tipoListDTO.getRecordComponents())
                 nomes.add(rc.getName());
 
             return Collections.unmodifiableSet(nomes);
         }
 
         // Fallback para ListDTOs que não sejam records (caso futuro).
-        Set<String> nomes = new java.util.LinkedHashSet<>();
+        Set<String> nomes = new LinkedHashSet<>();
 
         for (Field f : tipoListDTO.getDeclaredFields()) {
 
@@ -289,156 +297,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         }
 
         return Collections.unmodifiableSet(nomes);
-    }
-
-    /**
-     * Constrói o trecho JPQL e os parâmetros nomeados a partir dos query
-     * params da requisição, aplicando a whitelist única
-     * {@link #camposPermitidos()} (derivada do {@code ListDTO}).
-     *
-     * <p>Convenções aplicadas via reflexão sobre o tipo do campo na entidade
-     * JPA:</p>
-     *
-     * <ul>
-     *   <li>Campo {@code String} → {@code ILIKE '%' || valor || '%'}.</li>
-     *   <li>Campo enum, {@code UUID}, número, {@code Boolean} → igualdade.</li>
-     *   <li>Sufixos {@code From} (≥) e {@code To} (≤) no nome do query param
-     *       → comparação de range em campos numéricos e de data.</li>
-     *   <li>Query param repetido → cláusula {@code IN}.</li>
-     * </ul>
-     *
-     * <p>Cada {@code *Service} pode sobrescrever este método para tratar
-     * filtros que fujam da convenção (ex.: igualdade exata em uma {@code
-     * String} específica).</p>
-     */
-    protected FiltroAplicado aplicarFiltros(MultivaluedMap<String, String> queryParams) {
-
-        if (queryParams == null || queryParams.isEmpty())
-            return FiltroAplicado.vazio();
-
-        Set<String> filtraveis = camposPermitidos();
-        Map<String, Class<?>> camposEntidade = camposEntidade();
-
-        List<String> trechos = new ArrayList<>();
-        Map<String, Object> parametros = new LinkedHashMap<>();
-        List<String> ignorados = new ArrayList<>();
-        int contadorParam = 0;
-
-        for (Map.Entry<String, List<String>> entry : queryParams.entrySet()) {
-
-            String chave = entry.getKey();
-            List<String> valores = entry.getValue();
-
-            if (valores == null || valores.isEmpty())
-                continue;
-
-            // Params reservados (page/size/sort) são consumidos pelo BaseRest;
-            // não tratamos como filtro nem como ignorados.
-            if (PARAMS_RESERVADOS.contains(chave))
-                continue;
-
-            // Detecta sufixo de range (From/To) e identifica o campo base.
-            String campoBase;
-            String sufixo;
-
-            if (chave.endsWith("From")) {
-
-                campoBase = chave.substring(0, chave.length() - "From".length());
-
-                sufixo = "From";
-
-            } else if (chave.endsWith("To")) {
-
-                campoBase = chave.substring(0, chave.length() - "To".length());
-
-                sufixo = "To";
-
-            } else {
-
-                campoBase = chave;
-
-                sufixo = "";
-            }
-
-            // Ignora silenciosamente filtros fora da whitelist (registrando em log DEBUG).
-            if (!filtraveis.contains(campoBase)) {
-                ignorados.add(chave);
-                continue;
-            }
-
-            Class<?> tipoCampo = camposEntidade.get(campoBase);
-
-            if (tipoCampo == null) {
-                ignorados.add(chave);
-                continue; // Campo não existe na entidade; ignora.
-            }
-
-            // IN: query param repetido (apenas para igualdade exata).
-            if (sufixo.isEmpty() && valores.size() > 1 && !String.class.equals(tipoCampo)) {
-
-                String paramNome = "p_" + (contadorParam++);
-
-                List<Object> convertidos = new ArrayList<>(valores.size());
-
-                for (String v : valores)
-                    convertidos.add(converterValor(v, tipoCampo, campoBase));
-
-                trechos.add(campoBase + " in :" + paramNome);
-
-                parametros.put(paramNome, convertidos);
-
-                continue;
-            }
-
-            String valor = valores.get(0);
-
-            if (valor == null || valor.isBlank())
-                continue;
-
-            String paramNome = "p_" + (contadorParam++);
-
-            if (!sufixo.isEmpty()) {
-
-                // Range From/To.
-                Object convertido = converterValor(valor, tipoCampo, campoBase);
-
-                String operador = "From".equals(sufixo) ? ">=" : "<=";
-
-                trechos.add(campoBase + " " + operador + " :" + paramNome);
-
-                parametros.put(paramNome, convertido);
-
-            } else if (String.class.equals(tipoCampo)) {
-
-                // ILIKE para strings.
-                trechos.add("lower(" + campoBase + ") like lower(:" + paramNome + ")");
-
-                parametros.put(paramNome, "%" + valor + "%");
-
-            } else {
-
-                // Igualdade exata para os demais tipos.
-                Object convertido = converterValor(valor, tipoCampo, campoBase);
-
-                trechos.add(campoBase + " = :" + paramNome);
-
-                parametros.put(paramNome, convertido);
-
-            }
-
-        }
-
-        if (!ignorados.isEmpty() && Log.isDebugEnabled())
-            Log.debugf(
-                    "Filtros ignorados em %s (fora de camposPermitidos() ou inexistentes na entidade): %s",
-                    getClass().getSimpleName(),
-                    ignorados
-            );
-
-        if (trechos.isEmpty())
-            return FiltroAplicado.vazio();
-
-        return new FiltroAplicado(String.join(" and ", trechos), parametros);
     }
 
 
@@ -462,34 +320,29 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
     /**
-     * Combina o filtro construído por {@link #aplicarFiltros} com o filtro
-     * fixo de {@code status = ATIVO}. O filtro fixo é aplicado apenas quando
-     * a requisição não traz o campo {@code status} explicitamente — assim,
-     * uma tela administrativa que queira listar inativos pode mandar
-     * {@code ?status=INATIVO} (desde que {@code status} faça parte do
-     * {@code ListDTO}, i.e., esteja em {@link #camposPermitidos()}) e ter
-     * seu filtro respeitado.
+     * Indica se o cliente incluiu algum critério com {@code campo = "status"}
+     * e se {@code status} é um componente do {@code ListDTO} (whitelist).
+     *
+     * <p>Quando verdadeiro, o filtro implícito {@code status = ATIVO} é
+     * desligado para permitir, por exemplo, listar inativos.</p>
      */
-    private FiltroAplicado combinarComStatusAtivo(FiltroAplicado base, MultivaluedMap<String, String> queryParams) {
+    private boolean criterioMencionaStatus(FiltroDTO filtro) {
 
-        boolean statusJaFiltrado = queryParams != null
-                && queryParams.containsKey("status")
-                && queryParams.get("status") != null
-                && !queryParams.get("status").isEmpty()
-                && camposPermitidos().contains("status");
+        if (!camposPermitidos().contains("status"))
+            return false;
 
-        if (statusJaFiltrado)
-            return base;
+        List<CriterioFiltro> criterios = filtro.criterios();
 
-        String trechoStatus = "status = :statusFixo";
-        Map<String, Object> parametros = new HashMap<>(base.parametros());
-        parametros.put("statusFixo", EnumStatusEntity.ATIVO);
+        if (criterios == null || criterios.isEmpty())
+            return false;
 
-        String jpql = base.jpql().isBlank()
-                ? trechoStatus
-                : base.jpql() + " and " + trechoStatus;
+        for (CriterioFiltro c : criterios) {
 
-        return new FiltroAplicado(jpql, parametros);
+            if (c != null && "status".equals(c.campo()))
+                return true;
+        }
+
+        return false;
     }
 
     /**
@@ -553,67 +406,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
             throw new IllegalStateException("Tipo Entity não é uma Class em " + getClass().getName());
 
         return (Class<? extends BaseEntity>) c;
-    }
-
-    private Object converterValor(String valor, Class<?> tipo, String campo) {
-
-        try {
-
-            if (tipo.isEnum()) {
-
-                @SuppressWarnings({"rawtypes", "unchecked"})
-                Object convertido = Enum.valueOf((Class<Enum>) tipo, valor);
-                return convertido;
-            }
-
-            if (UUID.class.equals(tipo))
-                return UUID.fromString(valor);
-
-            if (Boolean.class.equals(tipo) || boolean.class.equals(tipo))
-                return Boolean.parseBoolean(valor);
-
-            if (Long.class.equals(tipo) || long.class.equals(tipo))
-                return Long.parseLong(valor);
-
-            if (Integer.class.equals(tipo) || int.class.equals(tipo))
-                return Integer.parseInt(valor);
-
-            if (Short.class.equals(tipo) || short.class.equals(tipo))
-                return Short.parseShort(valor);
-
-            if (Double.class.equals(tipo) || double.class.equals(tipo))
-                return Double.parseDouble(valor);
-
-            if (Float.class.equals(tipo) || float.class.equals(tipo))
-                return Float.parseFloat(valor);
-
-            if (java.math.BigDecimal.class.equals(tipo))
-                return new java.math.BigDecimal(valor);
-
-            if (java.math.BigInteger.class.equals(tipo))
-                return new java.math.BigInteger(valor);
-
-            if (LocalDate.class.equals(tipo))
-                return LocalDate.parse(valor);
-
-            if (LocalDateTime.class.equals(tipo))
-                return LocalDateTime.parse(valor);
-
-            if (OffsetDateTime.class.equals(tipo))
-                return OffsetDateTime.parse(valor);
-
-            if (String.class.equals(tipo))
-                return valor;
-
-        } catch (IllegalArgumentException | DateTimeParseException ex) {
-
-            throw new IllegalArgumentException(
-                    "Valor '" + valor + "' inválido para o filtro '" + campo + "': " + ex.getMessage()
-            );
-        }
-
-        // Tipo não reconhecido — repassa string crua e deixa o Hibernate falhar de forma controlada.
-        return valor;
     }
 
 

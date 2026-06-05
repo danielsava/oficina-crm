@@ -5,7 +5,7 @@ package common;
  *
  * <p>É o resultado da conversão do query param {@code sort=campo,direcao}
  * pelo {@link SortParser}. A validação contra a whitelist de campos
- * permitidos para sort ({@code camposSortaveis()}) acontece no
+ * permitidos para sort ({@code BaseService#camposPermitidos()}) acontece no
  * {@link BaseService}, não no parser.</p>
  *
  * @param campo   nome do campo da entidade JPA.
