@@ -50,3 +50,4 @@ Decisões que afetam **backend e frontend simultaneamente** (ex.: contrato de AP
 | 0006 | [OpenAPI/Swagger em dev e prod, sem versionamento de APIs internas de CRUD](./0006-openapi-swagger-e-nao-versionamento-de-apis-internas.md) | Accepted |
 | 0007 | [Media types explícitos no `BaseRest` para não depender dos defaults do Quarkus](./0007-media-types-explicitos-no-baserest.md) | Accepted |
 | 0008 | [Indice parcial em `status = 'ATIVO'` avaliado caso a caso](./0008-indice-parcial-status-ativo-caso-a-caso.md) | Accepted |
+| 0009 | [Paginação, ordenação e filtros básicos no `BaseRest`](./0009-paginacao-ordenacao-filtros-no-baserest.md) | Accepted |

@@ -33,7 +33,7 @@
 | 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | Migração (`V1__init.sql`; sem ADR)                                    |
 | 14 | `NOT NULL` em `version`, `created_at`, `updated_at` em `V1__init.sql` | Migração (`V1__init.sql`; sem ADR)                              |
 | 12 | `UsuarioListDTO` — campos expostos revisados (sem mudança)        | Plano 0001 (ADR-0002 reafirmado; sem novo ADR)                        |
-| 7  | Paginação, ordenação e filtros — análise concluída                | Decisões consolidadas; implementação delegada aos planos [`0002`](0002-paginacao-ordenacao-filtros-backend.md) (básico) e [`0003`](0003-busca-avancada-backend.md) (avançado, planejamento). ADR-0009 a ser criada com a implementação do plano 0002. |
+| 7  | Paginação, ordenação e filtros — modo básico implementado         | Decisões consolidadas, implementação concluída via plano [`0002`](0002-paginacao-ordenacao-filtros-backend.md) e registrada na [ADR-0009](../adr/0009-paginacao-ordenacao-filtros-no-baserest.md). Modo avançado segue em [`0003`](0003-busca-avancada-backend.md). |
 
 ---
 
@@ -87,4 +87,4 @@ Estratégia para preservar a qualidade da análise do agente de IA, evitando con
 | 15 | `senha_hash` ampliado para `VARCHAR(255)` em `V1__init.sql`        | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
 | 14 | `NOT NULL` em `version`, `created_at`, `updated_at` em `V1__init.sql` | 2026-06-04 | Migração (`V1__init.sql`; sem ADR) |
 | 12 | `UsuarioListDTO` — campos expostos revisados (sem mudança)        | 2026-06-04 | Plano 0001 (ADR-0002 reafirmado; sem novo ADR) |
-| 7  | Paginação, ordenação e filtros — análise concluída                | 2026-06-04 | Decisões consolidadas em [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md) (modo básico) e [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md) (modo avançado, planejamento). ADR-0009 a ser criada com a implementação do plano 0002. |
+| 7  | Paginação, ordenação e filtros — modo básico implementado         | 2026-06-04 | Implementação concluída via [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md), registrada na [ADR-0009](../adr/0009-paginacao-ordenacao-filtros-no-baserest.md). Modo avançado segue em [`0003-busca-avancada-backend.md`](0003-busca-avancada-backend.md). |
