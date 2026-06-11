@@ -90,12 +90,12 @@ public final class FiltroAvancadoQueryBuilder {
         if (criterios == null || criterios.isEmpty())
             return Resultado.vazio();
 
-        OperadorLogico operadorLogico = filtro.operadorLogico() == null
-                ? OperadorLogico.AND
-                : filtro.operadorLogico();
+        OperadorLogico operadorLogico = filtro.operadorLogico() == null ? OperadorLogico.AND : filtro.operadorLogico();
 
         List<String> trechos = new ArrayList<>(criterios.size());
+
         Map<String, Object> parametros = new LinkedHashMap<>();
+
         int contadorParam = 0;
 
         for (CriterioFiltro c : criterios) {
@@ -104,6 +104,7 @@ public final class FiltroAvancadoQueryBuilder {
                 throw new IllegalArgumentException("Critério nulo na lista de critérios.");
 
             String campo = c.campo();
+
             OperadorFiltro op = c.operador();
 
             if (campo == null || campo.isBlank())
@@ -114,28 +115,20 @@ public final class FiltroAvancadoQueryBuilder {
 
             // 1. Whitelist do campo.
             if (!camposPermitidos.contains(campo))
-                throw new IllegalArgumentException(
-                        "Campo '" + campo + "' não é filtrável nesta entidade. "
-                                + "Campos permitidos: " + camposPermitidos + "."
-                );
+                throw new IllegalArgumentException("Campo '" + campo + "' não é filtrável nesta entidade. Campos permitidos: " + camposPermitidos + ".");
 
             // 2. Existência na entidade JPA (defesa contra divergência ListDTO ↔ entidade).
             Class<?> tipoCampo = camposEntidade.get(campo);
 
             if (tipoCampo == null)
-                throw new IllegalArgumentException(
-                        "Campo '" + campo + "' está no ListDTO mas não foi encontrado na entidade JPA. "
-                                + "Quebra da convenção 'nome do componente do ListDTO = atributo JPA'."
+                throw new IllegalArgumentException("Campo '" + campo + "' está no ListDTO mas não foi encontrado na entidade JPA. Quebra da convenção 'nome do componente do ListDTO = atributo JPA'."
                 );
 
             // 3. Compatibilidade operador ↔ tipo do campo.
             CategoriaTipo categoria = categorizarTipo(tipoCampo);
 
             if (!operadorCompativel(op, categoria))
-                throw new IllegalArgumentException(
-                        "Operador '" + op + "' não é compatível com campo '" + campo
-                                + "' (" + tipoCampo.getSimpleName() + ")."
-                );
+                throw new IllegalArgumentException("Operador '" + op + "' não é compatível com campo '" + campo+ "' (" + tipoCampo.getSimpleName() + ").");
 
             // 4. Geração do trecho JPQL conforme o operador.
             String paramBase = "p" + (contadorParam++);
@@ -174,9 +167,7 @@ public final class FiltroAvancadoQueryBuilder {
                     Object valor2 = c.valor2();
 
                     if (valor2 == null)
-                        throw new IllegalArgumentException(
-                                "Operador BETWEEN exige 'valor2' não-nulo (campo '" + campo + "')."
-                        );
+                        throw new IllegalArgumentException("Operador BETWEEN exige 'valor2' não-nulo (campo '" + campo + "').");
 
                     Object conv1 = converterValor(valor1, tipoCampo, campo);
                     Object conv2 = converterValor(valor2, tipoCampo, campo);
@@ -194,14 +185,10 @@ public final class FiltroAvancadoQueryBuilder {
                     Object valor = exigirValor(c, campo);
 
                     if (!(valor instanceof List<?> lista))
-                        throw new IllegalArgumentException(
-                                "Operador " + op + " exige 'valor' como List (campo '" + campo + "')."
-                        );
+                        throw new IllegalArgumentException("Operador " + op + " exige 'valor' como List (campo '" + campo + "').");
 
                     if (lista.isEmpty())
-                        throw new IllegalArgumentException(
-                                "Operador " + op + " exige lista não-vazia (campo '" + campo + "')."
-                        );
+                        throw new IllegalArgumentException("Operador " + op + " exige lista não-vazia (campo '" + campo + "').");
 
                     List<Object> convertidos = new ArrayList<>(lista.size());
 
@@ -260,14 +247,12 @@ public final class FiltroAvancadoQueryBuilder {
         Object valor = c.valor();
 
         if (valor == null)
-            throw new IllegalArgumentException(
-                    "Operador '" + c.operador() + "' exige 'valor' não-nulo (campo '" + campo + "')."
-            );
+            throw new IllegalArgumentException("Operador '" + c.operador() + "' exige 'valor' não-nulo (campo '" + campo + "').");
 
         return valor;
     }
 
-    /** Categorias de tipo usadas para validar compatibilidade operador↔tipo. */
+    /** Categorias de tipo usadas para validar compatibilidade operador ↔ tipo. */
     private enum CategoriaTipo {
         STRING, NUMERICO, DATA, BOOLEAN, ENUM, UUID_, OUTRO
     }
@@ -289,9 +274,7 @@ public final class FiltroAvancadoQueryBuilder {
         if (Number.class.isAssignableFrom(tipo) || tipo.isPrimitive())
             return CategoriaTipo.NUMERICO;
 
-        if (LocalDate.class.equals(tipo)
-                || LocalDateTime.class.equals(tipo)
-                || OffsetDateTime.class.equals(tipo))
+        if (LocalDate.class.equals(tipo) || LocalDateTime.class.equals(tipo) || OffsetDateTime.class.equals(tipo))
             return CategoriaTipo.DATA;
 
         return CategoriaTipo.OUTRO;
@@ -325,9 +308,9 @@ public final class FiltroAvancadoQueryBuilder {
                 default -> false;
             };
 
-            // Tipo desconhecido: aceita apenas EQ/NOT_EQ por segurança. Casos
-            // legítimos exigem sobrescrita do *Service.
+            // Tipo desconhecido: aceita apenas EQ/NOT_EQ por segurança. Casos legítimos exigem sobrescrita do *Service.
             case OUTRO -> op == OperadorFiltro.EQ || op == OperadorFiltro.NOT_EQ;
+
         };
     }
 
@@ -446,10 +429,7 @@ public final class FiltroAvancadoQueryBuilder {
 
         } catch (IllegalArgumentException | DateTimeParseException ex) {
 
-            throw new IllegalArgumentException(
-                    "Valor '" + texto + "' inválido para campo '" + campo + "' ("
-                            + tipo.getSimpleName() + "): " + ex.getMessage()
-            );
+            throw new IllegalArgumentException("Valor '" + texto + "' inválido para campo '" + campo + "' ("+ tipo.getSimpleName() + "): " + ex.getMessage());
         }
 
         // Tipo não reconhecido — repassa string crua e deixa o Hibernate falhar

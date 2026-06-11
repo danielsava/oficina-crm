@@ -1,5 +1,7 @@
 package common;
 
+import io.quarkus.panache.common.Sort.Direction;
+
 /**
  * Direção de um critério de ordenação ({@link SortCriterio}).
  *
@@ -17,11 +19,9 @@ public enum SortDirecao {
      * Converte para {@link io.quarkus.panache.common.Sort.Direction} usado
      * pelo Panache na montagem do {@link io.quarkus.panache.common.Sort}.
      */
-    public io.quarkus.panache.common.Sort.Direction toPanache() {
+    public Direction toPanache() {
 
-        return this == ASC
-                ? io.quarkus.panache.common.Sort.Direction.Ascending
-                : io.quarkus.panache.common.Sort.Direction.Descending;
+        return this == ASC ? Direction.Ascending : Direction.Descending;
     }
 
 }

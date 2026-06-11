@@ -167,6 +167,7 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
                 : filtro;
 
         int page = efetivo.page();
+
         int size = efetivo.size() <= 0 ? 20 : efetivo.size();
 
         // 1. Sort.
@@ -177,10 +178,8 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         for (SortCriterio c : criteriosCliente) {
 
             if (!permitidos.contains(c.campo()))
-                throw new IllegalArgumentException(
-                        "Campo '" + c.campo() + "' não é permitido para ordenação. "
-                                + "Campos permitidos: " + permitidos + "."
-                );
+                throw new IllegalArgumentException("Campo '" + c.campo() + "' não é permitido para ordenação. Campos permitidos: " + permitidos + ".");
+
         }
 
         List<SortCriterio> criteriosSort = criteriosCliente.isEmpty() ? DEFAULT_SORT : criteriosCliente;
@@ -203,6 +202,7 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         if (!clienteFiltrouStatus) {
 
             String trechoStatus = "status = :statusFixo";
+
             parametros.put("statusFixo", EnumStatusEntity.ATIVO);
 
             jpql = jpql.isBlank()
