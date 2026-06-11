@@ -8,7 +8,6 @@ public class PasswordValidatorUtil {
 
     private static final int MIN_ENTROPY_BITS = 50;
 
-    // Regex básica: não substitui análise de entropia, mas filtra casos grotescos
     private static final Pattern HAS_UPPER = Pattern.compile("[A-Z]");
 
     private static final Pattern HAS_LOWER = Pattern.compile("[a-z]");

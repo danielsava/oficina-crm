@@ -5,40 +5,20 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.net.URI;
 import java.util.List;
 
-/**
- * Payload padrão de erro HTTP, conforme RFC 7807 (Problem Details for HTTP APIs).
- *
- * <p>Todos os {@link jakarta.ws.rs.ext.ExceptionMapper} da aplicação respondem com este
- * record, serializado como {@code application/problem+json}.</p>
- *
- * <h2>Campos</h2>
- * <ul>
- *   <li><b>type</b>: URI que identifica o tipo do problema. Usamos {@code about:blank}
- *       (default da RFC) enquanto não existe documentação pública de erros. Quando
- *       publicarmos as URIs reais (ex.: {@code https://api.oficinacrm.com.br/problems/not-found}),
- *       o campo passa a apontar para a documentação correspondente.</li>
- *   <li><b>title</b>: resumo curto e humano do problema. Não varia entre ocorrências
- *       do mesmo {@code type}.</li>
- *   <li><b>status</b>: código HTTP da resposta, replicado no payload por conveniência
- *       do cliente.</li>
- *   <li><b>detail</b>: explicação específica desta ocorrência. Opcional.</li>
- *   <li><b>instance</b>: URI da requisição que causou o erro. Opcional.</li>
- *   <li><b>errors</b>: extensão (fora do mínimo RFC 7807) para erros de validação
- *       por campo. Presente apenas em respostas de Bean Validation
- *       ({@code ConstraintViolationException}).</li>
- * </ul>
- *
- * <p>Campos {@code null} são omitidos da serialização ({@link JsonInclude.Include#NON_NULL}).</p>
- *
- * @see <a href="https://www.rfc-editor.org/rfc/rfc7807">RFC 7807</a>
- */
+/** Payload padrão de erro HTTP, conforme RFC 7807 (Problem Details for HTTP APIs). */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ProblemDetails(
+
         URI type,
+
         String title,
+
         int status,
+
         String detail,
+
         URI instance,
+
         List<FieldError> errors
 ) {
 

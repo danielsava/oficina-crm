@@ -1,6 +1,5 @@
 package common;
 
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 /**
  * Operador a ser aplicado a um {@link CriterioFiltro} individual.
@@ -9,7 +8,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
  * {@code FiltroAvancadoQueryBuilder} antes da montagem do JPQL — ver tabela
  * na ADR-0009.</p>
  */
-@Schema(description = "Operador aplicado a um critério individual da busca avançada.")
 public enum OperadorFiltro {
 
     /** Igualdade exata ({@code campo = :valor}). */

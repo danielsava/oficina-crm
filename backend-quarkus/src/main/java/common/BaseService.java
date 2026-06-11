@@ -22,39 +22,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Base de Service para o CRUD padrão.
- *
- * <p>Provê a implementação genérica de busca paginada com filtros
- * estruturados ({@link #buscarAvancado(FiltroDTO)}), com:</p>
- *
- * <ul>
- *   <li>Paginação offset/limit via {@link Page}.</li>
- *   <li>Ordenação por múltiplos campos validados contra a whitelist única
- *       {@link #camposPermitidos()}, derivada do {@code ListDTO}.</li>
- *   <li>Filtros estruturados (operadores explícitos, AND ou OR únicos por
- *       requisição, sem aninhamento) traduzidos por
- *       {@link FiltroAvancadoQueryBuilder}.</li>
- *   <li>Filtro fixo {@code status = ATIVO} aplicado por padrão, sempre com
- *       {@code AND} ao bloco de critérios do cliente, substituído quando a
- *       requisição inclui algum critério com {@code campo = "status"} (e
- *       {@code status} faz parte do {@code ListDTO}).</li>
- * </ul>
- *
- * <p>O endpoint público correspondente é {@code POST /buscar}, herdado pelo
- * {@link BaseRest}. Não há {@code GET /} paginado — ver ADR-0009.</p>
- *
- * <p>Pontos de extensão: {@link #camposPermitidos()} (raro; default deriva do
- * {@code ListDTO}) e {@link #buscarAvancado(FiltroDTO)} (raro; default cobre o
- * caso comum). O sort default ({@code id desc}) é fixo, mínimo e não
- * sobrescritível — atende apenas ao requisito técnico de paginação
- * consistente.</p>
- *
- * @see Pagina
- * @see FiltroDTO
- * @see FiltroAvancadoQueryBuilder
- * @see BaseRest
- */
 public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
@@ -71,27 +38,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
      */
     private static final Map<Class<?>, Set<String>> CACHE_CAMPOS_LISTDTO = new ConcurrentHashMap<>();
 
-    /**
-     * Ordenação default fixa aplicada quando o cliente não envia {@code sort}.
-     *
-     * <p>Usa <b>somente</b> {@code id desc} (PK herdada de {@link BaseEntity},
-     * existente em toda entidade do CRUD). É o contrato técnico mínimo
-     * exigido pela paginação offset/limit: sem um {@code ORDER BY} que
-     * produza ordem total, PostgreSQL não garante a mesma ordem entre
-     * requisições sequenciais ({@code page=0} seguido de {@code page=1}),
-     * o que causa registros duplicados/ausentes entre páginas. A PK é única
-     * por construção e atende esse requisito.</p>
-     *
-     * <p><b>Sem opinião de UX</b>: o backend não escolhe "mais recentes
-     * primeiro" nem qualquer outro critério de apresentação. Telas que
-     * queiram ordenação inicial específica DEVEM enviar {@code sort}
-     * explicitamente no {@code FiltroDTO}.</p>
-     *
-     * <p>Esta lista é fonte interna do backend e <b>não</b> passa pela
-     * validação contra {@link #camposPermitidos()} — por isso pode usar o
-     * campo técnico {@code id}, que normalmente não faz parte do
-     * {@code ListDTO}.</p>
-     */
     private static final List<SortCriterio> DEFAULT_SORT = List.of(
             new SortCriterio("id", SortDirecao.DESC)
     );
@@ -104,7 +50,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
     public abstract Class<ListDTO> listDTO();
 
     public abstract Class<EditDTO> editDTO();
-
 
 
     @Transactional
@@ -137,29 +82,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         mapper().updatedEntityFromDTO(editDTO, e);
     }
 
-    /**
-     * Busca paginada com filtros estruturados, retornando o envelope
-     * {@link Pagina} com a página atual de {@code ListDTO}.
-     *
-     * <p>Sequência:</p>
-     * <ol>
-     *   <li>Parseia {@code filtro.sort()} via {@link SortParser} (validação
-     *       sintática).</li>
-     *   <li>Valida cada campo do sort contra {@link #camposPermitidos()}.</li>
-     *   <li>Aplica {@link #DEFAULT_SORT} quando o cliente não envia sort.</li>
-     *   <li>Constrói o trecho JPQL dos critérios via
-     *       {@link FiltroAvancadoQueryBuilder} (whitelist, operador↔tipo,
-     *       combinação operador↔valor, conversão).</li>
-     *   <li>Combina com o filtro implícito {@code status = ATIVO} (sempre com
-     *       {@code AND}) quando o cliente não filtra explicitamente por
-     *       {@code status} e {@code status} faz parte do {@code ListDTO}.</li>
-     *   <li>Executa a query paginada com projeção em {@code ListDTO} e
-     *       calcula o envelope.</li>
-     * </ol>
-     *
-     * @param filtro payload da busca (Bean Validation aplicado no
-     *               {@link BaseRest}). Nulo é tratado como filtro vazio.
-     */
     public Pagina<ListDTO> buscarAvancado(FiltroDTO filtro) {
 
         FiltroDTO efetivo = filtro == null
@@ -227,15 +149,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         return new Pagina<>(content, page, size, totalElements, totalPages);
     }
 
-    /**
-     * Retorna o {@code EditDTO} populado com os dados do registro identificado
-     * pelo {@code uuid}, pronto para alimentar o formulário de edição no
-     * frontend.
-     *
-     * <p>Usa projeção Panache para evitar carregar a entidade completa quando
-     * o EditDTO basta. Módulos que precisem de campos calculados ou
-     * associações podem sobrescrever este método.</p>
-     */
     public EditDTO buscarEditDTOporUUID(String uuid) {
 
         return this.repository().find("uuid", UUID.fromString(uuid))
@@ -244,30 +157,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
     }
 
 
-    // ----------------------------------------------------------------------
-    //  Pontos de extensão (whitelist)
-    // ----------------------------------------------------------------------
-
-    /**
-     * Whitelist única de campos permitidos para <b>filtro</b> e
-     * <b>ordenação</b>, derivada automaticamente dos componentes declarados
-     * no record {@code ListDTO}.
-     *
-     * <p>Princípio: o {@code ListDTO} representa exatamente o que o frontend
-     * exibe na tabela; o usuário pode filtrar/ordenar pelas colunas que vê,
-     * nada mais. Isso elimina a necessidade de manter whitelists explícitas
-     * por entidade e fecha a porta para exposição de campos sensíveis que
-     * existem na entidade mas não no DTO (ex.: {@code Usuario.senhaHash}).</p>
-     *
-     * <p>Para incluir um campo no filtro/sort, basta adicioná-lo ao
-     * {@code ListDTO}. Os nomes dos componentes do record DEVEM corresponder
-     * aos atributos da entidade JPA, porque são usados diretamente como nomes
-     * de campo na cláusula JPQL.</p>
-     *
-     * <p>Resultado cacheado por classe de {@code ListDTO}. {@code *Service}
-     * com necessidade incomum (campos calculados, projeções específicas) pode
-     * sobrescrever este método.</p>
-     */
     protected Set<String> camposPermitidos() {
 
         return CACHE_CAMPOS_LISTDTO.computeIfAbsent(listDTO(), BaseService::descobrirCamposListDTO);
@@ -285,7 +174,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
             return Collections.unmodifiableSet(nomes);
         }
 
-        // Fallback para ListDTOs que não sejam records (caso futuro).
         Set<String> nomes = new LinkedHashSet<>();
 
         for (Field f : tipoListDTO.getDeclaredFields()) {
@@ -299,10 +187,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         return Collections.unmodifiableSet(nomes);
     }
 
-
-    // ----------------------------------------------------------------------
-    //  Helpers internos
-    // ----------------------------------------------------------------------
 
     private Sort montarSort(List<SortCriterio> criterios) {
 
@@ -408,10 +292,6 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         return (Class<? extends BaseEntity>) c;
     }
 
-
-    // ----------------------------------------------------------------------
-    //  Métodos utilitários herdados (CRUD básico, busca por atributo, etc.)
-    // ----------------------------------------------------------------------
 
     public List<Entity> listar() {
 

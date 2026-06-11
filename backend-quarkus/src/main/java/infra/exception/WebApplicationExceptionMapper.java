@@ -1,6 +1,7 @@
 package infra.exception;
 
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -36,7 +37,7 @@ public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplica
 
         return Response.status(status)
                 .entity(problem)
-                .header(jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE, ProblemDetails.MEDIA_TYPE)
+                .header(HttpHeaders.CONTENT_TYPE, ProblemDetails.MEDIA_TYPE)
                 .type(MediaType.valueOf(ProblemDetails.MEDIA_TYPE))
                 .build();
     }

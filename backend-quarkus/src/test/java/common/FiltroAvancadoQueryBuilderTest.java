@@ -19,33 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * Cobertura unitária do {@link FiltroAvancadoQueryBuilder} conforme passo 4 da
- * "Ordem de execução" do plano 0003.
- *
- * <p>Os cenários cobrem:</p>
- *
- * <ul>
- *   <li>Cada operador isolado (EQ, NOT_EQ, GT, GTE, LT, LTE, BETWEEN, IN,
- *       NOT_IN, STARTS_WITH, ENDS_WITH, CONTAINS, IS_NULL, IS_NOT_NULL).</li>
- *   <li>Combinação AND e OR de vários critérios.</li>
- *   <li>Lista de critérios vazia ou nula.</li>
- *   <li>Whitelist rejeitando campo desconhecido.</li>
- *   <li>Operador incompatível com tipo do campo.</li>
- *   <li>BETWEEN sem {@code valor2}.</li>
- *   <li>IN sem {@code List}.</li>
- *   <li>Datas ISO-8601 ({@link LocalDate} e {@link LocalDateTime}).</li>
- *   <li>Enum convertido a partir de {@link String}.</li>
- *   <li>UUID convertido a partir de {@link String}.</li>
- * </ul>
- *
- * <p>Testes puros (sem CDI/Quarkus); rodam apenas com JUnit 5.</p>
- */
 class FiltroAvancadoQueryBuilderTest {
-
-    // ----------------------------------------------------------------------
-    //  Fixtures
-    // ----------------------------------------------------------------------
 
     private enum CategoriaTeste { A, B, C }
 

@@ -2,6 +2,8 @@
 
 > **Status**: **concluído** (implementação aplicada; ADR-0009 reescrita in-place; plano 0002 descontinuado)
 > **Última atualização**: 2026-06-04 (implementação seguindo a "Ordem de execução" abaixo: ADR-0009 reescrita; `common.FiltroDTO`, `CriterioFiltro`, `OperadorFiltro`, `OperadorLogico` e `FiltroAvancadoQueryBuilder` criados; `BaseService.buscarAvancado(FiltroDTO)` e `BaseRest.POST /buscar` adicionados; código do plano 0002 removido — `FiltroAplicado`, `listarDTO` e auxiliares, `BaseRest.listar`, `PARAMS_RESERVADOS`; testes unitários do `FiltroAvancadoQueryBuilder` criados; `AGENTS.md`, plano 0001 (#7) e plano 0002 atualizados.)
+>
+> **Nota (2026-06-11)**: as anotações OpenAPI (`@Schema`, `@Operation`, `@APIResponse`, `@Parameter`, `@Tag`) e a maior parte do Javadoc criados por este plano foram **removidos** posteriormente, após a aprovação da [ADR-0010](../adr/0010-anotacoes-openapi-e-javadoc-sob-demanda.md), que estabelece que essas anotações são adicionadas apenas sob demanda. O conteúdo funcional do plano (records, builder, endpoint, testes) permanece em vigor.
 > **Escopo**: apenas backend. O plano do frontend será criado em momento posterior.
 > **Origem**: extensão natural do modo básico definido em [`0002-paginacao-ordenacao-filtros-backend.md`](0002-paginacao-ordenacao-filtros-backend.md). Após implementação do 0002 e análise comparativa, decidiu-se substituir o 0002 por este plano (que cobre todos os casos com contrato explícito).
 

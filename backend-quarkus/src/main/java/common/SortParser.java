@@ -5,20 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/**
- * Conversor de query params {@code sort=campo,direcao} em uma lista de
- * {@link SortCriterio} já validada sintaticamente.
- *
- * <p>O contrato HTTP exige direção obrigatória ({@code asc} ou {@code desc},
- * case-insensitive na entrada, normalizada para uppercase). Ausência de
- * direção ou formato fora do regex resulta em {@link IllegalArgumentException},
- * mapeada para {@code 400 application/problem+json} pelo
- * {@code IllegalArgumentExceptionMapper}.</p>
- *
- * <p>Este parser <b>não</b> consulta whitelist de campos — essa
- * responsabilidade fica no {@link BaseService}, que conhece os campos
- * permitidos por entidade.</p>
- */
 public final class SortParser {
 
     /**
@@ -33,16 +19,6 @@ public final class SortParser {
 
     private SortParser() { }
 
-    /**
-     * Converte os valores brutos do query param {@code sort} em
-     * {@link SortCriterio criterios} já normalizados.
-     *
-     * @param valoresBrutos lista de valores do query param. Pode ser
-     *                      {@code null} ou vazia; nesse caso, retorna lista
-     *                      vazia (o {@code BaseService} aplicará o default).
-     * @return lista imutável de critérios; vazia quando entrada vazia.
-     * @throws IllegalArgumentException quando algum valor não casa o regex.
-     */
     public static List<SortCriterio> parse(List<String> valoresBrutos) {
 
         if (valoresBrutos == null || valoresBrutos.isEmpty())

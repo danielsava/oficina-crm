@@ -13,36 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Utilitário sem CDI que traduz uma {@link FiltroDTO} em um trecho JPQL
- * parametrizado, aplicando todas as validações exigidas pela ADR-0009:
- *
- * <ul>
- *   <li>{@code campo} de cada {@link CriterioFiltro} precisa estar em
- *       {@code camposPermitidos} (whitelist derivada do {@code ListDTO}).</li>
- *   <li>{@link OperadorFiltro} precisa ser compatível com o tipo do campo na
- *       entidade JPA (ver tabela na ADR-0009).</li>
- *   <li>Combinações operador↔valor são checadas antes da conversão:
- *       {@link OperadorFiltro#IN}/{@code NOT_IN} exigem {@link List};
- *       {@link OperadorFiltro#BETWEEN} exige {@code valor2};
- *       {@link OperadorFiltro#IS_NULL}/{@code IS_NOT_NULL} dispensam valores;
- *       demais operadores exigem {@code valor} não-nulo.</li>
- *   <li>Conversão de valor a partir de {@link String} para o tipo Java do
- *       campo (Enum, UUID, números, datas ISO-8601). Falha de conversão
- *       resulta em {@link IllegalArgumentException} com mensagem
- *       específica.</li>
- * </ul>
- *
- * <p>Erros de validação são reportados via {@link IllegalArgumentException},
- * mapeados para {@code 400 application/problem+json} pelo
- * {@code IllegalArgumentExceptionMapper}.</p>
- *
- * <p>O builder não conhece o filtro implícito de {@code status = ATIVO}; quem
- * adiciona é o {@link BaseService#buscarAvancado(FiltroDTO)}, sempre com
- * {@code AND} ao bloco devolvido por este utilitário.</p>
- *
- * <p>Classe sem estado interno persistente; segura para uso concorrente.</p>
- */
 public final class FiltroAvancadoQueryBuilder {
 
     /**
@@ -63,19 +33,7 @@ public final class FiltroAvancadoQueryBuilder {
 
     private FiltroAvancadoQueryBuilder() { }
 
-    /**
-     * Constrói o trecho JPQL e os parâmetros para a lista plana de critérios
-     * combinados pelo {@link OperadorLogico} único do {@link FiltroDTO}.
-     *
-     * @param filtro            payload da busca (não pode ser {@code null}).
-     * @param camposPermitidos  whitelist única ({@code BaseService#camposPermitidos()}).
-     * @param camposEntidade    mapa {@code nomeCampo -> tipoJava} para a entidade.
-     * @return {@link Resultado} com o trecho JPQL e os parâmetros nomeados.
-     * @throws IllegalArgumentException quando algum critério é inválido (campo
-     *                                  fora da whitelist, operador incompatível
-     *                                  com o tipo, combinação operador↔valor
-     *                                  inválida ou conversão de valor falha).
-     */
+
     public static Resultado construir(
             FiltroDTO filtro,
             Set<String> camposPermitidos,
@@ -237,10 +195,6 @@ public final class FiltroAvancadoQueryBuilder {
         return new Resultado(jpql, parametros);
     }
 
-
-    // ----------------------------------------------------------------------
-    //  Helpers
-    // ----------------------------------------------------------------------
 
     private static Object exigirValor(CriterioFiltro c, String campo) {
 

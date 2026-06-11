@@ -30,5 +30,4 @@ public class AuthService {
         return PasswordHashUtil.verify(senha, usuario.getSenhaHash());
     }
 
-
 }

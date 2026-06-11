@@ -20,11 +20,10 @@ public abstract class BaseEntity {
             strategy = GenerationType.SEQUENCE,
             generator = "base_entity_seq"
     )
-
-    @Column(name = "id", nullable = false, updatable = false, unique=true)
+    @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
-    @Column(name = "uuid", nullable = false, updatable = false, unique=true)
+    @Column(name = "uuid", nullable = false, updatable = false, unique = true)
     private UUID uuid;
 
     @Enumerated(EnumType.STRING)
@@ -117,4 +116,5 @@ public abstract class BaseEntity {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
 }

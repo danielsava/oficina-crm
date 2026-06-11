@@ -68,6 +68,7 @@ These rules apply to BOTH backend and frontend, regardless of the stack. They ar
 - Work directly on the current branch.
 - Only commit, amend, push, or open PRs/MRs when explicitly requested by the user.
 - Do NOT update git config, skip hooks, use interactive flags (e.g., `-i`), force-push, or create empty commits unless explicitly requested.
+- Do NOT create tests (unit, integration, end-to-end, or any other kind) unless explicitly requested by the user. This applies to BOTH backend and frontend. When implementing a feature, deliver only the production code; tests are added in a separate, explicit request.
 
 ---
 

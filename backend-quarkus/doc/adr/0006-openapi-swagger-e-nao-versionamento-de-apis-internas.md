@@ -1,6 +1,6 @@
 # ADR-0006: OpenAPI/Swagger habilitado em dev e prod, sem versionamento de APIs internas de CRUD
 
-- **Status**: Accepted
+- **Status**: Accepted (ponto 3 "Anotação `@Schema` adotada como padrão nos DTOs" superseded por [ADR-0010](./0010-anotacoes-openapi-e-javadoc-sob-demanda.md); demais pontos em vigor)
 - **Data**: 2026-05-28
 - **Autores**: Equipe Oficina CRM
 
