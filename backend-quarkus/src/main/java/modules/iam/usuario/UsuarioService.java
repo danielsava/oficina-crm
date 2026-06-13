@@ -5,7 +5,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.NotFoundException;
 import modules.iam.auth.util.PasswordHashUtil;
 import modules.iam.usuario.dto.UsuarioEditDTO;
 import modules.iam.usuario.dto.UsuarioListDTO;
@@ -28,15 +27,6 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
 
     @Inject
     UsuarioMapper mapper;
-
-
-    public UsuarioRepository repository() { return this.repository; }
-
-    public UsuarioMapper mapper() { return this.mapper; }
-
-    public Class<UsuarioListDTO> listDTO() { return UsuarioListDTO.class; }
-
-    public Class<UsuarioEditDTO> editDTO() { return UsuarioEditDTO.class; }
 
 
     @Override
@@ -65,27 +55,12 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
     }
 
 
-    @Override
-    @Transactional
-    public void atualizarPorUUID(String uuid, UsuarioEditDTO editDTO) {
+    public UsuarioRepository repository() { return this.repository; }
 
-        Usuario usuario = buscarPorUUID(uuid);
+    public UsuarioMapper mapper() { return this.mapper; }
 
-        if (usuario == null)
-            throw new NotFoundException("Registro não encontrado");
+    public Class<UsuarioListDTO> listDTO() { return UsuarioListDTO.class; }
 
-        mapper.updatedEntityFromDTO(editDTO, usuario);
-    }
-
-
-    public boolean existePorEmail(String email) {
-
-        return existePor("email", email);
-    }
-
-    public Usuario buscarPorEmail(String email) {
-
-        return buscarPor("email", email);
-    }
+    public Class<UsuarioEditDTO> editDTO() { return UsuarioEditDTO.class; }
 
 }
