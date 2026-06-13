@@ -43,656 +43,808 @@ SSO federado, ABAC, multi-tenant).
 A modelagem proposta é um **IAM próprio embarcado** no monorepo (módulo Quarkus separado, ex.: `iam-service`), inspirado conceitualmente no Keycloak, com os seguintes pilares:
 
 - **Modelo híbrido RBAC + Permissões granulares por Aplicação** — não apenas roles globais. Roles são "atalhos" para conjuntos de permissões dentro de uma aplicação.
-- **Autorização escopada por Aplicação (ClientApp)** — cada aplicação cliente possui seu próprio catálogo de Funcionalidades (Resources) × Ações.
+- **Autorização escopada por Aplicação (`AplicacaoCliente`)** — cada aplicação cliente possui seu próprio catálogo de Recursos × Ações.
 - **Permissões atribuídas a Grupos/Roles**, nunca diretamente ao usuário (regra geral; exceções via concessão direta com vigência).
 - **Tokens JWT curtos (5–15 min) + Refresh Tokens longos (horas/dias) persistidos** para permitir revogação real.
 - **Revogação via tabela de denylist + versão de credenciais** (sem precisar consultar IAM a cada request).
 - **JWT carrega claims resumidas** (sub, roles por app, permission version), não a árvore inteira de permissões. Backend resolve permissões granulares via cache local sincronizado.
-- **Multi-tenant preparado desde já** via entidade `Organization`, mesmo que inicialmente exista apenas uma organização default.
+- **Multi-tenant preparado desde já** via entidade `Organizacao`, mesmo que inicialmente exista apenas uma organização default.
 - **Tabelas associativas como entidades próprias** quando carregam metadados (vigência, quem concedeu, status).
 
 ---
 
 # 2. Diagrama Textual das Entidades
 
-```
-Organization (tenant)
-   │
-   ├──< User >──── UserCredential (1:1)
-   │      │
-   │      ├──< UserGroupMembership >── Group
-   │      ├──< UserRoleAssignment >── Role ──< ClientApp
-   │      ├──< UserDirectPermission >── Permission
-   │      ├──< UserSession (1:N) ──< RefreshToken
-   │      └──< AuthEventLog
-   │
-   └──< ClientApp >── Module ──< Resource ──< Permission >── Action
-              │                                     │
-              │                                     └──< RolePermission >── Role
-              │                                     └──< GroupPermission >── Group
-              │
-              └──< Role
-              └──< UserAppAccess (vínculo usuário ↔ aplicação)
+> **Schema único**: todas as entidades abaixo residem no schema PostgreSQL
+> `iam` (constante `DbSchemas.IAM`). Nenhuma entidade do módulo IAM mora em
+> `core`, `crm`, `estoque` ou qualquer outro schema.
 
-RevokedToken (denylist global por jti)
-AuthorizationDecisionLog (auditoria fina)
+```
+Organizacao (tenant)
+   │
+   ├──< Usuario >──── UsuarioCredencial (1:1)
+   │      │
+   │      ├──< UsuarioGrupo >── Grupo
+   │      ├──< UsuarioPapel >── Papel ──< AplicacaoCliente
+   │      ├──< UsuarioPermissao >── Permissao
+   │      ├──< SessaoUsuario (1:N) ──< RefreshToken
+   │      └──< AuditoriaAutenticacao
+   │
+   └──< AplicacaoCliente >── Modulo ──< Recurso ──< Permissao >── Acao
+              │                                          │
+              │                                          └──< PapelPermissao >── Papel
+              │
+              └──< Papel
+              └──< UsuarioAplicacao (vínculo usuário ↔ aplicação)
+
+TokenRevogado (denylist global por jti)
+AuditoriaAutorizacao (auditoria fina)
 ```
 
 ---
 
 # 3. Lista de Entidades e Responsabilidades
 
-| Entidade | Responsabilidade |
-|---|---|
-| `Organization` | Tenant lógico. Isola usuários, grupos, aplicações. |
-| `User` | Identidade do usuário (dados de perfil). |
-| `UserCredential` | Hash de senha, política, versão, `passwordChangedAt`, `credentialVersion`. |
-| `ClientApp` | Aplicação cliente do IAM (Financeiro, RH, Estoque…). |
-| `Module` | Agrupamento lógico dentro de uma `ClientApp` (opcional). |
-| `Resource` | Funcionalidade/recurso de uma aplicação (`clientes`, `relatorios`). |
-| `Action` | Ação granular (`CREATE`, `READ`, `APPROVE`…). Catálogo. |
-| `Permission` | Tripla `(Resource, Action, ClientApp)` — unidade atômica de autorização. |
-| `Role` | Conjunto nomeado de permissões dentro de uma `ClientApp` (ex.: "Financeiro Gestor"). |
-| `Group` | Agrupador organizacional de usuários, pode receber Roles e Permissões. |
-| `RolePermission` | Associativa Role↔Permission com metadados. |
-| `GroupRole` | Associativa Group↔Role. |
-| `UserGroupMembership` | User↔Group com vigência, quem concedeu. |
-| `UserRoleAssignment` | User↔Role direto (exceções), com vigência. |
-| `UserDirectPermission` | User↔Permission (exceções pontuais, com vigência). |
-| `UserAppAccess` | User↔ClientApp — habilita acesso ao app independente de roles. |
-| `UserSession` | Sessão lógica (login ativo) — base para refresh tokens. |
-| `RefreshToken` | Refresh token persistido (rotacionável, revogável). |
-| `RevokedToken` | Denylist de `jti` de access tokens revogados antes de expirar. |
-| `AuthEventLog` | Auditoria de login, logout, falha, troca de senha, refresh. |
-| `AuthorizationDecisionLog` | Auditoria opcional de decisões PERMIT/DENY. |
-| `PasswordResetToken` | Token único para fluxo "esqueci minha senha". |
+| Entidade Java | Tabela (schema `iam`) | Responsabilidade |
+|---|---|---|
+| `Organizacao` | `tb_organizacao` | Tenant lógico. Isola usuários, grupos, aplicações. |
+| `Usuario` | `tb_usuario` | Identidade do usuário (dados de perfil). **Já existe** em `modules.iam.usuario`. |
+| `UsuarioCredencial` | `tb_usuario_credencial` | Hash de senha, algoritmo, versão, `senhaAlteradaEm`, `credentialVersion`. |
+| `AplicacaoCliente` | `tb_aplicacao_cliente` | Aplicação cliente do IAM (Financeiro, RH, Estoque…). |
+| `Modulo` | `tb_modulo` | Agrupamento lógico dentro de uma `AplicacaoCliente` (opcional). |
+| `Recurso` | `tb_recurso` | Funcionalidade/recurso de uma aplicação (`clientes`, `relatorios`). |
+| `Acao` | `tb_acao` | Ação granular (`CREATE`, `READ`, `APPROVE`…). Catálogo. |
+| `Permissao` | `tb_permissao` | Tripla `(Recurso, Acao, AplicacaoCliente)` — unidade atômica de autorização. |
+| `Papel` | `tb_papel` | Conjunto nomeado de permissões dentro de uma `AplicacaoCliente` (ex.: "Financeiro Gestor"). |
+| `Grupo` | `tb_grupo` | Agrupador organizacional de usuários. **Já existe** em `modules.iam.grupo`. |
+| `PapelPermissao` | `tb_papel_permissao` | Associativa Papel↔Permissao com metadados. |
+| `GrupoPapel` | `tb_grupo_papel` | Associativa Grupo↔Papel. |
+| `UsuarioGrupo` | `tb_usuario_grupo` | Usuario↔Grupo com vigência, quem concedeu. |
+| `UsuarioPapel` | `tb_usuario_papel` | Usuario↔Papel direto (exceção), com vigência. |
+| `UsuarioPermissao` | `tb_usuario_permissao` | Usuario↔Permissao (exceção pontual, com vigência). |
+| `UsuarioAplicacao` | `tb_usuario_aplicacao` | Usuario↔AplicacaoCliente — habilita acesso ao app. |
+| `SessaoUsuario` | `tb_sessao_usuario` | Sessão lógica (login ativo) — base para refresh tokens. |
+| `RefreshToken` | `tb_refresh_token` | Refresh token persistido (rotacionável, revogável). |
+| `TokenRevogado` | `tb_token_revogado` | Denylist de `jti` de access tokens revogados antes de expirar. |
+| `AuditoriaAutenticacao` | `tb_auditoria_autenticacao` | Auditoria de login, logout, falha, troca de senha, refresh. |
+| `AuditoriaAutorizacao` | `tb_auditoria_autorizacao` | Auditoria opcional de decisões PERMIT/DENY. |
+| `ResetSenhaToken` | `tb_reset_senha_token` | Token único para fluxo "esqueci minha senha". |
 
 ---
 
 # 4. Modelo Relacional Sugerido
 
-| Tabela | PK | FKs principais | Notas |
-|---|---|---|---|
-| `iam_organization` | `id` BIGINT | — | `code` UNIQUE |
-| `iam_user` | `id` BIGINT | `organization_id` | `username` UNIQUE por org, `email` UNIQUE por org |
-| `iam_user_credential` | `id` BIGINT | `user_id` (UNIQUE) | hash bcrypt/argon2, `credential_version` INT |
-| `iam_client_app` | `id` BIGINT | `organization_id` | `client_id` UNIQUE, `client_secret_hash` |
-| `iam_module` | `id` BIGINT | `client_app_id` | `code` UNIQUE por app |
-| `iam_resource` | `id` BIGINT | `client_app_id`, `module_id` | `code` UNIQUE por app |
-| `iam_action` | `id` BIGINT | — | catálogo global (`CREATE`, `READ`…) |
-| `iam_permission` | `id` BIGINT | `client_app_id`, `resource_id`, `action_id` | UNIQUE (`client_app_id`, `resource_id`, `action_id`) |
-| `iam_role` | `id` BIGINT | `client_app_id` | `code` UNIQUE por app |
-| `iam_role_permission` | `id` BIGINT | `role_id`, `permission_id` | UNIQUE (role_id, permission_id) |
-| `iam_group` | `id` BIGINT | `organization_id` | `code` UNIQUE por org |
-| `iam_group_role` | `id` BIGINT | `group_id`, `role_id` | vigência |
-| `iam_user_group` | `id` BIGINT | `user_id`, `group_id` | vigência, `granted_by` |
-| `iam_user_role` | `id` BIGINT | `user_id`, `role_id` | vigência (exceção) |
-| `iam_user_permission` | `id` BIGINT | `user_id`, `permission_id` | vigência (exceção) |
-| `iam_user_app_access` | `id` BIGINT | `user_id`, `client_app_id` | flag de acesso à app |
-| `iam_user_session` | `id` UUID | `user_id`, `client_app_id` | `revoked` bool |
-| `iam_refresh_token` | `id` UUID | `session_id`, `user_id` | `token_hash`, `expires_at`, `revoked` |
-| `iam_revoked_token` | `jti` VARCHAR | `user_id` | TTL = expiração do JWT |
-| `iam_auth_event_log` | `id` BIGINT | `user_id`, `client_app_id` | tipo, IP, UA, timestamp |
-| `iam_authz_decision_log` | `id` BIGINT | `user_id`, `permission_id` | resultado, timestamp |
-| `iam_password_reset_token` | `id` UUID | `user_id` | hash, expires_at, used |
+> **Schema único**: todas as tabelas deste módulo residem no schema `iam`
+> (referenciado em código por `DbSchemas.IAM`). Não há tabelas do IAM em
+> `core` nem em qualquer outro schema funcional. Em migrações Flyway as
+> tabelas são sempre qualificadas (`iam.tb_usuario`, etc.).
+>
+> **Convenção de nomes**: prefixo `tb_` para tabelas e padrão `snake_case`
+> (alinhado ao já adotado em `iam.tb_usuario`). O prefixo `iam_` no nome da
+> tabela foi removido — o schema já cumpre esse papel.
+
+| Schema | Tabela | PK | FKs principais | Notas |
+|---|---|---|---|---|
+| `iam` | `tb_organizacao` | `id` BIGINT | — | `codigo` UNIQUE |
+| `iam` | `tb_usuario` | `id` BIGINT | `organizacao_id` | `username` UNIQUE por org, `email` UNIQUE por org (entidade já existente no projeto) |
+| `iam` | `tb_usuario_credencial` | `id` BIGINT | `usuario_id` (UNIQUE) | hash argon2id/bcrypt, `credential_version` INT |
+| `iam` | `tb_aplicacao_cliente` | `id` BIGINT | `organizacao_id` | `client_id` UNIQUE, `client_secret_hash` |
+| `iam` | `tb_modulo` | `id` BIGINT | `aplicacao_cliente_id` | `codigo` UNIQUE por app |
+| `iam` | `tb_recurso` | `id` BIGINT | `aplicacao_cliente_id`, `modulo_id` | `codigo` UNIQUE por app |
+| `iam` | `tb_acao` | `id` BIGINT | — | catálogo global (`CREATE`, `READ`…) |
+| `iam` | `tb_permissao` | `id` BIGINT | `aplicacao_cliente_id`, `recurso_id`, `acao_id` | UNIQUE (`aplicacao_cliente_id`, `recurso_id`, `acao_id`) |
+| `iam` | `tb_papel` | `id` BIGINT | `aplicacao_cliente_id` | `codigo` UNIQUE por app |
+| `iam` | `tb_papel_permissao` | `id` BIGINT | `papel_id`, `permissao_id` | UNIQUE (papel_id, permissao_id) |
+| `iam` | `tb_grupo` | `id` BIGINT | `organizacao_id` | `codigo` UNIQUE por org (entidade já existente no projeto) |
+| `iam` | `tb_grupo_papel` | `id` BIGINT | `grupo_id`, `papel_id` | vigência |
+| `iam` | `tb_usuario_grupo` | `id` BIGINT | `usuario_id`, `grupo_id` | vigência, `concedido_por` |
+| `iam` | `tb_usuario_papel` | `id` BIGINT | `usuario_id`, `papel_id` | vigência (exceção) |
+| `iam` | `tb_usuario_permissao` | `id` BIGINT | `usuario_id`, `permissao_id` | vigência (exceção) |
+| `iam` | `tb_usuario_aplicacao` | `id` BIGINT | `usuario_id`, `aplicacao_cliente_id` | flag de acesso à app |
+| `iam` | `tb_sessao_usuario` | `id` BIGINT (+ `uuid`) | `usuario_id`, `aplicacao_cliente_id` | `revogada` bool |
+| `iam` | `tb_refresh_token` | `id` BIGINT (+ `uuid`) | `sessao_usuario_id`, `usuario_id` | `token_hash`, `expira_em`, `revogada` |
+| `iam` | `tb_token_revogado` | `id` BIGINT | `usuario_id` | `jti` UNIQUE, TTL = expiração do JWT |
+| `iam` | `tb_auditoria_autenticacao` | `id` BIGINT | `usuario_id`, `aplicacao_cliente_id` | tipo, IP, UA, timestamp |
+| `iam` | `tb_auditoria_autorizacao` | `id` BIGINT | `usuario_id`, `permissao_id` | resultado, timestamp |
+| `iam` | `tb_reset_senha_token` | `id` BIGINT (+ `uuid`) | `usuario_id` | hash, expira_em, usado |
+
+> **PK**: todas as tabelas usam `id BIGINT` proveniente de `core.global_id_seq`
+> (via `BaseEntity` — ver convenção do projeto). O `uuid` é o identificador
+> público (URLs e DTOs). Onde antes propus PK `UUID` nativa (sessão, refresh
+> token, reset token) o modelo é trazido para a convenção: PK numérica +
+> coluna `uuid` única do `BaseEntity` + colunas técnicas internas
+> específicas (ex.: `jti` em `tb_token_revogado`).
 
 ---
 
 # 5. Classes JPA Principais
 
-> Convenções: `@MappedSuperclass` para auditoria, `Long` para PKs de entidades de domínio estável, `UUID` para tokens/sessões. Hibernate 6 com Quarkus 3 / Java 25.
+> **Convenções do projeto aplicadas** (ver `backend-quarkus/AGENTS.md`):
+> - Todas as entidades **estendem `common.BaseEntity`** — herdam `id` (BIGINT
+>   gerado por `core.global_id_seq`), `uuid` (identificador público), `status`
+>   (`EnumStatusEntity`), `version`, `createdAt`, `updatedAt` e callbacks
+>   `@PrePersist`/`@PreUpdate`. **Não** redeclarar esses campos nas entidades
+>   filhas, nem criar um `AuditableEntity` paralelo.
+> - Toda `@Table` declara `schema = DbSchemas.IAM` — schema único do módulo.
+> - Pacotes ficam em `modules.iam.<sub_area>` (ex.: `modules.iam.papel`).
+> - Enums JPA sempre com `@Enumerated(EnumType.STRING)`.
+> - DTOs (não exibidos aqui) seguem o padrão `EditDTO`/`ListDTO` como
+>   `record`, com REST estendendo `BaseRest`.
 
-### 5.1 Base auditável
+> Os exemplos abaixo mostram apenas os campos próprios de cada entidade
+> (omitidos os campos herdados de `BaseEntity`).
+
+### 5.1 Organizacao (tenant)
 
 ```java
-package com.oficina.iam.domain;
+package modules.iam.organizacao;
 
+import common.BaseEntity;
+import common.DbSchemas;
 import jakarta.persistence.*;
-import java.time.Instant;
 
-@MappedSuperclass
-public abstract class AuditableEntity {
+@Entity
+@Table(
+    name = "tb_organizacao",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(name = "uk_organizacao_codigo", columnNames = "codigo")
+)
+public class Organizacao extends BaseEntity {
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    protected Instant createdAt;
+    @Column(name = "codigo", nullable = false, length = 50)
+    private String codigo;
 
-    @Column(name = "updated_at")
-    protected Instant updatedAt;
+    @Column(name = "nome", nullable = false, length = 200)
+    private String nome;
 
-    @Column(name = "created_by", length = 100, updatable = false)
-    protected String createdBy;
-
-    @Column(name = "updated_by", length = 100)
-    protected String updatedBy;
-
-    @PrePersist
-    void onCreate() {
-        this.createdAt = Instant.now();
-        this.updatedAt = this.createdAt;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        this.updatedAt = Instant.now();
-    }
-
-    // getters/setters omitidos
+    // getters/setters
 }
 ```
 
-### 5.2 Organization (tenant)
+### 5.2 Usuario e UsuarioCredencial
+
+> `Usuario` já existe em `modules.iam.usuario` (`tb_usuario`). A proposta
+> acrescenta o vínculo com `Organizacao` e a credencial separada. O status
+> de ativo/inativo continua sendo o `EnumStatusEntity` do `BaseEntity`;
+> estados específicos de identidade (LOCKED, PENDING_EMAIL_VERIFICATION)
+> vão para um campo próprio.
 
 ```java
+package modules.iam.usuario;
+
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.organizacao.Organizacao;
+
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "iam_organization",
-       uniqueConstraints = @UniqueConstraint(name = "uk_org_code", columnNames = "code"))
-public class Organization extends AuditableEntity {
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false, length = 50)
-    private String code;
-
-    @Column(nullable = false, length = 200)
-    private String name;
-
-    @Column(nullable = false)
-    private boolean active = true;
-}
-```
-
-### 5.3 User e UserCredential
-
-```java
-@Entity
-@Table(name = "iam_user",
-       uniqueConstraints = {
-           @UniqueConstraint(name = "uk_user_org_username", columnNames = {"organization_id", "username"}),
-           @UniqueConstraint(name = "uk_user_org_email",    columnNames = {"organization_id", "email"})
-       },
-       indexes = {
-           @Index(name = "ix_user_email", columnList = "email"),
-           @Index(name = "ix_user_org",   columnList = "organization_id")
-       })
-public class User extends AuditableEntity {
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Table(
+    name = "tb_usuario",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_usuario_org_username", columnNames = {"organizacao_id", "username"}),
+        @UniqueConstraint(name = "uk_usuario_org_email",    columnNames = {"organizacao_id", "email"})
+    },
+    indexes = {
+        @Index(name = "ix_usuario_email", columnList = "email"),
+        @Index(name = "ix_usuario_org",   columnList = "organizacao_id")
+    }
+)
+public class Usuario extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "organization_id", nullable = false,
-                foreignKey = @ForeignKey(name = "fk_user_org"))
-    private Organization organization;
+    @JoinColumn(name = "organizacao_id", nullable = false,
+                foreignKey = @ForeignKey(name = "fk_usuario_organizacao"))
+    private Organizacao organizacao;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "username", nullable = false, length = 100)
     private String username;
 
-    @Column(nullable = false, length = 200)
+    @Column(name = "email", nullable = false, length = 200)
     private String email;
 
-    @Column(name = "full_name", length = 200)
-    private String fullName;
+    @Column(name = "nome_completo", length = 200)
+    private String nomeCompleto;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private UserStatus status = UserStatus.ACTIVE;
+    @Column(name = "estado_identidade", nullable = false, length = 30)
+    private EstadoIdentidade estadoIdentidade = EstadoIdentidade.ATIVA;
 
-    @Column(name = "email_verified", nullable = false)
-    private boolean emailVerified;
+    @Column(name = "email_verificado", nullable = false)
+    private boolean emailVerificado;
 
-    @Column(name = "last_login_at")
-    private Instant lastLoginAt;
+    @Column(name = "ultimo_login_em")
+    private LocalDateTime ultimoLoginEm;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true,
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true,
               fetch = FetchType.LAZY)
-    private UserCredential credential;
+    private UsuarioCredencial credencial;
 
-    public enum UserStatus { ACTIVE, INACTIVE, LOCKED, PENDING }
+    public enum EstadoIdentidade { ATIVA, BLOQUEADA, PENDENTE_VERIFICACAO_EMAIL }
+
+    // getters/setters
 }
 ```
 
 ```java
-@Entity
-@Table(name = "iam_user_credential",
-       uniqueConstraints = @UniqueConstraint(name = "uk_cred_user", columnNames = "user_id"))
-public class UserCredential extends AuditableEntity {
+package modules.iam.usuario;
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(
+    name = "tb_usuario_credencial",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(name = "uk_credencial_usuario", columnNames = "usuario_id")
+)
+public class UsuarioCredencial extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false,
-                foreignKey = @ForeignKey(name = "fk_cred_user"))
-    private User user;
+    @JoinColumn(name = "usuario_id", nullable = false,
+                foreignKey = @ForeignKey(name = "fk_credencial_usuario"))
+    private Usuario usuario;
 
-    @Column(name = "password_hash", nullable = false, length = 255)
-    private String passwordHash; // argon2id ou bcrypt
+    @Column(name = "senha_hash", nullable = false, length = 255)
+    private String senhaHash; // argon2id ou bcrypt
 
-    @Column(name = "password_algorithm", nullable = false, length = 30)
-    private String passwordAlgorithm; // "argon2id"
+    @Column(name = "algoritmo_hash", nullable = false, length = 30)
+    private String algoritmoHash; // "argon2id"
 
-    @Column(name = "password_changed_at", nullable = false)
-    private Instant passwordChangedAt;
+    @Column(name = "senha_alterada_em", nullable = false)
+    private LocalDateTime senhaAlteradaEm;
 
-    /** Incrementado a cada troca de senha / revogação global do usuário.
-     *  Embutido como claim "cv" no JWT — desbate todos os tokens emitidos antes. */
+    // Incrementado a cada troca de senha / revogação global do usuário.
+    // Embutido como claim "cv" no JWT — invalida todos os tokens anteriores.
     @Column(name = "credential_version", nullable = false)
     private int credentialVersion = 1;
 
-    @Column(name = "failed_attempts", nullable = false)
-    private int failedAttempts;
+    @Column(name = "tentativas_falhas", nullable = false)
+    private int tentativasFalhas;
 
-    @Column(name = "locked_until")
-    private Instant lockedUntil;
+    @Column(name = "bloqueado_ate")
+    private LocalDateTime bloqueadoAte;
+
+    // getters/setters
 }
 ```
 
-### 5.4 ClientApp, Module, Resource, Action, Permission
+### 5.3 AplicacaoCliente, Modulo, Recurso, Acao, Permissao
 
 ```java
-@Entity
-@Table(name = "iam_client_app",
-       uniqueConstraints = @UniqueConstraint(name = "uk_app_client_id", columnNames = "client_id"))
-public class ClientApp extends AuditableEntity {
+package modules.iam.aplicacaocliente;
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.organizacao.Organizacao;
+
+@Entity
+@Table(
+    name = "tb_aplicacao_cliente",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(name = "uk_aplicacao_client_id", columnNames = "client_id")
+)
+public class AplicacaoCliente extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "organization_id", nullable = false)
-    private Organization organization;
+    @JoinColumn(name = "organizacao_id", nullable = false)
+    private Organizacao organizacao;
 
     @Column(name = "client_id", nullable = false, length = 100)
     private String clientId; // ex.: "sistema-financeiro"
 
     @Column(name = "client_secret_hash", length = 255)
-    private String clientSecretHash; // só para confidential clients
+    private String clientSecretHash; // apenas para confidential clients
 
-    @Column(nullable = false, length = 200)
-    private String name;
+    @Column(name = "nome", nullable = false, length = 200)
+    private String nome;
 
-    @Column(name = "access_token_ttl_seconds", nullable = false)
-    private int accessTokenTtlSeconds = 900;       // 15 min
+    @Column(name = "access_token_ttl_segundos", nullable = false)
+    private int accessTokenTtlSegundos = 900;     // 15 min
 
-    @Column(name = "refresh_token_ttl_seconds", nullable = false)
-    private int refreshTokenTtlSeconds = 28800;    // 8 h
+    @Column(name = "refresh_token_ttl_segundos", nullable = false)
+    private int refreshTokenTtlSegundos = 28800;  // 8 h
 
-    @Column(nullable = false)
-    private boolean active = true;
+    // getters/setters
 }
 ```
 
 ```java
-@Entity
-@Table(name = "iam_resource",
-       uniqueConstraints = @UniqueConstraint(name = "uk_resource_app_code",
-                                             columnNames = {"client_app_id", "code"}))
-public class Resource extends AuditableEntity {
+package modules.iam.recurso;
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.aplicacaocliente.AplicacaoCliente;
+import modules.iam.modulo.Modulo;
+
+@Entity
+@Table(
+    name = "tb_recurso",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_recurso_app_codigo",
+        columnNames = {"aplicacao_cliente_id", "codigo"}
+    )
+)
+public class Recurso extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "client_app_id", nullable = false)
-    private ClientApp clientApp;
+    @JoinColumn(name = "aplicacao_cliente_id", nullable = false)
+    private AplicacaoCliente aplicacaoCliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "module_id")
-    private Module module;
+    @JoinColumn(name = "modulo_id")
+    private Modulo modulo;
 
-    @Column(nullable = false, length = 80)
-    private String code;          // ex.: "clientes", "relatorios"
+    @Column(name = "codigo", nullable = false, length = 80)
+    private String codigo; // ex.: "clientes", "relatorios"
 
-    @Column(nullable = false, length = 200)
-    private String name;
+    @Column(name = "nome", nullable = false, length = 200)
+    private String nome;
+
+    // getters/setters
 }
 ```
 
 ```java
+package modules.iam.acao;
+
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+
 @Entity
-@Table(name = "iam_action",
-       uniqueConstraints = @UniqueConstraint(name = "uk_action_code", columnNames = "code"))
-public class Action {
+@Table(
+    name = "tb_acao",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(name = "uk_acao_codigo", columnNames = "codigo")
+)
+public class Acao extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "codigo", nullable = false, length = 50)
+    private String codigo; // CREATE, READ, UPDATE, DELETE, APPROVE, EXPORT...
 
-    @Column(nullable = false, length = 50)
-    private String code; // CREATE, READ, UPDATE, DELETE, APPROVE, EXPORT...
+    @Column(name = "nome", nullable = false, length = 100)
+    private String nome;
 
-    @Column(nullable = false, length = 100)
-    private String name;
+    // getters/setters
 }
 ```
 
 ```java
+package modules.iam.permissao;
+
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.acao.Acao;
+import modules.iam.aplicacaocliente.AplicacaoCliente;
+import modules.iam.recurso.Recurso;
+
 @Entity
-@Table(name = "iam_permission",
-       uniqueConstraints = @UniqueConstraint(
-           name = "uk_perm_app_resource_action",
-           columnNames = {"client_app_id", "resource_id", "action_id"}),
-       indexes = {
-           @Index(name = "ix_perm_app", columnList = "client_app_id")
-       })
-public class Permission extends AuditableEntity {
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "client_app_id", nullable = false)
-    private ClientApp clientApp;
+@Table(
+    name = "tb_permissao",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_permissao_app_recurso_acao",
+            columnNames = {"aplicacao_cliente_id", "recurso_id", "acao_id"}
+        ),
+        @UniqueConstraint(name = "uk_permissao_codigo", columnNames = "codigo_permissao")
+    },
+    indexes = @Index(name = "ix_permissao_app", columnList = "aplicacao_cliente_id")
+)
+public class Permissao extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "resource_id", nullable = false)
-    private Resource resource;
+    @JoinColumn(name = "aplicacao_cliente_id", nullable = false)
+    private AplicacaoCliente aplicacaoCliente;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "action_id", nullable = false)
-    private Action action;
+    @JoinColumn(name = "recurso_id", nullable = false)
+    private Recurso recurso;
 
-    /** Forma canônica usada em JWT/cache: "<app>:<resource>:<action>" */
-    @Column(name = "permission_code", nullable = false, length = 200, unique = true)
-    private String permissionCode;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "acao_id", nullable = false)
+    private Acao acao;
+
+    // Forma canônica usada em JWT/cache: "<app>:<recurso>:<acao>"
+    @Column(name = "codigo_permissao", nullable = false, length = 200)
+    private String codigoPermissao;
 
     @PrePersist @PreUpdate
-    void buildCode() {
-        this.permissionCode = clientApp.getClientId() + ":" + resource.getCode() + ":" + action.getCode();
+    void montarCodigo() {
+        this.codigoPermissao =
+            aplicacaoCliente.getClientId() + ":" + recurso.getCodigo() + ":" + acao.getCodigo();
     }
+
+    // getters/setters
 }
 ```
 
-### 5.5 Role, Group e associativas com metadados
+### 5.4 Papel, Grupo e associativas com metadados
+
+> O termo **Papel** substitui *Role* (alinhado ao idioma do projeto). O
+> termo **Grupo** já existe em `modules.iam.grupo`.
 
 ```java
+package modules.iam.papel;
+
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.aplicacaocliente.AplicacaoCliente;
+
 @Entity
-@Table(name = "iam_role",
-       uniqueConstraints = @UniqueConstraint(name = "uk_role_app_code",
-                                             columnNames = {"client_app_id", "code"}))
-public class Role extends AuditableEntity {
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "client_app_id", nullable = false)
-    private ClientApp clientApp;
-
-    @Column(nullable = false, length = 80)
-    private String code; // ex.: "FINANCEIRO_GESTOR"
-
-    @Column(nullable = false, length = 200)
-    private String name;
-
-    @Column(nullable = false)
-    private boolean active = true;
-}
-```
-
-```java
-@Entity
-@Table(name = "iam_role_permission",
-       uniqueConstraints = @UniqueConstraint(name = "uk_role_perm",
-                                             columnNames = {"role_id", "permission_id"}))
-public class RolePermission extends AuditableEntity {
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Table(
+    name = "tb_papel",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_papel_app_codigo",
+        columnNames = {"aplicacao_cliente_id", "codigo"}
+    )
+)
+public class Papel extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "role_id", nullable = false)
-    private Role role;
+    @JoinColumn(name = "aplicacao_cliente_id", nullable = false)
+    private AplicacaoCliente aplicacaoCliente;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "permission_id", nullable = false)
-    private Permission permission;
+    @Column(name = "codigo", nullable = false, length = 80)
+    private String codigo; // ex.: "FINANCEIRO_GESTOR"
 
-    @Column(name = "granted_by", length = 100)
-    private String grantedBy;
+    @Column(name = "nome", nullable = false, length = 200)
+    private String nome;
 
-    @Column(name = "valid_from")
-    private Instant validFrom;
-
-    @Column(name = "valid_until")
-    private Instant validUntil;
-
-    @Column(nullable = false)
-    private boolean active = true;
+    // getters/setters
 }
 ```
 
 ```java
-@Entity
-@Table(name = "iam_group",
-       uniqueConstraints = @UniqueConstraint(name = "uk_group_org_code",
-                                             columnNames = {"organization_id", "code"}))
-public class Group extends AuditableEntity {
+package modules.iam.papelpermissao;
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.papel.Papel;
+import modules.iam.permissao.Permissao;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(
+    name = "tb_papel_permissao",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_papel_permissao",
+        columnNames = {"papel_id", "permissao_id"}
+    )
+)
+public class PapelPermissao extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "organization_id", nullable = false)
-    private Organization organization;
+    @JoinColumn(name = "papel_id", nullable = false)
+    private Papel papel;
 
-    @Column(nullable = false, length = 80)
-    private String code;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "permissao_id", nullable = false)
+    private Permissao permissao;
 
-    @Column(nullable = false, length = 200)
-    private String name;
+    @Column(name = "concedido_por", length = 100)
+    private String concedidoPor;
 
-    /** Hierarquia opcional de grupos */
+    @Column(name = "valido_de")
+    private LocalDateTime validoDe;
+
+    @Column(name = "valido_ate")
+    private LocalDateTime validoAte;
+
+    // getters/setters
+}
+```
+
+```java
+package modules.iam.grupo;
+
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.organizacao.Organizacao;
+
+@Entity
+@Table(
+    name = "tb_grupo",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_grupo_org_codigo",
+        columnNames = {"organizacao_id", "codigo"}
+    )
+)
+public class Grupo extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "organizacao_id", nullable = false)
+    private Organizacao organizacao;
+
+    @Column(name = "codigo", nullable = false, length = 80)
+    private String codigo;
+
+    @Column(name = "nome", nullable = false, length = 200)
+    private String nome;
+
+    // Hierarquia opcional de grupos
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_group_id")
-    private Group parent;
+    @JoinColumn(name = "grupo_pai_id")
+    private Grupo grupoPai;
+
+    // getters/setters
 }
 ```
 
 ```java
+package modules.iam.usuariogrupo;
+
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.grupo.Grupo;
+import modules.iam.usuario.Usuario;
+
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "iam_user_group",
-       uniqueConstraints = @UniqueConstraint(name = "uk_user_group",
-                                             columnNames = {"user_id", "group_id"}),
-       indexes = @Index(name = "ix_ug_user", columnList = "user_id"))
-public class UserGroupMembership extends AuditableEntity {
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+@Table(
+    name = "tb_usuario_grupo",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_usuario_grupo",
+        columnNames = {"usuario_id", "grupo_id"}
+    ),
+    indexes = @Index(name = "ix_usuario_grupo_usuario", columnList = "usuario_id")
+)
+public class UsuarioGrupo extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group group;
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
 
-    @Column(name = "granted_by", length = 100)
-    private String grantedBy;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "grupo_id", nullable = false)
+    private Grupo grupo;
 
-    @Column(name = "valid_from")
-    private Instant validFrom;
+    @Column(name = "concedido_por", length = 100)
+    private String concedidoPor;
 
-    @Column(name = "valid_until")
-    private Instant validUntil;
+    @Column(name = "valido_de")
+    private LocalDateTime validoDe;
 
-    @Column(nullable = false)
-    private boolean active = true;
+    @Column(name = "valido_ate")
+    private LocalDateTime validoAte;
+
+    // getters/setters
 }
 ```
 
-(Análogos: `GroupRole`, `UserRoleAssignment`, `UserDirectPermission`, `UserAppAccess` — mesma estrutura: FKs + `validFrom/validUntil` + `grantedBy` + `active`.)
+> Análogas (mesma estrutura: FKs + `valido_de`/`valido_ate` + `concedido_por`,
+> todas estendendo `BaseEntity` no schema `iam`):
+> - `GrupoPapel` (`tb_grupo_papel`)
+> - `UsuarioPapel` (`tb_usuario_papel`) — concessão direta de papel
+> - `UsuarioPermissao` (`tb_usuario_permissao`) — concessão direta de permissão
+> - `UsuarioAplicacao` (`tb_usuario_aplicacao`) — habilita acesso à aplicação
 
-### 5.6 Sessão, Refresh Token e Revogação
+### 5.5 Sessão, Refresh Token e Revogação
+
+> Estas entidades **também estendem `BaseEntity`** — PK numérica de
+> `core.global_id_seq` + `uuid` público. O `uuid` herdado é usado como o
+> identificador `sid` referenciado no JWT (sessão) e como handle externo do
+> refresh token. O `jti` do access token revogado vive em uma coluna
+> própria com `UNIQUE`.
 
 ```java
-@Entity
-@Table(name = "iam_user_session",
-       indexes = {
-           @Index(name = "ix_session_user", columnList = "user_id"),
-           @Index(name = "ix_session_active", columnList = "revoked,expires_at")
-       })
-public class UserSession {
+package modules.iam.sessao;
 
-    @Id
-    @Column(columnDefinition = "uuid")
-    private UUID id;
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.aplicacaocliente.AplicacaoCliente;
+import modules.iam.usuario.Usuario;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(
+    name = "tb_sessao_usuario",
+    schema = DbSchemas.IAM,
+    indexes = {
+        @Index(name = "ix_sessao_usuario",      columnList = "usuario_id"),
+        @Index(name = "ix_sessao_ativa_exp",    columnList = "revogada,expira_em")
+    }
+)
+public class SessaoUsuario extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_app_id")
-    private ClientApp clientApp;
+    @JoinColumn(name = "aplicacao_cliente_id")
+    private AplicacaoCliente aplicacaoCliente;
 
-    @Column(name = "ip_address", length = 60)
-    private String ipAddress;
+    @Column(name = "ip", length = 60)
+    private String ip;
 
     @Column(name = "user_agent", length = 500)
     private String userAgent;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(name = "ultima_atividade_em", nullable = false)
+    private LocalDateTime ultimaAtividadeEm;
 
-    @Column(name = "last_activity_at", nullable = false)
-    private Instant lastActivityAt;
+    @Column(name = "expira_em", nullable = false)
+    private LocalDateTime expiraEm;
 
-    @Column(name = "expires_at", nullable = false)
-    private Instant expiresAt;
+    @Column(name = "revogada", nullable = false)
+    private boolean revogada;
 
-    @Column(nullable = false)
-    private boolean revoked;
+    @Column(name = "revogada_em")
+    private LocalDateTime revogadaEm;
 
-    @Column(name = "revoked_at")
-    private Instant revokedAt;
-
-    @PrePersist
-    void init() {
-        if (id == null) id = UUID.randomUUID();
-        createdAt = Instant.now();
-        lastActivityAt = createdAt;
-    }
+    // getters/setters
 }
 ```
 
 ```java
-@Entity
-@Table(name = "iam_refresh_token",
-       indexes = {
-           @Index(name = "ix_rt_hash", columnList = "token_hash", unique = true),
-           @Index(name = "ix_rt_session", columnList = "session_id")
-       })
-public class RefreshToken {
+package modules.iam.refreshtoken;
 
-    @Id
-    @Column(columnDefinition = "uuid")
-    private UUID id;
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.sessao.SessaoUsuario;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(
+    name = "tb_refresh_token",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(name = "uk_refresh_token_hash", columnNames = "token_hash"),
+    indexes = @Index(name = "ix_refresh_token_sessao", columnList = "sessao_usuario_id")
+)
+public class RefreshToken extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "session_id", nullable = false)
-    private UserSession session;
+    @JoinColumn(name = "sessao_usuario_id", nullable = false)
+    private SessaoUsuario sessao;
 
-    /** SHA-256 do refresh token entregue ao cliente — nunca armazenar o token em claro */
+    // SHA-256 do refresh token entregue ao cliente — nunca armazenar em claro.
     @Column(name = "token_hash", nullable = false, length = 100)
     private String tokenHash;
 
-    @Column(name = "expires_at", nullable = false)
-    private Instant expiresAt;
+    @Column(name = "expira_em", nullable = false)
+    private LocalDateTime expiraEm;
 
-    @Column(nullable = false)
-    private boolean revoked;
+    @Column(name = "revogada", nullable = false)
+    private boolean revogada;
 
-    @Column(name = "revoked_at")
-    private Instant revokedAt;
+    @Column(name = "revogada_em")
+    private LocalDateTime revogadaEm;
 
-    /** Para rotação: aponta para o RT que substituiu este */
-    @Column(name = "replaced_by", columnDefinition = "uuid")
-    private UUID replacedBy;
+    // Para detecção de reuso pós-rotação: aponta para o uuid do RT que substituiu este.
+    @Column(name = "substituido_por_uuid")
+    private UUID substituidoPorUuid;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @PrePersist
-    void init() {
-        if (id == null) id = UUID.randomUUID();
-        createdAt = Instant.now();
-    }
+    // getters/setters
 }
 ```
 
 ```java
-@Entity
-@Table(name = "iam_revoked_token",
-       indexes = @Index(name = "ix_rev_exp", columnList = "expires_at"))
-public class RevokedToken {
+package modules.iam.tokenrevogado;
 
-    /** jti do access token revogado */
-    @Id
-    @Column(length = 64)
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.usuario.Usuario;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(
+    name = "tb_token_revogado",
+    schema = DbSchemas.IAM,
+    uniqueConstraints = @UniqueConstraint(name = "uk_token_revogado_jti", columnNames = "jti"),
+    indexes = @Index(name = "ix_token_revogado_expira", columnList = "expira_em")
+)
+public class TokenRevogado extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
+
+    // jti do access token revogado
+    @Column(name = "jti", nullable = false, length = 64)
     private String jti;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    // Quando o TTL passa, registro pode ser excluído por job de limpeza.
+    @Column(name = "expira_em", nullable = false)
+    private LocalDateTime expiraEm;
 
-    @Column(name = "revoked_at", nullable = false)
-    private Instant revokedAt;
+    @Column(name = "motivo", length = 100)
+    private String motivo;
 
-    /** Quando o TTL passa, registro pode ser excluído por job */
-    @Column(name = "expires_at", nullable = false)
-    private Instant expiresAt;
-
-    @Column(length = 100)
-    private String reason;
+    // getters/setters
 }
 ```
 
-### 5.7 Auditoria
+### 5.6 Auditoria
+
+> A auditoria também estende `BaseEntity`. Mantemos `usuario_id` como FK
+> nullable (login falho em usuário inexistente). A tentativa textual de
+> username é preservada para investigação.
 
 ```java
+package modules.iam.auditoria;
+
+import common.BaseEntity;
+import common.DbSchemas;
+import jakarta.persistence.*;
+import modules.iam.aplicacaocliente.AplicacaoCliente;
+import modules.iam.usuario.Usuario;
+
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "iam_auth_event_log",
-       indexes = {
-           @Index(name = "ix_evt_user_time", columnList = "user_id,occurred_at"),
-           @Index(name = "ix_evt_type",      columnList = "event_type")
-       })
-public class AuthEventLog {
+@Table(
+    name = "tb_auditoria_autenticacao",
+    schema = DbSchemas.IAM,
+    indexes = {
+        @Index(name = "ix_auditoria_autn_usuario_data", columnList = "usuario_id,ocorrido_em"),
+        @Index(name = "ix_auditoria_autn_tipo",         columnList = "tipo_evento")
+    }
+)
+public class AuditoriaAutenticacao extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario; // nullable: tentativa em usuário inexistente
 
-    @Column(name = "user_id")
-    private Long userId; // nullable: falha em usuário inexistente
+    @Column(name = "username_tentativa", length = 200)
+    private String usernameTentativa;
 
-    @Column(name = "username_attempt", length = 200)
-    private String usernameAttempt;
-
-    @Column(name = "client_app_id")
-    private Long clientAppId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "aplicacao_cliente_id")
+    private AplicacaoCliente aplicacaoCliente;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "event_type", nullable = false, length = 40)
-    private AuthEventType eventType;
+    @Column(name = "tipo_evento", nullable = false, length = 40)
+    private TipoEventoAutenticacao tipoEvento;
 
-    @Column(name = "ip_address", length = 60)
-    private String ipAddress;
+    @Column(name = "ip", length = 60)
+    private String ip;
 
     @Column(name = "user_agent", length = 500)
     private String userAgent;
 
-    @Column(length = 500)
-    private String details;
+    @Column(name = "detalhes", length = 500)
+    private String detalhes;
 
-    @Column(name = "occurred_at", nullable = false)
-    private Instant occurredAt;
+    @Column(name = "ocorrido_em", nullable = false)
+    private LocalDateTime ocorridoEm;
 
-    public enum AuthEventType {
-        LOGIN_SUCCESS, LOGIN_FAILURE, LOGOUT,
-        TOKEN_REFRESH, TOKEN_REVOKED,
-        PASSWORD_CHANGED, PASSWORD_RESET_REQUESTED, PASSWORD_RESET_DONE,
-        ACCOUNT_LOCKED, ACCOUNT_UNLOCKED
+    public enum TipoEventoAutenticacao {
+        LOGIN_SUCESSO, LOGIN_FALHA, LOGOUT,
+        TOKEN_REFRESH, TOKEN_REVOGADO,
+        SENHA_ALTERADA, RESET_SENHA_SOLICITADO, RESET_SENHA_CONCLUIDO,
+        CONTA_BLOQUEADA, CONTA_DESBLOQUEADA
     }
+
+    // getters/setters
 }
 ```
 
@@ -702,24 +854,24 @@ public class AuthEventLog {
 
 **Modelo: RBAC com Permissões + opcional Direct Grants (híbrido).**
 
-1. **Unidade atômica** = `Permission` = `(ClientApp, Resource, Action)`. Forma canônica: `sistema-financeiro:clientes:CREATE`.
+1. **Unidade atômica** = `Permissao` = `(AplicacaoCliente, Recurso, Acao)`. Forma canônica: `sistema-financeiro:clientes:CREATE`.
 2. **Distribuição preferencial**:
-   - `User` → `Group` (via `UserGroupMembership`)
-   - `Group` → `Role` (via `GroupRole`)
-   - `Role` → `Permission` (via `RolePermission`)
+   - `Usuario` → `Grupo` (via `UsuarioGrupo`)
+   - `Grupo` → `Papel` (via `GrupoPapel`)
+   - `Papel` → `Permissao` (via `PapelPermissao`)
 3. **Exceções controladas**:
-   - `UserRoleAssignment` para vincular role diretamente (com vigência).
-   - `UserDirectPermission` para conceder/negar permissão pontual com `valid_from`/`valid_until`.
+   - `UsuarioPapel` para vincular papel diretamente ao usuário (com vigência).
+   - `UsuarioPermissao` para conceder/negar permissão pontual com `valido_de`/`valido_ate`.
 4. **Resolução efetiva** (algoritmo `PermissionResolver`):
    ```
-   effective(user) =
-       ⋃ permissions(roles(groups(user)))
-     ∪ ⋃ permissions(directRoles(user))
-     ∪ directPermissions(user)
-       — filtrado por vigência (valid_from <= now <= valid_until) e active=true
-       — filtrado por ClientApp ativo e UserAppAccess habilitado
+   efetivas(usuario) =
+       ⋃ permissoes(papeis(grupos(usuario)))
+     ∪ ⋃ permissoes(papeisDiretos(usuario))
+     ∪ permissoesDiretas(usuario)
+       — filtrado por vigência (valido_de <= agora <= valido_ate) e status=ATIVO
+       — filtrado por AplicacaoCliente ativa e UsuarioAplicacao habilitado
    ```
-5. **Diferentes perfis por aplicação**: como `Role` pertence a uma `ClientApp`, basta atribuir roles distintas para o mesmo usuário em apps distintas. Naturalmente resolvido pelo modelo.
+5. **Perfis diferentes por aplicação**: como `Papel` pertence a uma `AplicacaoCliente`, basta atribuir papéis distintos para o mesmo usuário em apps distintas. Naturalmente resolvido pelo modelo.
 
 ---
 
@@ -728,27 +880,27 @@ public class AuthEventLog {
 ### 7.1 Tokens
 
 - **Access Token (JWT)** assinado com **RS256** (chave privada do IAM; chave pública distribuída via JWKS endpoint `/iam/.well-known/jwks.json`).
-- **TTL curto**: 5–15 min (configurável por `ClientApp`).
-- **Refresh Token**: string opaca (não-JWT), 256 bits aleatórios. Persistido como **hash SHA-256** em `iam_refresh_token`. TTL longo (4h–24h).
+- **TTL curto**: 5–15 min (configurável por `AplicacaoCliente`).
+- **Refresh Token**: string opaca (não-JWT), 256 bits aleatórios. Persistido como **hash SHA-256** em `iam.tb_refresh_token`. TTL longo (4h–24h).
 
 ### 7.2 Sessão
 
-- Login cria `UserSession` (UUID) + 1 `RefreshToken` inicial.
-- O JWT carrega `sid = session.id` como claim.
-- Logout = `session.revoked = true` (cascata lógica em todos os RTs).
+- Login cria `SessaoUsuario` + 1 `RefreshToken` inicial.
+- O JWT carrega `sid = sessaoUsuario.uuid` como claim (o `uuid` herdado de `BaseEntity` é o identificador público).
+- Logout = `sessaoUsuario.revogada = true` (cascata lógica em todos os RTs).
 
 ### 7.3 Rotação de Refresh Token
 
-- A cada `/refresh`: invalida o RT atual (`revoked=true`, `replaced_by=novoId`), emite novo RT + novo access token.
+- A cada `/refresh`: invalida o RT atual (`revogada=true`, `substituido_por_uuid=novoUuid`), emite novo RT + novo access token.
 - **Detecção de reuso**: se um RT já revogado for usado, **revoga toda a sessão** (sinal de roubo de token).
 
 ### 7.4 Revogação de JWT antes da expiração
 
 Combinação de três mecanismos (defesa em profundidade):
 
-1. **`sid` na denylist de sessão** (Redis ou tabela `UserSession.revoked`) — chamada `revokeSession(sid)`.
-2. **`jti` na denylist `iam_revoked_token`** — para revogar um access token específico.
-3. **`cv` (credential_version)** no JWT — comparado com `UserCredential.credentialVersion` ao validar; trocas de senha ou “revogar tudo” incrementam o valor e invalidam todos os tokens anteriores.
+1. **`sid` na denylist de sessão** (Redis ou flag `SessaoUsuario.revogada`) — chamada `revogarSessao(sid)`.
+2. **`jti` na denylist `iam.tb_token_revogado`** — para revogar um access token específico.
+3. **`cv` (credential_version)** no JWT — comparado com `UsuarioCredencial.credentialVersion` ao validar; trocas de senha ou "revogar tudo" incrementam o valor e invalidam todos os tokens anteriores.
 
 ### 7.5 Como evitar consulta ao IAM a cada request
 
@@ -771,7 +923,7 @@ Combinação de três mecanismos (defesa em profundidade):
   "iat": 1717999100,
   "nbf": 1717999100,
   "jti": "8c5a...",                           // ID único do access token
-  "sid": "f1b2c3d4-...",                      // UserSession.id
+  "sid": "f1b2c3d4-...",                      // SessaoUsuario.uuid
   "cv":  7,                                   // credential_version
   "org": "default",                           // organization.code (multi-tenant)
   "upn": "joao.silva",                        // username
@@ -798,11 +950,11 @@ A claim `perm_version` permite ao backend detectar e recarregar permissões do c
 [Frontend] ── POST /iam/auth/login {username, password, client_id} ──> [IAM]
                                                                        │
                                                                        ├─ valida credencial (argon2id)
-                                                                       ├─ checa UserAppAccess para client_id
-                                                                       ├─ cria UserSession
+                                                                       ├─ checa UsuarioAplicacao para client_id
+                                                                       ├─ cria SessaoUsuario
                                                                        ├─ gera Access Token (JWT) + Refresh Token
-                                                                       ├─ persiste hash(RT) em iam_refresh_token
-                                                                       └─ grava AuthEventLog(LOGIN_SUCCESS)
+                                                                       ├─ persiste hash(RT) em iam.tb_refresh_token
+                                                                       └─ grava AuditoriaAutenticacao(LOGIN_SUCESSO)
 [Frontend] <─── { access_token, refresh_token, expires_in, token_type } ───
 [Frontend] ── GET /financeiro/api/x  (Authorization: Bearer ...) ──> [Backend Financeiro]
                                                                        │
@@ -818,15 +970,15 @@ A claim `perm_version` permite ao backend detectar e recarregar permissões do c
 POST /iam/auth/refresh { refresh_token }
   → busca hash → valida não-revogado, não-expirado
   → revoga atual, cria novo RT (rotação), novo access token
-  → AuthEventLog(TOKEN_REFRESH)
+  → AuditoriaAutenticacao(TOKEN_REFRESH)
 ```
 
 ### Logout
 ```
 POST /iam/auth/logout (Bearer)
-  → session.revoked = true, todos RTs da sessão revoked = true
-  → opcional: adiciona jti em iam_revoked_token
-  → AuthEventLog(LOGOUT)
+  → sessao.revogada = true, todos RTs da sessão revogada = true
+  → opcional: adiciona jti em iam.tb_token_revogado
+  → AuditoriaAutenticacao(LOGOUT)
 ```
 
 ---
@@ -837,7 +989,7 @@ POST /iam/auth/logout (Bearer)
 Request → JWT extraído pelo SmallRye JWT
        → SecurityIdentityAugmentor injeta permissões resolvidas localmente
        → @PermissionsAllowed("clientes:CREATE") OU verificação programática
-       → PermitAll/Deny/Decision logada (opcional) em iam_authz_decision_log
+       → PermitAll/Deny/Decision logada (opcional) em iam.tb_auditoria_autorizacao
 ```
 
 Exemplo com Quarkus:
@@ -899,22 +1051,31 @@ Para revogação total imediata (ex.: usuário demitido):
 
 # 12. Índices Recomendados
 
+> Todas as tabelas residem no schema `iam`. A coluna omitida no nome da
+> tabela está implícita (`iam.tb_usuario`, etc.).
+
 | Tabela | Índice | Razão |
 |---|---|---|
-| `iam_user` | `(organization_id, username)` UNIQUE | login |
-| `iam_user` | `(organization_id, email)` UNIQUE | login alt. + reset |
-| `iam_user_credential` | `user_id` UNIQUE | join 1:1 |
-| `iam_permission` | `(client_app_id, resource_id, action_id)` UNIQUE | integridade |
-| `iam_permission` | `permission_code` UNIQUE | lookup por código |
-| `iam_role_permission` | `(role_id, permission_id)` UNIQUE | integridade |
-| `iam_user_group` | `(user_id, group_id)` UNIQUE | integridade |
-| `iam_user_group` | `user_id` | resolução de perms |
-| `iam_user_session` | `(revoked, expires_at)` | limpeza + validação |
-| `iam_refresh_token` | `token_hash` UNIQUE | lookup no refresh |
-| `iam_refresh_token` | `session_id` | revogação cascata |
-| `iam_revoked_token` | `expires_at` | job de limpeza |
-| `iam_auth_event_log` | `(user_id, occurred_at)` | auditoria por user |
-| `iam_auth_event_log` | `event_type` | relatórios |
+| `tb_usuario` | `(organizacao_id, username)` UNIQUE | login |
+| `tb_usuario` | `(organizacao_id, email)` UNIQUE | login alt. + reset |
+| `tb_usuario_credencial` | `usuario_id` UNIQUE | join 1:1 |
+| `tb_permissao` | `(aplicacao_cliente_id, recurso_id, acao_id)` UNIQUE | integridade |
+| `tb_permissao` | `codigo_permissao` UNIQUE | lookup por código |
+| `tb_papel_permissao` | `(papel_id, permissao_id)` UNIQUE | integridade |
+| `tb_usuario_grupo` | `(usuario_id, grupo_id)` UNIQUE | integridade |
+| `tb_usuario_grupo` | `usuario_id` | resolução de permissões |
+| `tb_sessao_usuario` | `(revogada, expira_em)` | limpeza + validação |
+| `tb_refresh_token` | `token_hash` UNIQUE | lookup no refresh |
+| `tb_refresh_token` | `sessao_usuario_id` | revogação em cascata |
+| `tb_token_revogado` | `jti` UNIQUE | lookup na validação |
+| `tb_token_revogado` | `expira_em` | job de limpeza |
+| `tb_auditoria_autenticacao` | `(usuario_id, ocorrido_em)` | auditoria por usuário |
+| `tb_auditoria_autenticacao` | `tipo_evento` | relatórios |
+
+> **Atenção**: por orientação do projeto, **NÃO** criar índice parcial padrão
+> sobre `status = 'ATIVO'`. Esse tipo de índice é avaliado caso a caso, apenas
+> em tabelas com gargalo diagnosticado via `EXPLAIN` — ver
+> [`ADR-0008`](../../adr/0008-indice-parcial-status-ativo-caso-a-caso.md).
 
 ---
 
@@ -926,7 +1087,7 @@ Para revogação total imediata (ex.: usuário demitido):
 4. **TTL curto do access token** (5–15 min).
 5. **Rotação obrigatória** de refresh token + detecção de reuso.
 6. **Rate limiting** por IP e por user em login/refresh/reset.
-7. **Lockout** após N falhas (`UserCredential.failedAttempts`, `lockedUntil`).
+7. **Lockout** após N falhas (`UsuarioCredencial.tentativasFalhas`, `bloqueadoAte`).
 8. **CSRF**: refresh token preferencialmente em **cookie HttpOnly + Secure + SameSite=Strict** quando consumido por browser. Access token em memória do front (não em localStorage).
 9. **Audit log imutável** — considere tabela append-only, sem UPDATE/DELETE para o app.
 10. **Validação de `aud`** no backend: cada backend só aceita tokens cujo `aud` é o seu `client_id`.
@@ -949,9 +1110,9 @@ Para revogação total imediata (ex.: usuário demitido):
 | 5 | Validar sem consultar IAM a cada request? | Validação local da assinatura via JWKS cacheado + cache local de denylist sincronizado por eventos. |
 | 6 | Atualizar permissões com token ativo? | Backend re-resolve via cache quando `perm_version` do JWT < `perm_version` atual, ou força refresh. |
 | 7 | Permissões por aplicação sem misturar globais? | `Permission` carrega `client_app_id` obrigatório. Não existem permissões globais — apenas administrativas dentro de uma "app IAM-admin". |
-| 8 | Perfis diferentes por app? | Natural: `Role` pertence a `ClientApp`. Atribuir roles distintas em apps distintas. |
+| 8 | Perfis diferentes por app? | Natural: `Papel` pertence a `AplicacaoCliente`. Atribuir papéis distintos em apps distintas. |
 | 9 | CRUD vs ações de negócio? | Catálogo `Action` extensível: `CREATE`, `READ`, `UPDATE`, `DELETE` + `APPROVE`, `EXPORT`, `EXECUTE`, etc. Mesma estrutura, sem distinção formal. |
-| 10 | Multi-tenant futuro? | Já preparado: `Organization` em `User`, `Group`, `ClientApp`. Claim `org` no JWT. Filtros por tenant em todas as queries (filtro Hibernate `@Filter` ou interceptor). |
+| 10 | Multi-tenant futuro? | Já preparado: `Organizacao` em `Usuario`, `Grupo`, `AplicacaoCliente`. Claim `org` no JWT. Filtros por tenant em todas as queries (filtro Hibernate `@Filter` ou interceptor). |
 
 ---
 
@@ -963,7 +1124,7 @@ Para revogação total imediata (ex.: usuário demitido):
 | **Login social** | `UserFederatedIdentity` (provider, externalId, accessToken). Suporte a `iss` externo. |
 | **SSO entre apps** | Já contemplado — JWT do IAM funciona em todas as apps `aud`-compatíveis. |
 | **ABAC** | Nova entidade `Policy` (DSL ou JSON), avaliada por engine (Cedar, OPA) após RBAC. Atributos: `user.department`, `resource.owner`, `env.time`. |
-| **Política de senha** | Entidade `PasswordPolicy` por `Organization`: min length, complexidade, histórico (`PasswordHistory`), idade máx. |
+| **Política de senha** | Entidade `PoliticaSenha` por `Organizacao`: min length, complexidade, histórico (`HistoricoSenha`), idade máx. |
 | **Consentimento (OIDC)** | `UserConsent(user, clientApp, scopes, grantedAt)`. |
 | **Service accounts / API keys** | `ApiKey(clientApp, scopes, hash, expiresAt)`. |
 | **Delegação / impersonation** | `ImpersonationGrant(actorUser, targetUser, validUntil)`, claim `act` no JWT. |
@@ -973,7 +1134,7 @@ Para revogação total imediata (ex.: usuário demitido):
 
 # 16. Conclusão — Recomendação Final de Arquitetura
 
-**Arquitetura recomendada**:
+**Arquitetura recomendada v1**:
 
 1. **Módulo Quarkus separado** (`iam-service`) com seu próprio banco/schema, expondo APIs REST: `/auth/login`, `/auth/refresh`, `/auth/logout`, `/users/{id}/permissions`, `/revocations?since=`, `/.well-known/jwks.json`.
 2. **Modelo RBAC granular híbrido**: Permission atômica `(app:resource:action)` → Role (por app) → Group → User. Direct grants permitidos como exceção com vigência.
@@ -988,16 +1149,84 @@ Para revogação total imediata (ex.: usuário demitido):
 
 Essa arquitetura entrega autenticação centralizada, autorização altamente granular por aplicação, revogação efetiva e desempenho — mantendo a base de código manutenível e idiomática para Quarkus 3 + Java 25.
 
+**Arquitetura recomendada v2** (alinhada à estrutura do `backend-quarkus`):
+
+1. **Módulo IAM embarcado no próprio backend Quarkus**, sob `modules.iam.*`
+   (já é a estrutura atual — `modules.iam.usuario`, `modules.iam.grupo`,
+   `modules.iam.auth`). Não há serviço separado. Todas as tabelas no schema
+   **único** `iam` (`DbSchemas.IAM`), seguindo o padrão `tb_*`.
+2. **Endpoints REST do IAM** em `modules.iam.auth` (já parcialmente
+   existente): `/iam/auth/login`, `/iam/auth/refresh`, `/iam/auth/logout`,
+   `/iam/usuarios/{uuid}/permissoes`, `/iam/revogacoes?desde=`,
+   `/iam/.well-known/jwks.json`. Endpoints CRUD de administração
+   (papéis, permissões, grupos, aplicações) estendem `BaseRest`/`BaseService`
+   com `EditDTO`/`ListDTO` como `record`, sem prefixo de versão (regra de
+   API interna — ver [`ADR-0006`](../../adr/0006-openapi-swagger-e-nao-versionamento-de-apis-internas.md)).
+3. **Modelo RBAC granular híbrido**: `Permissao` atômica
+   `(app:recurso:acao)` → `Papel` (por app) → `Grupo` → `Usuario`. Concessões
+   diretas permitidas como exceção, sempre com vigência.
+4. **JWT RS256 curto + Refresh Token opaco rotacionável** persistido como
+   hash. Sessão como entidade central (`SessaoUsuario`), com `uuid` do
+   `BaseEntity` servindo como claim `sid`.
+5. **Revogação em camadas**: `sid` + `jti` + `credential_version` +
+   `perm_version`. Cache local nos backends, sincronizado por pub/sub.
+6. **JWT minimalista**: identidade, papéis por app, versões — **não** a
+   árvore inteira de permissões.
+7. **Backends validam localmente** (JWKS cache + denylist cache) e usam
+   `@RolesAllowed` + `PermissionChecker` programático para granularidade.
+8. **Multi-tenant preparado** com `Organizacao` desde o dia 1.
+9. **Auditoria forte** em `iam.tb_auditoria_autenticacao` + opcional
+   `iam.tb_auditoria_autorizacao`.
+10. **Tabelas associativas como entidades** sempre que houver vigência,
+    `concedido_por`, status — princípio aplicado a `PapelPermissao`,
+    `UsuarioGrupo`, `GrupoPapel`, `UsuarioPapel`, `UsuarioPermissao`,
+    `UsuarioAplicacao`. Todas estendem `BaseEntity`.
+11. **Migrações Flyway** em `src/main/resources/db/migration` — enquanto
+    durar a fase inicial, ajustar diretamente `V1__init.sql` para adicionar
+    as novas tabelas do IAM (regra temporária do `backend-quarkus/AGENTS.md`).
+    Após a primeira execução em ambiente compartilhado, novas migrações
+    `V2__ddl_*.sql` passam a ser criadas. Todos os DDL **devem qualificar
+    o schema** explicitamente (`iam.tb_usuario`, `iam.tb_permissao` …).
+12. **PK e identidade** seguem o padrão único do projeto: `BaseEntity`
+    fornece `id` BIGINT (de `core.global_id_seq`, `allocationSize=20`) e
+    `uuid` público. Não usar `GenerationType.IDENTITY` nem PKs UUID nativas.
+13. **DTOs e mappers**: `EditDTO`/`ListDTO` como Java `record`, conversão
+    via MapStruct (`componentModel = "cdi"`), nunca expor entidades nos REST.
+14. **Caminho evolutivo claro** para MFA, ABAC, SSO federado, login social,
+    sem refactor estrutural — basta adicionar novas entidades sob
+    `modules.iam.*` no mesmo schema `iam`.
+
+Essa arquitetura entrega autenticação centralizada, autorização altamente
+granular por aplicação, revogação efetiva e desempenho — mantendo a base de
+código manutenível e idiomática para Quarkus 3 + Java 25, e totalmente
+aderente às convenções do `backend-quarkus`.
+
+### ADRs a registrar antes da implementação
+
+A implementação deste módulo é uma decisão arquitetural não-trivial e por
+isso depende de ADRs formais em `backend-quarkus/doc/adr/`
+(formato Nygard, português, numerados em sequência). Sugestões:
+
+- **ADR-IAM-A**: Adoção de IAM próprio embarcado (vs Keycloak / IdP externo).
+- **ADR-IAM-B**: Modelo RBAC híbrido com `Permissao` atômica + `Papel` por
+  aplicação + `Grupo` organizacional.
+- **ADR-IAM-C**: JWT RS256 curto + Refresh Token opaco rotacionável; sessão
+  como entidade.
+- **ADR-IAM-D**: Estratégia de revogação em camadas (`sid` + `jti` +
+  `credential_version` + `perm_version`) com cache + pub/sub.
+- **ADR-IAM-E**: Multi-tenant via `Organizacao` desde o dia 1 (mesmo com
+  uma única organização default em produção inicial).
+
 ### Sugestões de próximos passos práticos
 
 Posso aprofundar qualquer um destes pontos com código pronto para o projeto. Quer que eu siga com algum?
 
-- (a) Esqueleto do módulo `iam-service` (estrutura Maven/Gradle Quarkus + migrações Flyway).
-- (b) Implementação do `AuthService` (login + emissão JWT/RT + rotação).
-- (c) Implementação do `PermissionResolver` + cache Caffeine + pub/sub Redis.
-- (d) `SecurityIdentityAugmentor` + `@PermissionsAllowed` ponta a ponta.
-- (e) Scripts SQL DDL completos com índices.
-- (f) ADR formal seguindo `backend-quarkus/doc/adr/` (formato Nygard, em português).
+- (a) Atualização de `V1__init.sql` (Flyway) com os DDL das novas tabelas IAM no schema `iam`.
+- (b) Esqueleto das entidades JPA sob `modules.iam.*` (`Organizacao`, `AplicacaoCliente`, `Papel`, `Permissao`, …) com Repository/Service/Rest/Mapper aderentes ao `BaseEntity`/`BaseRepository`/`BaseService`/`BaseRest`.
+- (c) Implementação do `AuthService` (login + emissão JWT/RT + rotação + auditoria).
+- (d) Implementação do `PermissionResolver` + cache Caffeine + propagação de revogações.
+- (e) `SecurityIdentityAugmentor` do Quarkus + `@PermissionsAllowed` ponta a ponta.
+- (f) Redação dos ADRs listados acima em `backend-quarkus/doc/adr/`.
 
 ---
 
