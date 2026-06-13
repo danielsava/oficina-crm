@@ -23,10 +23,10 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
 
 
     @Inject
-    UsuarioRepository repository;
+    private UsuarioRepository repository;
 
     @Inject
-    UsuarioMapper mapper;
+    private UsuarioMapper mapper;
 
 
     @Override
@@ -55,12 +55,16 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
     }
 
 
+    @Override
     public UsuarioRepository repository() { return this.repository; }
 
+    @Override
     public UsuarioMapper mapper() { return this.mapper; }
 
+    @Override
     public Class<UsuarioListDTO> listDTO() { return UsuarioListDTO.class; }
 
+    @Override
     public Class<UsuarioEditDTO> editDTO() { return UsuarioEditDTO.class; }
 
 }
