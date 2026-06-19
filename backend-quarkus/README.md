@@ -4,6 +4,28 @@ This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
 
+### WARN Maven init
+
+No IntelliJ: Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → VM Options, adicione:
+
+```
+ --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow
+```
+
+### MapStruct PostProcessor ERROR
+
+ Utilizar o maven bundle do Intellij. 
+
+
+### Build Analytics Quarkus
+
+Para desabilitar a coleta anônima de telemetria de build do Quarkus, de forma global, crie um arquivo
+`~/.redhat/io.quarkus.analytics.localconfig` com o conteúdo `{"disabled":true}`.
+
+No comando do maven, pode ser informada a opção `-Dquarkus.analytics.disabled=true`;
+
+
+
 ## Banco Docker 
 
 ```shell script
