@@ -1,7 +1,9 @@
 -- Sequence global da aplicação (compartilhada por todos os módulos/schemas).
+-- INCREMENT BY 20 está alinhado ao allocationSize do @SequenceGenerator em BaseEntity:
+-- cada nextval() reserva um bloco de 20 IDs em memória, reduzindo chamadas ao banco.
 CREATE SEQUENCE core.global_id_seq
     START WITH 1
-    INCREMENT BY 1
+    INCREMENT BY 20
     CACHE 20;
 
 -- Tabela do módulo IAM
