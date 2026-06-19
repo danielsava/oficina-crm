@@ -7,7 +7,7 @@ If you want to learn more about Quarkus, please visit its website: <https://quar
 ## Banco Docker 
 
 ```shell script
-    docker run -d --name postgres -p 5432:5432 -e POSTGRES_DB=user -e POSTGRES_PASSWORD=123456 postgres 
+    docker run -d --name postgres -p 5432:5432 -e POSTGRES_DB=postgres -e POSTGRES_PASSWORD=123456 postgres 
 ```
 
 ## Banco: Docker Compose

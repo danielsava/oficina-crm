@@ -1,10 +1,8 @@
 -- Sequence global da aplicação (compartilhada por todos os módulos/schemas).
--- Reside no schema técnico `core`, juntamente com a `flyway_schema_history`.
 CREATE SEQUENCE core.global_id_seq
     START WITH 1
     INCREMENT BY 1
     CACHE 20;
-
 
 -- Tabela do módulo IAM
 CREATE TABLE iam.tb_usuario (
