@@ -40,7 +40,7 @@ Adotamos para todas as subclasses de `BaseRest` o seguinte contrato de listagem 
 - Herdado por todo `*Rest` que estende `BaseRest`; vive como método `buscar(FiltroDTO)` na classe base.
 - Path relativo ao `@Path` do `*Rest` concreto (ex.: `POST /usuario/buscar`).
 - Request `Content-Type: application/json`; corpo: `FiltroDTO`.
-- Resposta de sucesso: `200 application/json` com o envelope `common.Pagina<ListDTO>` (mesmo record introduzido pelo plano 0002, mantido).
+- Resposta de sucesso: `200 application/json` com o envelope `common.paginacao.Pagina<ListDTO>` (mesmo record introduzido pelo plano 0002, mantido).
 - Resposta de erro: `400 application/problem+json` para payloads inválidos (RFC 7807, ADR-0004).
 - **Não existe `GET /` paginado**. O `GET /` foi **removido** do `BaseRest` como parte desta decisão. Toda listagem paginada passa por `POST /buscar`.
 
@@ -51,7 +51,7 @@ Justificativa para `POST` em vez de `GET`:
 - Semântica: aqui `POST` não cria recurso; é "POST como mecanismo de transporte de query estruturada". Padrão aceito (Elasticsearch `_search`, GitHub GraphQL, várias APIs corporativas). Documentado na descrição da operação OpenAPI.
 - Trade-off conhecido: `POST` não é cacheado por proxies HTTP. Aceitável para CRUD admin interno (cache HTTP fora de escopo).
 
-### 2. DTO de entrada: `common.FiltroDTO` (estrutura plana)
+### 2. DTO de entrada: `common.filtro.FiltroDTO` (estrutura plana)
 
 Record genérico no pacote `common`:
 
@@ -114,7 +114,7 @@ Combinações operador↔valor:
 
 ### 5. Tradução para JPQL (`FiltroAvancadoQueryBuilder`)
 
-Utilitário em `common.FiltroAvancadoQueryBuilder`:
+Utilitário em `common.filtro.FiltroAvancadoQueryBuilder`:
 
 1. Recebe `FiltroDTO`, `Class<Entity>`, whitelist e cache de tipos de campos.
 2. Valida cada `CriterioFiltro` (whitelist + operador↔tipo + combinação operador↔valor).
@@ -143,7 +143,7 @@ Mantém o comportamento herdado:
 - Mesma whitelist (`camposPermitidos()`).
 - Mesmo `DEFAULT_SORT = [id desc]` (constante fixa universal no `BaseService`, não sobrescritível por `*Service`).
 - Mesmas regras de validação (direção obrigatória; campo na whitelist).
-- Reusa `common.SortParser` integralmente.
+- Reusa `common.paginacao.SortParser` integralmente.
 
 ### 8. Defaults e limites
 
@@ -186,7 +186,7 @@ Mantém o comportamento herdado:
 
 ### Neutras
 
-- O record `common.Pagina` aparece tipado por entidade no contrato OpenAPI (`Pagina_UsuarioListDTO`, etc.), resolvido pelo SmallRye OpenAPI sem configuração adicional.
+- O record `common.paginacao.Pagina` aparece tipado por entidade no contrato OpenAPI (`Pagina_UsuarioListDTO`, etc.), resolvido pelo SmallRye OpenAPI sem configuração adicional.
 - Sort com `BETWEEN` em campo `String` ou `IN` com `valor` que não é lista → 400. Erros de cliente sempre falham rápido, com mensagem específica em `detail`.
 
 ## Alternativas consideradas

@@ -1,5 +1,7 @@
-package common;
+package common.base;
 
+import common.filtro.FiltroDTO;
+import common.paginacao.Pagina;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;

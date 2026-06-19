@@ -1,6 +1,6 @@
 package modules.iam.usuario;
 
-import common.BaseRest;
+import common.base.BaseRest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Path;
 import modules.iam.usuario.dto.UsuarioEditDTO;

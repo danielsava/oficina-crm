@@ -1,4 +1,4 @@
-package common;
+package common.base;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 

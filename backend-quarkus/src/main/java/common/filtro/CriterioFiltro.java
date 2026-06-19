@@ -1,4 +1,4 @@
-package common;
+package common.filtro;
 
 public record CriterioFiltro(
 

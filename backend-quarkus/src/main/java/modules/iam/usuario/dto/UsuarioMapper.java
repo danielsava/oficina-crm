@@ -1,6 +1,6 @@
 package modules.iam.usuario.dto;
 
-import common.BaseMapper;
+import common.base.BaseMapper;
 import modules.iam.usuario.Usuario;
 import org.mapstruct.Mapper;
 

@@ -160,7 +160,7 @@ AuditoriaAutorizacao (auditoria fina)
 # 5. Classes JPA Principais
 
 > **Convenções do projeto aplicadas** (ver `backend-quarkus/AGENTS.md`):
-> - Todas as entidades **estendem `common.BaseEntity`** — herdam `id` (BIGINT
+> - Todas as entidades **estendem `common.base.BaseEntity`** — herdam `id` (BIGINT
 >   gerado por `core.global_id_seq`), `uuid` (identificador público), `status`
 >   (`EnumStatusEntity`), `version`, `createdAt`, `updatedAt` e callbacks
 >   `@PrePersist`/`@PreUpdate`. **Não** redeclarar esses campos nas entidades
@@ -179,15 +179,15 @@ AuditoriaAutorizacao (auditoria fina)
 ```java
 package modules.iam.organizacao;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 
 @Entity
 @Table(
-    name = "tb_organizacao",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(name = "uk_organizacao_codigo", columnNames = "codigo")
+        name = "tb_organizacao",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(name = "uk_organizacao_codigo", columnNames = "codigo")
 )
 public class Organizacao extends BaseEntity {
 
@@ -212,8 +212,8 @@ public class Organizacao extends BaseEntity {
 ```java
 package modules.iam.usuario;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.organizacao.Organizacao;
 
@@ -221,22 +221,22 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-    name = "tb_usuario",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_usuario_org_username", columnNames = {"organizacao_id", "username"}),
-        @UniqueConstraint(name = "uk_usuario_org_email",    columnNames = {"organizacao_id", "email"})
-    },
-    indexes = {
-        @Index(name = "ix_usuario_email", columnList = "email"),
-        @Index(name = "ix_usuario_org",   columnList = "organizacao_id")
-    }
+        name = "tb_usuario",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_usuario_org_username", columnNames = {"organizacao_id", "username"}),
+                @UniqueConstraint(name = "uk_usuario_org_email", columnNames = {"organizacao_id", "email"})
+        },
+        indexes = {
+                @Index(name = "ix_usuario_email", columnList = "email"),
+                @Index(name = "ix_usuario_org", columnList = "organizacao_id")
+        }
 )
 public class Usuario extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "organizacao_id", nullable = false,
-                foreignKey = @ForeignKey(name = "fk_usuario_organizacao"))
+            foreignKey = @ForeignKey(name = "fk_usuario_organizacao"))
     private Organizacao organizacao;
 
     @Column(name = "username", nullable = false, length = 100)
@@ -259,10 +259,10 @@ public class Usuario extends BaseEntity {
     private LocalDateTime ultimoLoginEm;
 
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true,
-              fetch = FetchType.LAZY)
+            fetch = FetchType.LAZY)
     private UsuarioCredencial credencial;
 
-    public enum EstadoIdentidade { ATIVA, BLOQUEADA, PENDENTE_VERIFICACAO_EMAIL }
+    public enum EstadoIdentidade {ATIVA, BLOQUEADA, PENDENTE_VERIFICACAO_EMAIL}
 
     // getters/setters
 }
@@ -271,23 +271,23 @@ public class Usuario extends BaseEntity {
 ```java
 package modules.iam.usuario;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(
-    name = "tb_usuario_credencial",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(name = "uk_credencial_usuario", columnNames = "usuario_id")
+        name = "tb_usuario_credencial",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(name = "uk_credencial_usuario", columnNames = "usuario_id")
 )
 public class UsuarioCredencial extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usuario_id", nullable = false,
-                foreignKey = @ForeignKey(name = "fk_credencial_usuario"))
+            foreignKey = @ForeignKey(name = "fk_credencial_usuario"))
     private Usuario usuario;
 
     @Column(name = "senha_hash", nullable = false, length = 255)
@@ -319,16 +319,16 @@ public class UsuarioCredencial extends BaseEntity {
 ```java
 package modules.iam.aplicacaocliente;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.organizacao.Organizacao;
 
 @Entity
 @Table(
-    name = "tb_aplicacao_cliente",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(name = "uk_aplicacao_client_id", columnNames = "client_id")
+        name = "tb_aplicacao_cliente",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(name = "uk_aplicacao_client_id", columnNames = "client_id")
 )
 public class AplicacaoCliente extends BaseEntity {
 
@@ -358,20 +358,20 @@ public class AplicacaoCliente extends BaseEntity {
 ```java
 package modules.iam.recurso;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.aplicacaocliente.AplicacaoCliente;
 import modules.iam.modulo.Modulo;
 
 @Entity
 @Table(
-    name = "tb_recurso",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_recurso_app_codigo",
-        columnNames = {"aplicacao_cliente_id", "codigo"}
-    )
+        name = "tb_recurso",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_recurso_app_codigo",
+                columnNames = {"aplicacao_cliente_id", "codigo"}
+        )
 )
 public class Recurso extends BaseEntity {
 
@@ -396,15 +396,15 @@ public class Recurso extends BaseEntity {
 ```java
 package modules.iam.acao;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 
 @Entity
 @Table(
-    name = "tb_acao",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(name = "uk_acao_codigo", columnNames = "codigo")
+        name = "tb_acao",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(name = "uk_acao_codigo", columnNames = "codigo")
 )
 public class Acao extends BaseEntity {
 
@@ -421,8 +421,8 @@ public class Acao extends BaseEntity {
 ```java
 package modules.iam.permissao;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.acao.Acao;
 import modules.iam.aplicacaocliente.AplicacaoCliente;
@@ -430,16 +430,16 @@ import modules.iam.recurso.Recurso;
 
 @Entity
 @Table(
-    name = "tb_permissao",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_permissao_app_recurso_acao",
-            columnNames = {"aplicacao_cliente_id", "recurso_id", "acao_id"}
-        ),
-        @UniqueConstraint(name = "uk_permissao_codigo", columnNames = "codigo_permissao")
-    },
-    indexes = @Index(name = "ix_permissao_app", columnList = "aplicacao_cliente_id")
+        name = "tb_permissao",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_permissao_app_recurso_acao",
+                        columnNames = {"aplicacao_cliente_id", "recurso_id", "acao_id"}
+                ),
+                @UniqueConstraint(name = "uk_permissao_codigo", columnNames = "codigo_permissao")
+        },
+        indexes = @Index(name = "ix_permissao_app", columnList = "aplicacao_cliente_id")
 )
 public class Permissao extends BaseEntity {
 
@@ -459,10 +459,11 @@ public class Permissao extends BaseEntity {
     @Column(name = "codigo_permissao", nullable = false, length = 200)
     private String codigoPermissao;
 
-    @PrePersist @PreUpdate
+    @PrePersist
+    @PreUpdate
     void montarCodigo() {
         this.codigoPermissao =
-            aplicacaoCliente.getClientId() + ":" + recurso.getCodigo() + ":" + acao.getCodigo();
+                aplicacaoCliente.getClientId() + ":" + recurso.getCodigo() + ":" + acao.getCodigo();
     }
 
     // getters/setters
@@ -477,19 +478,19 @@ public class Permissao extends BaseEntity {
 ```java
 package modules.iam.papel;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.aplicacaocliente.AplicacaoCliente;
 
 @Entity
 @Table(
-    name = "tb_papel",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_papel_app_codigo",
-        columnNames = {"aplicacao_cliente_id", "codigo"}
-    )
+        name = "tb_papel",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_papel_app_codigo",
+                columnNames = {"aplicacao_cliente_id", "codigo"}
+        )
 )
 public class Papel extends BaseEntity {
 
@@ -510,8 +511,8 @@ public class Papel extends BaseEntity {
 ```java
 package modules.iam.papelpermissao;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.papel.Papel;
 import modules.iam.permissao.Permissao;
@@ -520,12 +521,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-    name = "tb_papel_permissao",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_papel_permissao",
-        columnNames = {"papel_id", "permissao_id"}
-    )
+        name = "tb_papel_permissao",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_papel_permissao",
+                columnNames = {"papel_id", "permissao_id"}
+        )
 )
 public class PapelPermissao extends BaseEntity {
 
@@ -553,19 +554,19 @@ public class PapelPermissao extends BaseEntity {
 ```java
 package modules.iam.grupo;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.organizacao.Organizacao;
 
 @Entity
 @Table(
-    name = "tb_grupo",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_grupo_org_codigo",
-        columnNames = {"organizacao_id", "codigo"}
-    )
+        name = "tb_grupo",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_grupo_org_codigo",
+                columnNames = {"organizacao_id", "codigo"}
+        )
 )
 public class Grupo extends BaseEntity {
 
@@ -591,8 +592,8 @@ public class Grupo extends BaseEntity {
 ```java
 package modules.iam.usuariogrupo;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.grupo.Grupo;
 import modules.iam.usuario.Usuario;
@@ -601,13 +602,13 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-    name = "tb_usuario_grupo",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_usuario_grupo",
-        columnNames = {"usuario_id", "grupo_id"}
-    ),
-    indexes = @Index(name = "ix_usuario_grupo_usuario", columnList = "usuario_id")
+        name = "tb_usuario_grupo",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_usuario_grupo",
+                columnNames = {"usuario_id", "grupo_id"}
+        ),
+        indexes = @Index(name = "ix_usuario_grupo_usuario", columnList = "usuario_id")
 )
 public class UsuarioGrupo extends BaseEntity {
 
@@ -650,8 +651,8 @@ public class UsuarioGrupo extends BaseEntity {
 ```java
 package modules.iam.sessao;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.aplicacaocliente.AplicacaoCliente;
 import modules.iam.usuario.Usuario;
@@ -660,12 +661,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-    name = "tb_sessao_usuario",
-    schema = DbSchemas.IAM,
-    indexes = {
-        @Index(name = "ix_sessao_usuario",      columnList = "usuario_id"),
-        @Index(name = "ix_sessao_ativa_exp",    columnList = "revogada,expira_em")
-    }
+        name = "tb_sessao_usuario",
+        schema = DbSchemas.IAM,
+        indexes = {
+                @Index(name = "ix_sessao_usuario", columnList = "usuario_id"),
+                @Index(name = "ix_sessao_ativa_exp", columnList = "revogada,expira_em")
+        }
 )
 public class SessaoUsuario extends BaseEntity {
 
@@ -702,8 +703,8 @@ public class SessaoUsuario extends BaseEntity {
 ```java
 package modules.iam.refreshtoken;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.sessao.SessaoUsuario;
 
@@ -712,10 +713,10 @@ import java.util.UUID;
 
 @Entity
 @Table(
-    name = "tb_refresh_token",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(name = "uk_refresh_token_hash", columnNames = "token_hash"),
-    indexes = @Index(name = "ix_refresh_token_sessao", columnList = "sessao_usuario_id")
+        name = "tb_refresh_token",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(name = "uk_refresh_token_hash", columnNames = "token_hash"),
+        indexes = @Index(name = "ix_refresh_token_sessao", columnList = "sessao_usuario_id")
 )
 public class RefreshToken extends BaseEntity {
 
@@ -747,8 +748,8 @@ public class RefreshToken extends BaseEntity {
 ```java
 package modules.iam.tokenrevogado;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.usuario.Usuario;
 
@@ -756,10 +757,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-    name = "tb_token_revogado",
-    schema = DbSchemas.IAM,
-    uniqueConstraints = @UniqueConstraint(name = "uk_token_revogado_jti", columnNames = "jti"),
-    indexes = @Index(name = "ix_token_revogado_expira", columnList = "expira_em")
+        name = "tb_token_revogado",
+        schema = DbSchemas.IAM,
+        uniqueConstraints = @UniqueConstraint(name = "uk_token_revogado_jti", columnNames = "jti"),
+        indexes = @Index(name = "ix_token_revogado_expira", columnList = "expira_em")
 )
 public class TokenRevogado extends BaseEntity {
 
@@ -791,8 +792,8 @@ public class TokenRevogado extends BaseEntity {
 ```java
 package modules.iam.auditoria;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 import modules.iam.aplicacaocliente.AplicacaoCliente;
 import modules.iam.usuario.Usuario;
@@ -801,12 +802,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-    name = "tb_auditoria_autenticacao",
-    schema = DbSchemas.IAM,
-    indexes = {
-        @Index(name = "ix_auditoria_autn_usuario_data", columnList = "usuario_id,ocorrido_em"),
-        @Index(name = "ix_auditoria_autn_tipo",         columnList = "tipo_evento")
-    }
+        name = "tb_auditoria_autenticacao",
+        schema = DbSchemas.IAM,
+        indexes = {
+                @Index(name = "ix_auditoria_autn_usuario_data", columnList = "usuario_id,ocorrido_em"),
+                @Index(name = "ix_auditoria_autn_tipo", columnList = "tipo_evento")
+        }
 )
 public class AuditoriaAutenticacao extends BaseEntity {
 

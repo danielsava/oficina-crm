@@ -1,4 +1,4 @@
-package common;
+package common.paginacao;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,11 +7,7 @@ import java.util.regex.Pattern;
 
 public final class SortParser {
 
-    /**
-     * Formato aceito: nome de campo iniciando por letra, seguido por
-     * letras/dígitos, vírgula e direção {@code asc}/{@code desc}
-     * (case-insensitive).
-     */
+    // Formato: 'campo,asc' ou 'campo,desc' (case-insensitive). Campo começa por letra.
     private static final Pattern FORMATO_SORT = Pattern.compile(
             "^([a-zA-Z][a-zA-Z0-9]*),(asc|desc)$",
             Pattern.CASE_INSENSITIVE

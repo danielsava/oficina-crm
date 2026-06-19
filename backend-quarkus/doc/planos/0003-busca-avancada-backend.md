@@ -1,7 +1,7 @@
 # Plano de Implementação — Busca Paginada com Filtros (Caminho B Único) — Backend
 
 > **Status**: **concluído** (implementação aplicada; ADR-0009 reescrita in-place; plano 0002 descontinuado)
-> **Última atualização**: 2026-06-04 (implementação seguindo a "Ordem de execução" abaixo: ADR-0009 reescrita; `common.FiltroDTO`, `CriterioFiltro`, `OperadorFiltro`, `OperadorLogico` e `FiltroAvancadoQueryBuilder` criados; `BaseService.buscarAvancado(FiltroDTO)` e `BaseRest.POST /buscar` adicionados; código do plano 0002 removido — `FiltroAplicado`, `listarDTO` e auxiliares, `BaseRest.listar`, `PARAMS_RESERVADOS`; testes unitários do `FiltroAvancadoQueryBuilder` criados; `AGENTS.md`, plano 0001 (#7) e plano 0002 atualizados.)
+> **Última atualização**: 2026-06-04 (implementação seguindo a "Ordem de execução" abaixo: ADR-0009 reescrita; `common.filtro.FiltroDTO`, `CriterioFiltro`, `OperadorFiltro`, `OperadorLogico` e `FiltroAvancadoQueryBuilder` criados; `BaseService.buscarAvancado(FiltroDTO)` e `BaseRest.POST /buscar` adicionados; código do plano 0002 removido — `FiltroAplicado`, `listarDTO` e auxiliares, `BaseRest.listar`, `PARAMS_RESERVADOS`; testes unitários do `FiltroAvancadoQueryBuilder` criados; `AGENTS.md`, plano 0001 (#7) e plano 0002 atualizados.)
 >
 > **Nota (2026-06-11)**: as anotações OpenAPI (`@Schema`, `@Operation`, `@APIResponse`, `@Parameter`, `@Tag`) e a maior parte do Javadoc criados por este plano foram **removidos** posteriormente, após a aprovação da [ADR-0010](../adr/0010-anotacoes-openapi-e-javadoc-sob-demanda.md), que estabelece que essas anotações são adicionadas apenas sob demanda. O conteúdo funcional do plano (records, builder, endpoint, testes) permanece em vigor.
 > **Escopo**: apenas backend. O plano do frontend será criado em momento posterior.
@@ -27,7 +27,7 @@ A motivação foi consolidada em análise comparativa: o 0002 entregou complexid
 - **Método**: `POST` (corpo estruturado em JSON; URLs ficariam ilegíveis se isso virasse query string).
 - **Path**: `/buscar` relativo ao path do `*Rest` concreto (ex.: `/usuario/buscar`).
 - **Content-Type**: `application/json` (request); resposta `application/json` (sucesso) ou `application/problem+json` (erro), conforme padrão (ADR-0004, ADR-0007).
-- **Resposta de sucesso**: envelope `common.Pagina<ListDTO>` — o **mesmo** record introduzido com o plano 0002. Reuso direto.
+- **Resposta de sucesso**: envelope `common.paginacao.Pagina<ListDTO>` — o **mesmo** record introduzido com o plano 0002. Reuso direto.
 - **Localização da declaração**: o endpoint vive no `BaseRest`, herdado por todos os `*Rest` concretos (assim como `POST /`, `PUT /{uuid}`, `GET /{uuid}`, `DELETE /inativar/{uuid}`).
 - **Não há `GET /` paginado**: o endpoint `GET /` do `BaseRest` deixa de existir como parte deste plano (ver "Ordem de execução"). Listagem só pelo `POST /buscar`.
 
@@ -38,22 +38,26 @@ Justificativa para POST em vez de GET:
 - Semântica: POST aqui não cria recurso; é "POST como mecanismo de transporte de query estruturada". Padrão aceito (Elasticsearch, GitHub GraphQL, várias APIs corporativas). Documentar isso na descrição da operação OpenAPI.
 - Trade-off conhecido: `POST` não é cacheado por proxies HTTP. Aceitável para CRUD admin interno (cache HTTP fora de escopo).
 
-### 2. DTO de entrada: `common.FiltroDTO`
+### 2. DTO de entrada: `common.filtro.FiltroDTO`
 
 Record genérico no pacote `common`. Estrutura final:
 
 ```java
 package common;
 
+import common.filtro.CriterioFiltro;
+import common.filtro.OperadorLogico;
+
 import java.util.List;
 
 public record FiltroDTO(
-    int page,
-    int size,
-    List<String> sort,             // mesmo formato do plano 0002: ["campo,asc", "outroCampo,desc", ...]
-    OperadorLogico operadorLogico, // AND (default) ou OR — único para toda a lista de criterios
-    List<CriterioFiltro> criterios // lista plana (sem aninhamento)
-) {}
+        int page,
+        int size,
+        List<String> sort,             // mesmo formato do plano 0002: ["campo,asc", "outroCampo,desc", ...]
+        OperadorLogico operadorLogico, // AND (default) ou OR — único para toda a lista de criterios
+        List<CriterioFiltro> criterios // lista plana (sem aninhamento)
+) {
+}
 ```
 
 Tipos auxiliares:
@@ -146,7 +150,7 @@ Exemplo com OR (busca global por trecho em vários campos):
 - `page >= 0`, `size >= 1`, `size <= 100` (mesmos limites do plano 0002). Bean Validation com `@Min`/`@Max` no record.
 - `operadorLogico` no nível raiz: default `AND` quando `null`. Nunca falha por ausência.
 - `criterios` no nível raiz: pode ser `null` ou lista vazia (significa "sem filtros", retorna tudo paginado).
-- `sort` segue o mesmo `common.SortParser` introduzido pelo plano 0002, com a mesma whitelist (`camposPermitidos()`). Direção obrigatória, fallback `DEFAULT_SORT = [id desc]`.
+- `sort` segue o mesmo `common.paginacao.SortParser` introduzido pelo plano 0002, com a mesma whitelist (`camposPermitidos()`). Direção obrigatória, fallback `DEFAULT_SORT = [id desc]`.
 - **Sem limite de quantidade de critérios**. A proteção contra payload patológico fica delegada ao limite de tamanho de request body do Quarkus (`quarkus.http.limits.max-body-size`, default 10MB). Decisão consciente: CRUD admin interno, frontend coordenado no mesmo monorepo, custo de implementar limite arbitrário (e mantê-lo) supera o ganho.
 
 ### 3. Whitelist de campos — herdada do `ListDTO` (mantém rev.3 do plano 0002)
@@ -231,7 +235,7 @@ Mantém o comportamento do plano 0002:
 - Mesma whitelist (`camposPermitidos()`).
 - Mesmo `DEFAULT_SORT = [id desc]` (constante fixa universal, não sobrescritível por `*Service`).
 - Mesmas regras de validação (direção obrigatória; campo na whitelist).
-- Reusa `common.SortParser` integralmente.
+- Reusa `common.paginacao.SortParser` integralmente.
 
 ### 8. Defaults e limites
 

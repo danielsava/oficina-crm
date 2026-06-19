@@ -1,4 +1,4 @@
-package common;
+package infra.persistence;
 
 public final class DbSchemas {
 

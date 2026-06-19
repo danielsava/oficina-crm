@@ -1,6 +1,6 @@
 package modules.iam.usuario;
 
-import common.BaseService;
+import common.base.BaseService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -23,10 +23,10 @@ public class UsuarioService extends BaseService<Usuario, UsuarioEditDTO, Usuario
 
 
     @Inject
-    private UsuarioRepository repository;
+    UsuarioRepository repository;
 
     @Inject
-    private UsuarioMapper mapper;
+    UsuarioMapper mapper;
 
 
     @Override

@@ -1,4 +1,4 @@
-package common;
+package common.paginacao;
 
 import java.util.List;
 

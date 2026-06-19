@@ -1,4 +1,4 @@
-package common;
+package common.filtro;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

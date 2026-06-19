@@ -80,7 +80,7 @@ Esta dívida será fechada por um ADR futuro que descreve o fluxo definitivo de 
 
 ## Referências
 
-- `common.BaseService.buscarEditDTOporUUID` — implementação por projeção Panache.
-- `common.BaseRest.buscarPorUUID` — endpoint `GET /{uuid}` retornando `EditDTO`.
+- `common.base.BaseService.buscarEditDTOporUUID` — implementação por projeção Panache.
+- `common.base.BaseRest.buscarPorUUID` — endpoint `GET /{uuid}` retornando `EditDTO`.
 - `modules.iam.usuario.UsuarioService.SENHA_TEMPORARIA_PADRAO` — dívida técnica da senha fixa.
 - ADR-0002 — `uuid` como identificador público (motiva a forma do path `/{uuid}`).

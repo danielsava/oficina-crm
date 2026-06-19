@@ -1,6 +1,14 @@
-package common;
+package common.base;
 
 
+import common.filtro.CriterioFiltro;
+import common.filtro.FiltroAvancadoQueryBuilder;
+import common.filtro.FiltroDTO;
+import common.filtro.OperadorLogico;
+import common.paginacao.Pagina;
+import common.paginacao.SortCriterio;
+import common.paginacao.SortDirecao;
+import common.paginacao.SortParser;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
@@ -25,17 +33,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
 
 
-    /**
-     * Cache de campos da entidade por classe, para evitar reflexão em todo
-     * request. Populado preguiçosamente em {@link #camposEntidade()}.
-     */
+    // Cache de campos da entidade por classe, para evitar reflexão por request.
     private static final Map<Class<?>, Map<String, Class<?>>> CACHE_CAMPOS_ENTIDADE = new ConcurrentHashMap<>();
 
-    /**
-     * Cache de nomes de campos do {@code ListDTO} por classe, para evitar
-     * reflexão a cada request. Populado preguiçosamente em
-     * {@link #camposPermitidos()}.
-     */
+    // Cache de nomes de campos do ListDTO por classe, para evitar reflexão por request.
     private static final Map<Class<?>, Set<String>> CACHE_CAMPOS_LISTDTO = new ConcurrentHashMap<>();
 
     private static final List<SortCriterio> DEFAULT_SORT = List.of(
@@ -203,13 +204,8 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         return sort;
     }
 
-    /**
-     * Indica se o cliente incluiu algum critério com {@code campo = "status"}
-     * e se {@code status} é um componente do {@code ListDTO} (whitelist).
-     *
-     * <p>Quando verdadeiro, o filtro implícito {@code status = ATIVO} é
-     * desligado para permitir, por exemplo, listar inativos.</p>
-     */
+    // Quando o cliente filtra explicitamente por 'status', o filtro implícito
+    // status = ATIVO é desligado (permite listar inativos, por exemplo).
     private boolean criterioMencionaStatus(FiltroDTO filtro) {
 
         if (!camposPermitidos().contains("status"))
@@ -229,11 +225,8 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         return false;
     }
 
-    /**
-     * Mapa {@code nomeCampo -> tipo} dos campos declarados na entidade e em
-     * suas superclasses (inclui {@link BaseEntity}). Resultado cacheado por
-     * {@code Class<Entity>}.
-     */
+    // Mapa nomeCampo -> tipo dos campos declarados na entidade e superclasses.
+    // Resultado cacheado por classe de entidade.
     private Map<String, Class<?>> camposEntidade() {
 
         Class<?> tipoEntity = resolverTipoEntity();
@@ -263,11 +256,7 @@ public abstract class BaseService<Entity extends BaseEntity, EditDTO, ListDTO> {
         return Collections.unmodifiableMap(resultado);
     }
 
-    /**
-     * Resolve o argumento de tipo {@code Entity} declarado pela subclasse de
-     * {@link BaseService}. Usado para localizar os campos da entidade via
-     * reflexão.
-     */
+    // Resolve o argumento de tipo Entity declarado pela subclasse, via reflexão.
     @SuppressWarnings("unchecked")
     private Class<? extends BaseEntity> resolverTipoEntity() {
 

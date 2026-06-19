@@ -15,7 +15,7 @@ public class AuthService {
 
     public boolean autenticar(String email, String senha) {
 
-        var usuario = usuarioService.buscarPorEmail(email);
+        var usuario = usuarioService.buscarPor("email", email);
 
         if(usuario == null) {
 

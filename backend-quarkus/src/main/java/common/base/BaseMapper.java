@@ -1,4 +1,4 @@
-package common;
+package common.base;
 
 import org.mapstruct.MappingTarget;
 

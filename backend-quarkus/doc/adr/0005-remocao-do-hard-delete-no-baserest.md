@@ -5,7 +5,7 @@
 
 ## Contexto
 
-O `common.BaseRest` originalmente expunha **dois** endpoints de exclusão para qualquer entidade que herdasse do CRUD genérico:
+O `common.base.BaseRest` originalmente expunha **dois** endpoints de exclusão para qualquer entidade que herdasse do CRUD genérico:
 
 - `DELETE /{uuid}` — **hard delete**: removia fisicamente o registro do banco via `BaseService.excluirPorUUID(...)`.
 - `DELETE /inativar/{uuid}` — **soft delete**: marcava `status = INATIVO` via `BaseService.inativarPorUUID(...)`.
@@ -21,7 +21,7 @@ Como o projeto ainda está na fase inicial (nenhuma FK foi criada) e nenhum `*Re
 
 ## Decisão
 
-**Removemos** o endpoint `DELETE /{uuid}` (hard delete) do `common.BaseRest`.
+**Removemos** o endpoint `DELETE /{uuid}` (hard delete) do `common.base.BaseRest`.
 
 O CRUD genérico passa a expor **apenas soft delete** via `DELETE /inativar/{uuid}`, que continua atendendo o caso de uso padrão de "desativar registro".
 
@@ -57,7 +57,7 @@ O CRUD genérico passa a expor **apenas soft delete** via `DELETE /inativar/{uui
 
 ## Referências
 
-- `common.BaseRest` — passa a expor apenas `DELETE /inativar/{uuid}`.
-- `common.BaseService#excluirPorUUID` — API interna preservada.
-- `common.EnumStatusEntity` — `ATIVO`/`INATIVO` como base do soft delete.
+- `common.base.BaseRest` — passa a expor apenas `DELETE /inativar/{uuid}`.
+- `common.base.BaseService#excluirPorUUID` — API interna preservada.
+- `common.base.EnumStatusEntity` — `ATIVO`/`INATIVO` como base do soft delete.
 - Plano de padronização do CRUD, item 6 (`doc/planos/0001-padronizacao-crud-backend.md`).

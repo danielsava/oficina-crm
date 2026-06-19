@@ -1,5 +1,6 @@
-package common;
+package common.base;
 
+import infra.persistence.DbSchemas;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

@@ -1,7 +1,7 @@
 package modules.iam.usuario;
 
-import common.BaseEntity;
-import common.DbSchemas;
+import common.base.BaseEntity;
+import infra.persistence.DbSchemas;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;

@@ -1,4 +1,4 @@
-package common;
+package common.base;
 
 public enum EnumStatusEntity {
     ATIVO,

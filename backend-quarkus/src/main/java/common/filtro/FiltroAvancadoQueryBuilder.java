@@ -1,4 +1,4 @@
-package common;
+package common.filtro;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -15,13 +15,8 @@ import java.util.UUID;
 
 public final class FiltroAvancadoQueryBuilder {
 
-    /**
-     * Resultado da montagem: trecho JPQL do {@code WHERE} (sem a palavra
-     * "where") e o mapa de parâmetros nomeados correspondente.
-     *
-     * <p>Quando a lista de critérios é vazia, {@link #jpql()} é
-     * {@code ""} e {@link #parametros()} é um mapa vazio.</p>
-     */
+    // Trecho JPQL do WHERE (sem a palavra "where") e mapa de parâmetros nomeados.
+    // Quando não há critérios, jpql é "" e parametros é vazio.
     public record Resultado(String jpql, Map<String, Object> parametros) {
 
         public static Resultado vazio() {
@@ -206,7 +201,7 @@ public final class FiltroAvancadoQueryBuilder {
         return valor;
     }
 
-    /** Categorias de tipo usadas para validar compatibilidade operador ↔ tipo. */
+    // Categorias de tipo usadas para validar compatibilidade operador x tipo.
     private enum CategoriaTipo {
         STRING, NUMERICO, DATA, BOOLEAN, ENUM, UUID_, OUTRO
     }
@@ -268,15 +263,9 @@ public final class FiltroAvancadoQueryBuilder {
         };
     }
 
-    /**
-     * Converte o valor cru (vindo do JSON) para o tipo Java do campo.
-     *
-     * <p>Jackson preserva o tipo conforme o JSON ({@code "abc"} → String;
-     * {@code 42} → Integer/Long; {@code [...]} → List). Quando o tipo já bate
-     * com o esperado, devolve o próprio objeto. Caso contrário, tenta
-     * conversão a partir de {@code String} (suficiente para a maioria dos
-     * casos: enums, UUID, datas ISO-8601, números em formato textual).</p>
-     */
+    // Converte o valor cru (JSON) para o tipo Java do campo. Quando o tipo já bate,
+    // devolve o próprio objeto; caso contrário tenta conversão via String
+    // (enums, UUID, datas ISO-8601, números em formato textual).
     static Object converterValor(Object valor, Class<?> tipo, String campo) {
 
         if (valor == null)
@@ -391,7 +380,7 @@ public final class FiltroAvancadoQueryBuilder {
         return texto;
     }
 
-    /** Mapeia um tipo primitivo para o seu wrapper, para checagem com {@code isInstance}. */
+    // Mapeia um tipo primitivo para o seu wrapper (para checagem com isInstance).
     private static Class<?> tipoEquivalente(Class<?> primitivo) {
 
         if (primitivo == boolean.class) return Boolean.class;

@@ -69,7 +69,7 @@ Todos os `*ListDTO` MUST incluir `uuid` como primeiro campo, para que o cliente 
 
 ## Referências
 
-- `common.BaseRest` — implementação dos endpoints por UUID.
-- `common.BaseService` — variantes `*PorUUID` (públicas via REST) e `*PorId` (internas).
+- `common.base.BaseRest` — implementação dos endpoints por UUID.
+- `common.base.BaseService` — variantes `*PorUUID` (públicas via REST) e `*PorId` (internas).
 - `backend-quarkus/AGENTS.md` — seção *API Standards*, regra "Public Identifier".
 - OWASP API Security Top 10 — API1: Broken Object Level Authorization.

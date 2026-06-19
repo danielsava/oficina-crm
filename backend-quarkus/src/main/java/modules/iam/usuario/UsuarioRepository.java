@@ -1,6 +1,6 @@
 package modules.iam.usuario;
 
-import common.BaseRepository;
+import common.base.BaseRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
