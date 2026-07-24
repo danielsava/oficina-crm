@@ -48,7 +48,7 @@ A modelagem proposta é um **IAM próprio embarcado** no monorepo (módulo Quark
 - **Tokens JWT curtos (5–15 min) + Refresh Tokens longos (horas/dias) persistidos** para permitir revogação real.
 - **Revogação via tabela de denylist + versão de credenciais** (sem precisar consultar IAM a cada request).
 - **JWT carrega claims resumidas** (sub, roles por app, permission version), não a árvore inteira de permissões. Backend resolve permissões granulares via cache local sincronizado.
-- **Multi-tenant preparado desde já** via entidade `Organizacao`, mesmo que inicialmente exista apenas uma organização default.
+- **`Organizacao` mantida desde a v1 como contêiner estrutural** para evolução futura do modelo.
 - **Tabelas associativas como entidades próprias** quando carregam metadados (vigência, quem concedeu, status).
 
 ---
@@ -60,7 +60,7 @@ A modelagem proposta é um **IAM próprio embarcado** no monorepo (módulo Quark
 > `core`, `crm`, `estoque` ou qualquer outro schema.
 
 ```
-Organizacao (tenant)
+Organizacao
    │
    ├──< Usuario >──── UsuarioCredencial (1:1)
    │      │
@@ -87,7 +87,7 @@ AuditoriaAutorizacao (auditoria fina)
 
 | Entidade Java | Tabela (schema `iam`) | Responsabilidade |
 |---|---|---|
-| `Organizacao` | `tb_organizacao` | Tenant lógico. Isola usuários, grupos, aplicações. |
+| `Organizacao` | `tb_organizacao` | Contêiner estrutural do IAM. Na v1 o sistema opera com uma única organização default. |
 | `Usuario` | `tb_usuario` | Identidade do usuário (dados de perfil). **Já existe** em `modules.iam.usuario`. |
 | `UsuarioCredencial` | `tb_usuario_credencial` | Hash de senha, algoritmo, versão, `senhaAlteradaEm`, `credentialVersion`. |
 | `AplicacaoCliente` | `tb_aplicacao_cliente` | Aplicação cliente do IAM (Financeiro, RH, Estoque…). |
@@ -125,7 +125,7 @@ AuditoriaAutorizacao (auditoria fina)
 
 | Schema | Tabela | PK | FKs principais | Notas |
 |---|---|---|---|---|
-| `iam` | `tb_organizacao` | `id` BIGINT | — | `codigo` UNIQUE |
+| `iam` | `tb_organizacao` | `id` BIGINT | — | Entidade estrutural. Na v1 o sistema opera com uma única organização default. `codigo` UNIQUE. |
 | `iam` | `tb_usuario` | `id` BIGINT | `organizacao_id` | `username` UNIQUE por org, `email` UNIQUE por org (entidade já existente no projeto) |
 | `iam` | `tb_usuario_credencial` | `id` BIGINT | `usuario_id` (UNIQUE) | hash argon2id/bcrypt, `credential_version` INT |
 | `iam` | `tb_aplicacao_cliente` | `id` BIGINT | `organizacao_id` | `client_id` UNIQUE, `client_secret_hash` |
@@ -174,7 +174,14 @@ AuditoriaAutorizacao (auditoria fina)
 > Os exemplos abaixo mostram apenas os campos próprios de cada entidade
 > (omitidos os campos herdados de `BaseEntity`).
 
-### 5.1 Organizacao (tenant)
+### 5.1 Organizacao
+
+> **Status da revisão desta entidade**: analisada.
+>
+> `Organizacao` é uma entidade estrutural do modelo. Na v1, o sistema opera
+> com uma única organização default, resolvida implicitamente pelo backend.
+> Portanto, ela não representa uma variação funcional exposta ao usuário final
+> nem exige seleção no login.
 
 ```java
 package modules.iam.organizacao;
@@ -926,7 +933,6 @@ Combinação de três mecanismos (defesa em profundidade):
   "jti": "8c5a...",                           // ID único do access token
   "sid": "f1b2c3d4-...",                      // SessaoUsuario.uuid
   "cv":  7,                                   // credential_version
-  "org": "default",                           // organization.code (multi-tenant)
   "upn": "joao.silva",                        // username
   "email": "joao@empresa.com",
   "name": "João Silva",
@@ -1113,7 +1119,7 @@ Para revogação total imediata (ex.: usuário demitido):
 | 7 | Permissões por aplicação sem misturar globais? | `Permission` carrega `client_app_id` obrigatório. Não existem permissões globais — apenas administrativas dentro de uma "app IAM-admin". |
 | 8 | Perfis diferentes por app? | Natural: `Papel` pertence a `AplicacaoCliente`. Atribuir papéis distintos em apps distintas. |
 | 9 | CRUD vs ações de negócio? | Catálogo `Action` extensível: `CREATE`, `READ`, `UPDATE`, `DELETE` + `APPROVE`, `EXPORT`, `EXECUTE`, etc. Mesma estrutura, sem distinção formal. |
-| 10 | Multi-tenant futuro? | Já preparado: `Organizacao` em `Usuario`, `Grupo`, `AplicacaoCliente`. Claim `org` no JWT. Filtros por tenant em todas as queries (filtro Hibernate `@Filter` ou interceptor). |
+| 10 | Multi-tenant futuro? | Sim. O modelo já nasce com `Organizacao` como contêiner estrutural. Na v1, porém, o sistema opera com uma única organização default, sem seleção no login. |
 
 ---
 
@@ -1143,7 +1149,8 @@ Para revogação total imediata (ex.: usuário demitido):
 4. **Revogação em camadas**: `sid` + `jti` + `credential_version` + `perm_version`. Cache local nos backends, sincronizado por pub/sub.
 5. **JWT minimalista**: identidade, roles por app, versões — não permissões inteiras.
 6. **Backends validam local** (JWKS cache + denylist cache) e usam `@RolesAllowed` + `PermissionChecker` para granularidade.
-7. **Multi-tenant preparado** com `Organization` desde o dia 1.
+7. **`Organization` mantida desde a v1 como contêiner estrutural** para
+   evolução futura do modelo.
 8. **Auditoria forte** em `iam_auth_event_log` + opcional `iam_authz_decision_log`.
 9. **Tabelas associativas como entidades** sempre que houver vigência, `grantedBy`, status — princípio aplicado a `RolePermission`, `UserGroupMembership`, `GroupRole`, `UserRoleAssignment`, `UserDirectPermission`, `UserAppAccess`.
 10. **Caminho evolutivo claro** para MFA, ABAC, SSO federado, login social, sem refactor estrutural.
@@ -1175,7 +1182,8 @@ Essa arquitetura entrega autenticação centralizada, autorização altamente gr
    árvore inteira de permissões.
 7. **Backends validam localmente** (JWKS cache + denylist cache) e usam
    `@RolesAllowed` + `PermissionChecker` programático para granularidade.
-8. **Multi-tenant preparado** com `Organizacao` desde o dia 1.
+8. **`Organizacao` mantida desde a v1 como contêiner estrutural** para
+   evolução futura do modelo.
 9. **Auditoria forte** em `iam.tb_auditoria_autenticacao` + opcional
    `iam.tb_auditoria_autorizacao`.
 10. **Tabelas associativas como entidades** sempre que houver vigência,
